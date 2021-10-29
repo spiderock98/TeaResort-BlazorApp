@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+
+<head>
+    <style>
+        .btn-light {
+            color: #1f2d3d;
+            border-color: #d8d8d8;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body.swal2-shown > [aria-hidden="true"] {
+            transition: 0.1s filter;
+            filter: blur(10px);
+        }
+    </style>
+</head>
+
+@* sidebar-collapse to collapse sidebar on load *@
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
+    <div class="wrapper">
+
+        <NavMenu />
+
+        <SideBar />
+
+        @Body
+
+        <Footer />
+
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark">
+            <!-- Control sidebar content goes here -->
+        </aside>
+        <!-- /.control-sidebar -->
+
+    </div>
+</body>

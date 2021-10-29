@@ -1,0 +1,570 @@
+﻿@page "/area"
+@inject NavigationManager uriHelper
+@using BlazorDateRangePicker
+@using Helper
+@inject IJSRuntime JSHelper
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Area Listing</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <div class="row">
+
+                <div class="form-group col-4">
+                    <label>
+                        <i class="fas fa-map-marker-alt"></i>
+                        Area
+                    </label>
+                    <div class="input-group ">
+                        <select title="-- Select --"
+                                data-style="btn-light"
+                                class="form-control selectpicker">
+                            <option>TP. Hồ Chí Minh</option>
+                            <option>Hà Nội</option>
+                            <option>Hải Phòng</option>
+                            <option>Đà Nẵng</option>
+                            <option>Hội An</option>
+                            <option>Nha Trang</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group col-4">
+                    <label>
+                        <i class="fas fa-city"></i>
+                        Zone
+                    </label>
+                    <div class="input-group ">
+                        <select title="-- Select --"
+                                data-style="btn-light"
+                                class="form-control selectpicker">
+                            <option>Biệt thự 1</option>
+                            <option>Biệt thự 2</option>
+                            <option>Biệt thự 3</option>
+                            <option>Biệt thự 4</option>
+                            <option>Biệt thự 5</option>
+                            <option>Biệt thự 6</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group col-4">
+                    <label>
+                        <i class="fas fa-store"></i>
+                        Room
+                    </label>
+                    <div class="input-group ">
+                        <select title="-- Select --"
+                                data-style="btn-light"
+                                class="form-control selectpicker">
+                            <option>Tầng Trệt</option>
+                            <option>Tầng 1</option>
+                            <option>Tầng 2</option>
+                            <option>Tầng 3</option>
+                            <option>Tầng 4</option>
+                            <option>Tầng 5</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card">
+                @*<div class="card-header">
+            <h3 class="card-title">Daily Engergy</h3>
+            </div>*@
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <table id="example1" class="table table-bordered table-striped">
+                        <thead>
+                            <tr class="text-center">
+                                <th></th>
+                                <th>City</th>
+                                <th>District</th>
+                                <th>Ward</th>
+                                <th>Current Power <sup>kW</sup></th>
+                                <th>Total Engergy <sup>kW.h</sup></th>
+                                <th>Energy Target <sup>kW.h</sup></th>
+                                <th>Status</th>
+                                <th>Maintenance</th>
+                                <th>Schedule Enabler</th>
+                                <th>Setting</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr class="text-center">
+                                <td>
+                                    <div class="custom-control custom-checkbox">
+                                        <input class="custom-control-input custom-control-input-success" type="checkbox"
+                                               id="cbSelectStore0">
+                                        <label for="cbSelectStore0" class="custom-control-label"></label>
+                                    </div>
+                                </td>
+                                <td>TP. Hồ Chí Minh</td>
+                                <td>TP. Thủ Đức</td>
+                                <td>Tăng Nhơn Phú A</td>
+                                <td>90</td>
+                                <td>500</td>
+                                <td>200</td>
+                                <td class="text-danger">
+                                    <i class="far fa-times-circle"></i> Offline
+                                </td>
+                                <td>
+                                    <i class="fas fa-exclamation-triangle" style="color: #aeae00;"></i>
+                                </td>
+                                <td>
+                                    <input type="checkbox" name="my-checkbox" checked data-bootstrap-switch
+                                           data-off-color="danger" data-on-color="success">
+                                </td>
+
+                                <td>
+                                    <button class="btn" type="button" data-toggle="modal" data-target="#modalStore0">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="modalStore0" tabindex="-1"
+                                         aria-labelledby="lbModalStore0" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="lbModalStore0">Store Trần Hưng Đạo</h5>
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                            aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+
+                                                    <!-- TODO: May Try Fieldset and Legend -->
+                                                    @* Reference:
+                                                https://getbootstrap.com/docs/4.5/components/forms/?#validation *@
+                                                    <form id="formModifyStore0" class="needs-validation" novalidate>
+                                                        <div class="form-row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="validationCustom00">Store</label>
+                                                                <input type="text" class="form-control"
+                                                                       id="validationCustom00" value="Trần Hưng Đạo"
+                                                                       required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid name of Store.
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="validationCustom01">Address</label>
+                                                                <input type="text" class="form-control"
+                                                                       id="validationCustom01" value="TP. Hồ Chí Minh"
+                                                                       required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid Address.
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-row">
+                                                            <div class="col-md-3 mb-3">
+                                                                <label for="validationCustom02">Area</label>
+                                                                <input type="number" class="form-control"
+                                                                       id="validationCustom02" value="50" required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid Number.
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-9 mb-3">
+                                                                <label for="customFile0">Layout</label>
+                                                                <div class="custom-file">
+                                                                    <input type="file" class="custom-file-input"
+                                                                           id="customFile0">
+                                                                    <label class="custom-file-label"
+                                                                           for="customFile0">Choose file</label>
+                                                                </div>
+
+                                                                <div class="invalid-feedback">
+                                                                    Please select a valid state.
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+
+                                                    </form>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                            data-dismiss="modal">
+                                                        Close
+                                                    </button>
+                                                    <button type="submit" form="formModifyStore0"
+                                                            class="btn btn-primary">
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                            <tr class="text-center">
+                                <td>
+                                    <div class="custom-control custom-checkbox">
+                                        <input class="custom-control-input custom-control-input-success" type="checkbox"
+                                               id="cbSelectStore0">
+                                        <label for="cbSelectStore0" class="custom-control-label"></label>
+                                    </div>
+                                </td>
+                                <td>TP. Hồ Chí Minh</td>
+                                <td>TP. Thủ Đức</td>
+                                <td>Tăng Nhơn Phú B</td>
+                                <td>90</td>
+                                <td>500</td>
+                                <td>200</td>
+                                <td class="text-success">
+                                    <i class="far fa-check-circle"></i> Online
+                                </td>
+                                <td></td>
+                                <td>
+                                    <input type="checkbox" name="my-checkbox" checked data-bootstrap-switch
+                                           data-off-color="danger" data-on-color="success">
+                                </td>
+
+                                <td>
+                                    <button class="btn" type="button" data-toggle="modal" data-target="#modalStore1">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="modalStore1" tabindex="-1"
+                                         aria-labelledby="lbModalStore1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="lbModalStore1">Store Mạc Đĩnh Chi</h5>
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                            aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+
+                                                    <!-- TODO: May Try Fieldset and Legend -->
+                                                    @* Reference:
+                                                https://getbootstrap.com/docs/4.5/components/forms/?#validation *@
+                                                    <form id="formModifyStore1" class="needs-validation" novalidate>
+                                                        <div class="form-row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="validationCustom10">Store</label>
+                                                                <input type="text" class="form-control"
+                                                                       id="validationCustom10" value="Trần Hưng Đạo"
+                                                                       required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid name of Store.
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="validationCustom11">Address</label>
+                                                                <input type="text" class="form-control"
+                                                                       id="validationCustom11" value="TP. Hồ Chí Minh"
+                                                                       required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid Address.
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-row">
+                                                            <div class="col-md-3 mb-3">
+                                                                <label for="validationCustom12">Area</label>
+                                                                <input type="number" class="form-control"
+                                                                       id="validationCustom12" value="50" required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid Number.
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-9 mb-3">
+                                                                <label for="customFile1">Layout</label>
+                                                                <div class="custom-file">
+                                                                    <input type="file" class="custom-file-input"
+                                                                           id="customFile1" required>
+                                                                    <label class="custom-file-label"
+                                                                           for="customFile1">Choose file</label>
+                                                                </div>
+
+                                                                <div class="invalid-feedback">
+                                                                    Please select a valid state.
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+
+                                                    </form>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                            data-dismiss="modal">
+                                                        Close
+                                                    </button>
+                                                    <button type="button" form="formModifyStore1"
+                                                            class="btn btn-primary">
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                            <tr class="text-center">
+                                <td>
+                                    <div class="custom-control custom-checkbox">
+                                        <input class="custom-control-input custom-control-input-success" type="checkbox"
+                                               id="cbSelectStore0">
+                                        <label for="cbSelectStore0" class="custom-control-label"></label>
+                                    </div>
+                                </td>
+                                <td>TP. Hồ Chí Minh</td>
+                                <td>TP. Thủ Đức</td>
+                                <td>Phú Hữu</td>
+                                <td>90</td>
+                                <td>500</td>
+                                <td>200</td>
+                                <td class="text-success">
+                                    <i class="far fa-check-circle"></i> Online
+                                </td>
+                                <td></td>
+                                <td>
+                                    <input type="checkbox" name="my-checkbox" checked data-bootstrap-switch
+                                           data-off-color="danger" data-on-color="success">
+                                </td>
+
+                                <td>
+                                    <button class="btn" type="button" data-toggle="modal" data-target="#modalStore2">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="modalStore2" tabindex="-1"
+                                         aria-labelledby="lbModalStore2" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="lbModalStore2">Store 3</h5>
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                            aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+
+                                                    <!-- TODO: May Try Fieldset and Legend -->
+                                                    @* Reference:
+                                                https://getbootstrap.com/docs/4.5/components/forms/?#validation *@
+                                                    <form id="formModifyStore2" class="needs-validation" novalidate>
+                                                        <div class="form-row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="validationCustom20">Store</label>
+                                                                <input type="text" class="form-control"
+                                                                       id="validationCustom20" value="Trần Hưng Đạo"
+                                                                       required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid name of Store.
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="validationCustom21">Address</label>
+                                                                <input type="text" class="form-control"
+                                                                       id="validationCustom21" value="TP. Hồ Chí Minh"
+                                                                       required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid Address.
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-row">
+                                                            <div class="col-md-3 mb-3">
+                                                                <label for="validationCustom22">Area</label>
+                                                                <input type="number" class="form-control"
+                                                                       id="validationCustom22" value="50" required>
+                                                                <div class="invalid-feedback">
+                                                                    Please provide a valid Number.
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-9 mb-3">
+                                                                <label for="customFile2">Layout</label>
+                                                                <div class="custom-file">
+                                                                    <input type="file" class="custom-file-input"
+                                                                           id="customFile2" required>
+                                                                    <label class="custom-file-label"
+                                                                           for="customFile2">Choose file</label>
+                                                                </div>
+
+                                                                <div class="invalid-feedback">
+                                                                    Please select a valid state.
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+
+                                                    </form>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                            data-dismiss="modal">
+                                                        Close
+                                                    </button>
+                                                    <button type="button" form="formModifyStore2"
+                                                            class="btn btn-primary">
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+
+            <div class="card card-primary card-outline">
+                @*<div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-edit"></i>
+                        Vertical Tabs Examples
+                    </h3>
+                </div>*@
+
+                <div class="card-body">
+                    @*<h4 class="mt-4">Right Sided <small>(nav-tabs-right)</small></h4>*@
+                    <div class="row">
+                        <div class="col-7 col-sm-9">
+                            <div class="tab-content" id="vert-tabs-right-tabContent">
+                                <div class="tab-pane fade show active" id="vert-tabs-right-home" role="tabpanel"
+                                     aria-labelledby="vert-tabs-right-home-tab">
+                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin malesuada lacus ullamcorper dui
+                                    molestie, sit amet congue quam finibus. Etiam ultricies nunc non magna feugiat commodo. Etiam odio
+                                    magna, mollis auctor felis vitae, ullamcorper ornare ligula. Proin pellentesque tincidunt nisi,
+                                    vitae ullamcorper felis aliquam id. Pellentesque habitant morbi tristique senectus et netus et
+                                    malesuada fames ac turpis egestas. Proin id orci eu lectus blandit suscipit. Phasellus porta, ante
+                                    et varius ornare, sem enim sollicitudin eros, at commodo leo est vitae lacus. Etiam ut porta sem.
+                                    Proin porttitor porta nisl, id tempor risus rhoncus quis. In in quam a nibh cursus pulvinar non
+                                    consequat neque. Mauris lacus elit, condimentum ac condimentum at, semper vitae lectus. Cras
+                                    lacinia erat eget sapien porta consectetur.
+                                </div>
+                                <div class="tab-pane fade" id="vert-tabs-right-profile" role="tabpanel"
+                                     aria-labelledby="vert-tabs-right-profile-tab">
+                                    Mauris tincidunt mi at erat gravida, eget tristique urna bibendum. Mauris pharetra purus ut ligula
+                                    tempor, et vulputate metus facilisis. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                    Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Maecenas
+                                    sollicitudin, nisi a luctus interdum, nisl ligula placerat mi, quis posuere purus ligula eu
+                                    lectus. Donec nunc tellus, elementum sit amet ultricies at, posuere nec nunc. Nunc euismod
+                                    pellentesque diam.
+                                </div>
+                                <div class="tab-pane fade" id="vert-tabs-right-messages" role="tabpanel"
+                                     aria-labelledby="vert-tabs-right-messages-tab">
+                                    Morbi turpis dolor, vulputate vitae felis non, tincidunt congue mauris. Phasellus volutpat augue
+                                    id mi placerat mollis. Vivamus faucibus eu massa eget condimentum. Fusce nec hendrerit sem, ac
+                                    tristique nulla. Integer vestibulum orci odio. Cras nec augue ipsum. Suspendisse ut velit
+                                    condimentum, mattis urna a, malesuada nunc. Curabitur eleifend facilisis velit finibus tristique.
+                                    Nam vulputate, eros non luctus efficitur, ipsum odio volutpat massa, sit amet sollicitudin est
+                                    libero sed ipsum. Nulla lacinia, ex vitae gravida fermentum, lectus ipsum gravida arcu, id
+                                    fermentum metus arcu vel metus. Curabitur eget sem eu risus tincidunt eleifend ac ornare magna.
+                                </div>
+
+                                <div class="callout callout-danger tab-pane fade" id="vert-tabs-right-settings" role="tabpanel"
+                                    aria-labelledby="vert-tabs-right-settings-tab">
+                                    <h5>I am a danger callout!</h5>
+                                    <p>
+                                        There is a problem that we need to fix. A wonderful serenity has taken possession of my entire
+                                        soul,
+                                        like these sweet mornings of spring which I enjoy with my whole heart.
+                                    </p>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="col-5 col-sm-3">
+                            <div class="nav flex-column nav-tabs nav-tabs-right h-100" id="vert-tabs-right-tab" role="tablist"
+                                 aria-orientation="vertical">
+                                <a class="nav-link active" id="vert-tabs-right-home-tab" data-toggle="pill"
+                                   href="#vert-tabs-right-home" role="tab" aria-controls="vert-tabs-right-home"
+                                   aria-selected="true">Home</a>
+                                <a class="nav-link" id="vert-tabs-right-profile-tab" data-toggle="pill"
+                                   href="#vert-tabs-right-profile" role="tab" aria-controls="vert-tabs-right-profile"
+                                   aria-selected="false">Profile</a>
+                                <a class="nav-link" id="vert-tabs-right-messages-tab" data-toggle="pill"
+                                   href="#vert-tabs-right-messages" role="tab" aria-controls="vert-tabs-right-messages"
+                                   aria-selected="false">Messages</a>
+                                <a class="nav-link" id="vert-tabs-right-settings-tab" data-toggle="pill"
+                                   href="#vert-tabs-right-settings" role="tab" aria-controls="vert-tabs-right-settings"
+                                   aria-selected="false">Settings</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.card -->
+            </div>
+
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    { }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
+        JSHelper.InvokeVoidAsync("InjectDataTable");
+        JSHelper.InvokeVoidAsync("InjectBootstrapSwitch");
+        JSHelper.InvokeVoidAsync("InjectFormValidate");
+    }
+
+    public void DisplayResult(DateRange range)
+    {
+        //JSHelper.InvokeVoidAsync("console.log", range.Start, range.End);
+        var lstRangeDate = DateTimeHelper.DateTime2StringRange(range.Start.DateTime, range.End.DateTime);
+        //JSHelper.InvokeVoidAsync("console.log", lstRangeDate);
+        //JSHelper.InvokeVoidAsync("console.log", lstRangeDate.ToArray());
+        JSHelper.InvokeVoidAsync("RenderAreaChartLayout", lstRangeDate);
+    }
+
+    protected async Task ViewPhoto(string type)
+    {
+        await JSHelper.InvokeVoidAsync("Swal.fire", new
+        {
+            title = type == "layout" ? "Bản vẽ mặt bằng" : "Hình ảnh thực tế",
+            //text= "Modal with a custom image.",
+            imageUrl = type == "layout" ?
+        "https://kientrucsuvietnam.vn/wp-content/uploads/2016/04/thiet-ke-nha-dep-tu-van-thiet-ke-nha-pho-5x11m-2-tang-2.jpg" :
+        "https://unsplash.it/400/200",
+            imageWidth = 400,
+            imageHeight = 200,
+            imageAlt = "Custom image",
+        });
+    }
+}

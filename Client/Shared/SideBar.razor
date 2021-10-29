@@ -1,0 +1,161 @@
+@inject NavigationManager navigationHelper
+@inject IJSRuntime JSHelper
+<!-- Main Sidebar Container -->
+<aside class="main-sidebar sidebar-light-cyan elevation-4 position-fixed">
+    <!-- Brand Logo -->
+    <a href="#" class="brand-link" style="background-color:white;">
+        <img src="public/img/daikin-logo.png" alt="Daikin-Logo" class="brand-image-xl logo-xl"
+            style="max-width: 206px;max-height: 206px;">
+        <img src="public/img/daikin-logo-square.png" alt="Daikin-Logo" class="brand-image-xs logo-xs"
+            style="max-width: 43px;max-height: 43px;">
+        <span class="brand-text font-weight-light">.</span>
+    </a>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <!-- Sidebar user panel -->
+        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+            <div class="image">
+                <img src="AdminLte/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+            </div>
+            <div class="info user-select-none">
+                <a class="d-block" @onclick=@(() => { SelectMenu("profile"); })>System Admin</a>
+            </div>
+        </div>
+
+        <!-- Sidebar Menu -->
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                <!-- Add icons to the links using the .nav-icon class
+    with font-awesome or any other icon font library -->
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("dashboard","active")" @onclick=@(() =>
+                        SelectMenu("dashboard"))>
+                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            DASHBOARD
+                            @*<i class="right fas fa-angle-left"></i>*@
+                        </p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("device","active")" @onclick=@(() => SelectMenu("device"))>
+                        <i class="nav-icon fas fa-eye"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            DEVICE LISTING
+                        </p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("schedule","active")" @onclick=@(() =>
+                        SelectMenu("schedule"))>
+                        <i class="nav-icon fas fa-building"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            SCHEDULE PROFILES
+                        </p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("daily","active")" @onclick=@(() => SelectMenu("daily"))>
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            ENERGY DAILY USE
+                        </p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("users","active")" @onclick=@(() => SelectMenu("users"))>
+                        <i class="nav-icon fas fa-users"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            USERS MANAGEMENT
+                        </p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("logs","active")" @onclick=@(() => SelectMenu("logs"))>
+                        <i class="nav-icon fas fa-history"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            HISTORY LOGS
+                        </p>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+        <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+</aside>
+
+@code {
+    Dictionary<string, string> menuPaths = new Dictionary<string, string>()
+{
+{"dashboard","/dashboard"}, {"device","/device"} , {"schedule", "/schedule"}, {"daily", "/daily"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}
+};
+
+    string currentMenu = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentMenu = navigationHelper.ToBaseRelativePath(navigationHelper.Uri);
+        //if (currentMenu == string.Empty) SelectMenu("dashboard");
+        if (currentMenu == string.Empty) navigationHelper.NavigateTo("/device");
+
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+    }
+    void SelectMenu(string menu)
+    {
+        try
+        {
+            currentMenu = menu;
+            navigationHelper.NavigateTo(menuPaths[currentMenu]);
+        }
+        catch (Exception exp)
+        { }
+    }
+
+    bool isMenuDashboardOpen = false;
+    private string ToogleMenu(string menu, string cssPath)
+    {
+        isMenuDashboardOpen = !isMenuDashboardOpen;
+        if (isMenuDashboardOpen)
+        {
+            try
+            {
+                if (currentMenu == menu) return cssPath;
+                else return "";
+
+            }
+            catch (Exception exp)
+            { return ""; }
+        }
+        else
+        {
+            return "";
+        }
+
+    }
+
+    private string CheckActiveStatus(string menu, string cssPath)
+    {
+        try
+        {
+            if (currentMenu == menu) return cssPath;
+            else return "";
+        }
+        catch (Exception exp)
+        { return ""; }
+    }
+}

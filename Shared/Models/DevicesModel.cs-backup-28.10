@@ -1,0 +1,160 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections;
+
+
+namespace SmartRetail.Share.Models
+{
+    public class DeviceParaListTransfer
+    {
+        public int DeviceId { get; set; }
+        public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>();
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class DeviceModel : BaseNotifyModel
+    {
+        #region Local define 
+        //-- Local using ---------
+        bool _IsSelect = false;
+        string _RoomName = "";
+        string _LocationName = "";
+        //------------------------
+
+        int _Id = 0;
+        string _Name;
+        bool _IsConnect = false;
+        string _DataSourceId = "";
+        long _LastUpdate = 0;
+        int _RoomId = 0;
+        Dictionary<string, string> _DataSourcePara = new Dictionary<string, string>();
+        Dictionary<string, string> _Status = new Dictionary<string, string>();
+        string _DeviceType;
+        int _CurPriority;
+        string _DrStatus;
+        string _Capabilitie;
+
+        #endregion
+        public DeviceModel()
+        {
+
+        }
+
+        public void CopyObj(DeviceModel dev)
+        {
+            IsSelect = dev.IsSelect;
+            if (RoomName != dev.RoomName) RoomName = dev.RoomName;
+            if (LocationName != dev.LocationName) LocationName = dev.LocationName;
+            if (DrStatus != dev.DrStatus) DrStatus = dev.DrStatus;
+            CurPriority = dev.CurPriority;
+            if (Name != dev.Name) Name = dev.Name;
+            IsConnect = dev.IsConnect;
+            DataSourceId = dev.DataSourceId;
+            LastUpdate = dev.LastUpdate;
+            SectionId = dev.SectionId;
+            DataSourcePara = dev.DataSourcePara;
+            foreach (var st in dev.Status)
+            {
+                if (Status[st.Key] != st.Value) Status[st.Key] = st.Value;
+            }
+
+            Status = dev.Status;
+            DeviceType = dev.DeviceType;
+            Capabilitie = dev.Capabilitie;
+        }
+
+        #region For Local Using
+        // Using for internal Using.
+        public bool IsSelect
+        {
+            get { return _IsSelect; }
+            set { SetProperty(ref _IsSelect, value); }
+        }
+        public string RoomName
+        {
+            get { return _RoomName; }
+            set { SetProperty(ref _RoomName, value); }
+        }
+        public string LocationName
+        {
+            get { return _LocationName; }
+            set { SetProperty(ref _LocationName, value); }
+        }
+        public string DrStatus
+        {
+            get { return _DrStatus; }
+            set { SetProperty(ref _DrStatus, value); }
+        }
+        public int CurPriority
+        {
+            get { return _CurPriority; }
+            set { SetProperty(ref _CurPriority, value); }
+        }
+        #endregion
+
+        [JsonProperty]
+        public int Id
+        {
+            get { return _Id; }
+            set { SetProperty(ref _Id, value); }
+        }
+        [JsonProperty]
+        public string Name
+        {
+            get { return _Name; }
+            set { SetProperty(ref _Name, value); }
+        }
+        [JsonProperty]
+        public bool IsConnect
+        {
+            get { return _IsConnect; }
+            set { SetProperty(ref _IsConnect, value); }
+        }
+        [JsonProperty]
+        public string DataSourceId
+        {
+            get { return _DataSourceId; }
+            set { SetProperty(ref _DataSourceId, value); }
+        }
+        [JsonProperty]
+        public long LastUpdate
+        {
+            get { return _LastUpdate; }
+            set { SetProperty(ref _LastUpdate, value); }
+        }
+        [JsonProperty]
+        public int SectionId
+        {
+            get { return _RoomId; }
+            set { SetProperty(ref _RoomId, value); }
+        }
+        [JsonProperty]
+        public Dictionary<string, string> DataSourcePara
+        {
+            get { return _DataSourcePara; }
+            set { SetProperty(ref _DataSourcePara, value); }
+        }
+        [JsonProperty]
+        public Dictionary<string, string> Status
+        {
+            get { return _Status; }
+            set { SetProperty(ref _Status, value); }
+        }
+        [JsonProperty]
+        public string DeviceType
+        {
+            get { return _DeviceType; }
+            set { SetProperty(ref _DeviceType, value); }
+        }
+
+        [JsonProperty]
+        public string Capabilitie
+        {
+            get { return _Capabilitie; }
+            set { SetProperty(ref _Capabilitie, value); }
+        }
+
+    }
+}

@@ -1,0 +1,22 @@
+
+[class*="sidebar-light-"] .nav-sidebar > .nav-item > .nav-link.active,
+[class*="sidebar-dark-"] .nav-sidebar > .nav-item > .nav-link.active,
+[class*="sidebar-light-"] .nav-treeview > .nav-item > .nav-link.active,
+[class*="sidebar-light-"] .nav-treeview > .nav-item > .nav-link.active:hover {
+  color: rgb(0, 183, 255);
+  background-color: white;
+}
+
+[class*="sidebar-light-"] .sidebar a,
+[class*="sidebar-light-"] .nav-treeview > .nav-item > .nav-link,
+[class*="sidebar-light-"] .brand-link .brand-text {
+    color: white;
+}
+
+.sidebar {
+  background-color: #0097e0;
+}
+
+aside {
+  background-color: #0097e0;
+}

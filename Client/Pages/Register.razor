@@ -1,0 +1,154 @@
+﻿@page "/register"
+@layout LoginLayout
+@inject NavigationManager NavHelper
+@* @inject IdentityAuthenticationStateProvider authStateProvider *@
+@inject IJSRuntime JSHelper
+@using SmartRetail.Services
+@using Share.Models
+
+
+<p class="login-box-msg">Register a new membership</p>
+<form autocomplete="off"
+      @ref="elFormRegister"
+      class="needs-validation"
+      novalidate>
+
+    <div class="input-group mb-3">
+        <input type="text" 
+               class="form-control" 
+               placeholder="Username" 
+               @bind-value="NewUserParam.UserName"
+               autocomplete="nope" />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-user"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mb-3">
+        <input type="password" 
+               @bind-value="NewUserParam.Password" 
+               class="form-control" 
+               placeholder="Password"
+               autocomplete="new-password" />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-lock"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mb-3">
+        <input type="password" 
+               class="form-control" 
+               placeholder="Retype password"
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-lock"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mb-3">
+        <input @bind-value="NewUserParam.Email" 
+               type="email" 
+               class="form-control" 
+               placeholder="Email" />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-envelope"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mb-3">
+        <input @bind-value="NewUserParam.PhoneNumber" 
+               type="text" 
+               class="form-control"
+               placeholder="Phone Number" />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-phone"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mb-3">
+        <input @bind-value="NewUserParam.Company" 
+               type="text" 
+               class="form-control" 
+               placeholder="Company" />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-building"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mb-3">
+        <input @bind-value="NewUserParam.Location" 
+               type="text" 
+               class="form-control"
+               placeholder="Department" />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-location-arrow"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <button type="button" 
+                    class="btn btn-primary btn-block"
+                    @onclick="OnSubmitRegisterHandle" >
+                Create account
+            </button>
+        </div>
+    </div>
+</form>
+
+<a href="login" class="text-center">I already have a membership</a>
+
+
+@functions {
+    UserInforTransfer NewUserParam = new UserInforTransfer();
+    ElementReference elFormRegister, elCurrentSingleSelectBox;
+    UserService svUser = new UserService();
+
+    //RegisterParameters registerParameters { get; set; } = new RegisterParameters();
+    string error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    }
+
+    async Task OnSubmitRegisterHandle()
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormRegister);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        error = null;
+        try
+        {
+            await svUser.CreateNewUser(NewUserParam);
+
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "success" });
+            NavHelper.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "error", text = error });
+        }
+    }
+}

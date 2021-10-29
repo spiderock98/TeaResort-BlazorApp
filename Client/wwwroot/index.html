@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Daikin TEA RESORT</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="SmartRetail.Client.styles.css" rel="stylesheet" />
+    <link href="manifest.json" rel="manifest" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="AdminLte/plugins/fontawesome-free/css/all.min.css" />
+
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" />
+
+    <!-- Customize -->
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="AdminLte/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- overlayScrollbars -->
+    <!--<link rel="stylesheet" href="AdminLte/plugins/overlayScrollbars/css/OverlayScrollbars.css" />-->
+    <!-- BlazorDateRangePicker -->
+    <link rel="stylesheet" href="_content/BlazorDateRangePicker/daterangepicker.min.css" />
+    <!-- DataTables -->
+    <link rel="stylesheet" href="AdminLte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="AdminLte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="AdminLte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+    <!-- bootstrap slider -->
+    <!-- <link rel="stylesheet" href="AdminLte/plugins/bootstrap-slider/css/bootstrap-slider.min.css"> -->
+
+    <!-- BootstrapSelect -->
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+
+    <!-- summernote -->
+    <link rel="stylesheet" href="AdminLte/plugins/summernote/summernote-bs4.min.css" />
+
+    <!-- Bootstrap Table -->
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.css" />
+
+
+    <!-- Theme style -->
+    <link rel="stylesheet" href="AdminLte/dist/css/adminlte.min.css" />
+
+</head>
+
+<body>
+    <div id="app">Đang tải trang...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <style>
+        .new-version-toast {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            background-color: darkturquoise;
+            padding: 10px;
+            margin: 10px 30px;
+            box-shadow: 9px 5px 5px grey;
+            position: absolute;
+            bottom: 0px;
+            width: 400px;
+        }
+    </style>
+    <script>
+        const bc = new BroadcastChannel('blazor-channel');
+        bc.onmessage = function (message) {
+            if (message && message.data == "new-version-found") {
+                console.info("A new version was found");
+
+                let label = document.createElement("label");
+                label.textContent = "A new version was found";
+
+                let updateButton = document.createElement("button");
+                updateButton.textContent = "Reload now";
+                updateButton.addEventListener('click', () => {
+                    console.log("Updating to new version");
+                    bc.postMessage("skip-waiting");
+                });
+
+                let newVersionToast = document.createElement("div");
+                newVersionToast.className = "new-version-toast";
+                newVersionToast.appendChild(label);
+                newVersionToast.appendChild(updateButton);
+
+                document.getElementsByTagName("body")[0].appendChild(newVersionToast);
+            } else if (message && message.data == "reload-page") {
+                console.info("Reloading page");
+                window.location.href = window.location.href
+            }
+        }
+    </script>
+    <script>
+        navigator.serviceWorker.register("service-worker.js");
+    </script>
+
+    <!-- jQuery -->
+    <script src="AdminLte/plugins/jquery/jquery.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="AdminLte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- overlayScrollbars -->
+    <!--<script src="AdminLte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>-->
+    <!-- jQuery UI 1.11.4 -->
+    <script src="AdminLte/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- ChartJS -->
+    <script src="AdminLte/plugins/chart.js/Chart.min.js"></script>
+
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+
+
+    <!-- Customize Script -->
+    <!-- Select2 -->
+    <script src="AdminLte/plugins/select2/js/select2.full.min.js"></script>
+    <!-- InputMask -->
+    <!--<script src="AdminLte/plugins/moment/moment.min.js"></script>
+    <script src="AdminLte/plugins/inputmask/jquery.inputmask.min.js"></script>-->
+    <!-- BlazorDateRangePicker -->
+    <script src="_content/BlazorDateRangePicker/clickAndPositionHandler.js"></script>
+    <!-- DataTables  & Plugins -->
+    <script src="AdminLte/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="AdminLte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="AdminLte/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="AdminLte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+    <script src="AdminLte/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="AdminLte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+    <script src="AdminLte/plugins/jszip/jszip.min.js"></script>
+    <script src="AdminLte/plugins/pdfmake/pdfmake.min.js"></script>
+    <script src="AdminLte/plugins/pdfmake/vfs_fonts.js"></script>
+    <script src="AdminLte/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+    <script src="AdminLte/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+    <script src="AdminLte/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+    <!-- Bootstrap slider -->
+    <!-- <script src="AdminLte/plugins/bootstrap-slider/bootstrap-slider.min.js"></script> -->
+    <!-- Bootstrap Switch -->
+    <script src="AdminLte/plugins/bootstrap-switch/js/bootstrap-switch.min.js"></script>
+    <!-- Swal2 -->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SelectBootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+
+    <!-- Summernote -->
+    <script src="AdminLte/plugins/summernote/summernote-bs4.min.js"></script>
+
+    <!-- Bootstrap Table -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.18.3/dist/bootstrap-table.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/tableExport.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF/jspdf.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
+    <script
+        src="https://unpkg.com/bootstrap-table@1.18.3/dist/extensions/export/bootstrap-table-export.min.js"></script>
+    <script
+        src="https://unpkg.com/bootstrap-table@1.18.3/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
+
+
+    <!-- Custom Interop -->
+    <script src="scripts/interop.js"></script>
+
+    <!-- AdminLTE App -->
+    <script src="AdminLte/dist/js/adminlte.js"></script>
+
+</body>
+
+</html>

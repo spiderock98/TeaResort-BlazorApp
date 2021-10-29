@@ -1,0 +1,113 @@
+﻿@page "/login"
+@layout LoginLayout
+@inject NavigationManager navigationManager
+@*@inject IdentityAuthenticationStateProvider authStateProvider*@
+@inject IJSRuntime JSHelper
+@using SmartRetail.Services
+@using Newtonsoft.Json
+@using Share.Models
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+
+
+<p class="login-box-msg">Sign in to start your session</p>
+<form @ref="elFormNewLogin"
+      class="needs-validation"
+      novalidate>
+    <div class="input-group mb-3">
+        <input type="text"
+               @bind-value="NewUserParameter.User"
+               class="form-control"
+               placeholder="Username"
+               required
+               autofocus />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-user"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group mb-3">
+        <input type="password"
+               class="form-control"
+               @bind-value="NewUserParameter.Password"
+               placeholder="Password"
+               required />
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-lock"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <button type="button"
+                    class="btn btn-primary btn-block"
+                    @onclick="OnSubmitLogInHandle">
+                Sign In
+            </button>
+        </div>
+    </div>
+</form>
+
+<p class="mb-0">
+    <a href="register" class="text-center">Create new account</a>
+</p>
+
+
+
+@code {
+    string error { get; set; }
+    UserService svUser = new UserService();
+    CloudUser NewUserParameter = new CloudUser();
+    ElementReference elFormNewLogin, elCurrentSingleSelectBox;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    }
+
+    async Task OnSubmitLogInHandle()
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormNewLogin);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        error = null;
+        try
+        {
+            var response = await svUser.Login(NewUserParameter.User, NewUserParameter.Password) ?? "";
+            ResultModel objResult = (ResultModel)JsonConvert.DeserializeObject(response, typeof(ResultModel));
+            var _TOKEN = objResult.Token ?? "";
+            if ((_TOKEN.Length > 90) && (_TOKEN.Length < 130))
+            {
+                await JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Access Granted", false);
+                await LocalStorage.SetItemAsync("token", _TOKEN);
+
+                NavHelper.NavigateTo("/dashboard");
+            }
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            navigationManager.NavigateTo("/schedule");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "error", text = error });
+        }
+    }
+
+    class ResultModel
+    {
+        public string Token;
+        public string Error;
+        public ResultModel() { }
+    }
+}

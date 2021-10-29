@@ -1,0 +1,245 @@
+﻿@page "/dashboard"
+@using BlazorDateRangePicker
+@using Helper
+@inject IJSRuntime JSHelper
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Dashboard</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+
+                <div class="col-lg-6 col-12">
+
+                    <div class="row">
+                        <div class="col-6">
+                            <!-- small box -->
+                            <div class="small-box bg-success">
+                                <div class="inner">
+                                    <h3>546</h3>
+                                    <p>Total Devices</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="ion ion-usb"></i>
+                                </div>
+                                <a href="#" class="small-box-footer">More info <i
+                                        class="fas fa-arrow-circle-right"></i></a>
+                            </div>
+                        </div>
+
+                        <!-- ./col -->
+                        <div class="col-6">
+                            <!-- small box -->
+                            <div class="small-box bg-danger">
+                                <div class="inner">
+                                    <h3>53</h3>
+                                    <p>Failure Devices</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="ion ion-alert"></i>
+                                </div>
+                                <a href="#" class="small-box-footer">More info <i
+                                        class="fas fa-arrow-circle-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- ./col -->
+                        <div class="col-6">
+                            <!-- small box -->
+                            <div class="small-box bg-warning">
+                                <div class="inner">
+                                    <h3>8345<sup style="font-size: 20px">kW</sup></h3>
+                                    <p>Current Power</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="ion ion-power"></i>
+                                </div>
+                                <a href="#" class="small-box-footer">More info <i
+                                        class="fas fa-arrow-circle-right"></i></a>
+                            </div>
+                        </div>
+
+                        <!-- ./col -->
+                        <div class="col-6">
+                            <!-- small box -->
+                            <div class="small-box bg-info">
+                                <div class="inner">
+                                    <h3>178567<sup style="font-size: 20px">kW.h</sup></h3>
+                                    <p>Total Engergy Used</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="ion ion-flash"></i>
+                                </div>
+                                <a href="#" class="small-box-footer">More info <i
+                                        class="fas fa-arrow-circle-right"></i></a>
+                            </div>
+                        </div>
+                        <!-- ./col -->
+                    </div>
+
+                </div>
+
+                <div class="col-lg-6 col-12">
+
+                    <!-- PIE CHART -->
+                    <div class="card card-primary">
+                        @*<div class="card-header">
+                            <h2 class="card-title">Pie Chart</h2>
+                            </div>*@
+                        <div class="card-body">
+                            <canvas id="pieChart"
+                                style="min-height: 264px; height: 264px; max-height: 264px; max-width: 100%;"></canvas>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+
+                </div>
+            </div>
+            <!-- /.row -->
+
+            <div class="row">
+
+                <!-- Date range -->
+                <div class="form-group col-6">
+                    <label>
+                        <i class="far fa-calendar-alt"></i>
+                        Date Range
+                    </label>
+                    <div class="input-group">
+                        <DateRangePicker class="form-control" 
+                                         OnRangeSelect="DisplayResult"
+                                         Opens="SideType.Center" />
+                    </div>
+                    <!-- /.input group -->
+                </div>
+
+                <div class="form-group col-6">
+                    <label>
+                        <i class="fas fa-map-marker-alt"></i>
+                        Area
+                    </label>
+                    <div class="input-group ">
+                        <select title="-- Select --"
+                                data-style="btn-light"
+                                class="form-control selectpicker">
+                            <option>TP. Hồ Chí Minh</option>
+                            <option>Hà Nội</option>
+                            <option>Hải Phòng</option>
+                            <option>Đà Nẵng</option>
+                            <option>Hội An</option>
+                            <option>Nha Trang</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group col-6">
+                    <label>
+                        <i class="fas fa-city"></i>
+                        Zone
+                    </label>
+                    <div class="input-group ">
+                        <select title="-- Select --"
+                                data-style="btn-light"
+                                class="form-control selectpicker">
+                            <option>Biệt thự 1</option>
+                            <option>Biệt thự 2</option>
+                            <option>Biệt thự 3</option>
+                            <option>Biệt thự 4</option>
+                            <option>Biệt thự 5</option>
+                            <option>Biệt thự 6</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group col-6">
+                    <label>
+                        <i class="fas fa-store"></i>
+                        Room
+                    </label>
+                    <div class="input-group ">
+                        <select title="-- Select --"
+                                data-style="btn-light"
+                                class="form-control selectpicker">
+                            <option>Tầng Trệt</option>
+                            <option>Tầng 1</option>
+                            <option>Tầng 2</option>
+                            <option>Tầng 3</option>
+                            <option>Tầng 4</option>
+                            <option>Tầng 5</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card card-primary">
+                @*<div class="card-header">
+                    <h3 class="card-title">Area Chart</h3>
+
+                    <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                    <i class="fas fa-times"></i>
+                    </button>
+                    </div>
+                    </div>*@
+
+                <div class="card-body">
+                    <div class="chart">
+                        <canvas id="areaChart"
+                            style="min-height: 350px; height: 350px; max-height: 350px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+        JSHelper.InvokeVoidAsync("RenderPieChartLayout");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
+        JSHelper.InvokeVoidAsync("RenderAreaChartLayout", DateTimeHelper.DateTime2StringRange(DateTime.Now,
+DateTime.Now.AddDays(6)));
+    }
+
+    public void DisplayResult(DateRange range)
+    {
+        //JSHelper.InvokeVoidAsync("console.log", range.Start, range.End);
+        var lstRangeDate = DateTimeHelper.DateTime2StringRange(range.Start.DateTime, range.End.DateTime);
+        //JSHelper.InvokeVoidAsync("console.log", lstRangeDate);
+        //JSHelper.InvokeVoidAsync("console.log", lstRangeDate.ToArray());
+        JSHelper.InvokeVoidAsync("RenderAreaChartLayout", lstRangeDate);
+    }
+}

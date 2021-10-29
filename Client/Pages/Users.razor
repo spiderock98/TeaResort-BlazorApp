@@ -1,0 +1,503 @@
+﻿@page "/users"
+@using Share.Models
+@using SmartRetail.Services
+@inject NavigationManager NavHelper
+@using System.Collections
+@using Helper
+@inject IJSRuntime JSHelper
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+
+<div class="content-wrapper">
+
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Users</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <div class="card card-info card-outline card-outline-tabs">
+                <div class="card-header p-0 border-bottom-0">
+                    <ul class="nav nav-tabs justify-content-end" id="custom-tabs-four-tab" role="tablist">
+                        @*<li class="nav-item">
+                            <button type="button"
+                                    class="btn btn-outline-success p-2"
+                                    data-toggle="modal"
+                                    data-target="#mdAddNewUserInfo"
+                                    @onclick="RegisterUserShow">
+                                <i class="fas fa-plus-circle"></i>
+                                ADD USER
+                            </button>
+                        </li>*@
+                    </ul>
+                </div>
+
+
+                <div class="card-body">
+
+                    <table id="table"
+                           data-search="true"
+                           data-show-export="true"
+                           data-search-align="right"
+                           data-buttons-align="right">
+                        <thead>
+                            <tr>
+                                <th class="text-center">No.</th>
+                                <th class="text-center">FULL NAME</th>
+                                <th class="text-center">EMAIL</th>
+                                <th class="text-center">ROLE</th>
+                                <th class="text-center">ENABLED</th>
+                                <th class="text-center">EDIT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int idx = 0;
+                                @if (ListUserInfo != null)
+                                {
+                                    foreach (var _user in ListUserInfo)
+                                    {
+                                        <tr class="text-center">
+                                            <th>@(++idx)</th>
+                                            <td>@_user.Infor.UserName</td>
+                                            <td>@_user.Infor.Email</td>
+                                            <td>@string.Join("-", _user.Roles)</td>
+                                            @{
+                                                if (_user.IsActive)
+                                                {
+                                                    <td class="text-success">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td class="text-danger">
+                                                        <i class="fas fa-times-circle"></i>
+                                                    </td>
+                                                }
+                                            }
+
+                                            <td>
+                                                <button class="btn btn-sm btn-primary"
+                                                        data-toggle="modal"
+                                                        data-target="#mdEditUserInfo"
+                                                        @onclick="() => PreEditOrDelete(_user)">
+                                                    <i class="far fa-edit"></i>
+                                                    EDIT
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+
+                            }
+
+                        </tbody>
+                    </table>
+
+                </div>
+                <!-- /.card -->
+            </div>
+
+            @* Modal Add NEW User *@
+            @*<div class="modal fade" id="mdAddNewUserInfo" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content bg-light">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Add New User</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+                            <form id="mdNewUser"
+                                  autocomplete="off">
+                                <DataAnnotationsValidator />
+                                <div class="form-row">
+                                    <div class="form-group col-12 col-lg-4">
+                                        <label>
+                                            User Name
+                                        </label>
+                                        <InputText @bind-Value="registerParameters.UserName" class="form-control" type="text" autocomplete="nope" />
+                                        <ValidationMessage For=@(() => registerParameters.UserName) />
+                                    </div>
+
+                                    <div class="form-group col-12 col-lg-4">
+                                        <label>
+                                            Password
+                                        </label>
+                                        <InputText @bind-Value="registerParameters.Password" class="form-control" type="password" autocomplete="new-password" />
+                                        <ValidationMessage For=@(() => registerParameters.Password) />
+                                    </div>
+
+                                    <div class="form-group col-12 col-lg-4">
+                                        <label>
+                                            Password Confirmation
+                                        </label>
+                                        <InputText @bind-Value="registerParameters.PasswordConfirm" class="form-control" type="password" />
+                                        <ValidationMessage For=@(() => registerParameters.PasswordConfirm) />
+
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Email
+                                        </label>
+                                        <InputText @bind-Value="registerParameters.Email" class="form-control" type="email" />
+                                        <ValidationMessage For=@(() => registerParameters.Email) />
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Phone Number
+                                        </label>
+                                        <InputText @bind-Value="registerParameters.PhoneNumber" class="form-control" type="text" />
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Company
+                                        </label>
+                                        <InputText @bind-Value="registerParameters.Company" class="form-control" type="text" />
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Department
+                                        </label>
+                                        <InputText @bind-Value="registerParameters.Department" class="form-control" type="text" />
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="modal-footer justify-content-between">
+                            <button type="button" class="btn btn-outline-danger" data-dismiss="modal">
+                                CLOSE
+                            </button>
+                            <button type="submit" class="btn btn-outline-info" form="mdNewUser">CREATE ACCOUNT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>*@
+
+            @* Modal Edit User Info *@
+            <div class="modal fade" id="mdEditUserInfo" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content bg-light">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Edit User Infomation</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+                            <form @ref="currentEditForm"
+                                  id="formEditUserInfo"
+                                  class="needs-validation"
+                                  novalidate
+                                  autocomplete="off">
+                                <div class="form-row">
+                                    <div class="form-group col-12">
+                                        <label>
+                                            User Name
+                                        </label>
+                                        <input value="@_currentEditUser.UserName" 
+                                               class="form-control" 
+                                               type="text" 
+                                               autocomplete="nope" 
+                                               readonly>
+                                        <div class="invalid-feedback">
+                                            Please fill your User Name.
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Email
+                                        </label>
+                                        <input @bind-value="@_currentEditUser.Email" 
+                                               class="form-control" 
+                                               type="email" >
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Phone Number
+                                        </label>
+                                        <input @bind-value="@_currentEditUser.PhoneNumber" 
+                                               class="form-control" 
+                                               type="text">
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Company
+                                        </label>
+                                        <input @bind-value="@_currentEditUser.Company" 
+                                               class="form-control" 
+                                               type="text">
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>
+                                            Location
+                                        </label>
+                                        <input @bind-value="@_currentEditUser.Location" 
+                                               class="form-control" 
+                                               type="text">
+                                    </div>
+
+                                    <div class="form-group col-12">
+                                        <label>Roles</label>
+                                        <select @ref="elCurrentMutipleSelectBox"
+                                                @onchange="@(() => { SelectMultiAndBindRoles(FormAction
+                                                                 .Edit); })"
+                                                id="slEditFormRoles"
+                                                title="-- Select --"
+                                                data-style="btn-light"
+                                                class="form-control selectpicker"
+                                                multiple>
+                                            @foreach (var obj in Enum.GetValues(typeof(Role)))
+                                            {
+                                                var value = Enum.GetName(typeof(Role), obj);
+                                                var key = (int)obj;
+                                                <option value="@key">@value</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="modal-footer d-flex">
+                            <button type="button" class="mr-auto btn btn-outline-danger" data-dismiss="modal">
+                                Close
+                            </button>
+                            <button @onclick="DeleteUser" type="button" data-dismiss="modal" class="btn btn-danger">
+                                <i class="fas fa-user-slash"></i>
+                                DELETE USER
+                            </button>
+                            <button @onclick=@(() => { _currentEditUser.IsActive = !_currentEditUser.IsActive; SaveEdit(); }) type="button" data-dismiss="modal" class="btn btn-outline-warning">
+                                <i class="fas fa-user-slash"></i>
+                                @(_currentEditUser.IsActive ? "DISABLE USER" : "ENABLE USER")
+                            </button>
+                            <button @onclick=@(() => { SaveEdit(); }) type="button" class="btn btn-outline-info">
+                                Update User Info
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+@code {
+    ElementReference elChangeRoles, currentEditForm, elCurrentMutipleSelectBox;
+    //ElementReference elFormNewWorkerGroup, elCurrentFormEditWorkerGroup, elCurrentSingleSelectBox, elCurrentMutipleSelectBox;
+
+    List<Role> RoleList = new List<Role>() { Role.Admin, Role.Edit, Role.Excute, Role.Install, Role.Member, Role.View };
+    string error { get; set; } // for new user
+    List<CloudUser> ListUserInfo = new List<CloudUser>();
+    UserInforTransfer registerParameters { get; set; } = new UserInforTransfer(); // for new User
+    UserDataTransfer _currentEditUser = new UserDataTransfer();
+    CloudUser _crEditUserWithRole = new CloudUser() { Roles = new List<Role>() }; // this is just for set ROLE
+    UserService svUser = new UserService();
+    string AccessToken = "";
+    public enum FormAction { Add, Edit }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == "")
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login");
+        }
+        // check user auth role by get username then check in list 
+        //var authUser = await svUser.GetRoles(AccessToken);
+        //if (authUser.Contains(Role.Admin.ToString()) == false)
+        //{
+        //    JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Access Denied", false);
+        //    NavHelper.NavigateTo("/login");
+        //}
+        ListUserInfo = await svUser.GetUserListAsync(AccessToken);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+        //JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", , _currentEditUser.Roles);
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
+    }
+
+    private void PreEditOrDelete(CloudUser _user)
+    {
+        _currentEditUser = new UserDataTransfer()
+        {
+            UserName = _user.Infor.UserName,
+            Email = _user.Infor.Email,
+            Company = _user.Infor.Company,
+            Location = _user.Infor.Location,
+            PhoneNumber = _user.Infor.PhoneNumber,
+            IsActive = _user.IsActive,
+        };
+        _crEditUserWithRole.Roles = _user.Roles;
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditFormRoles", _crEditUserWithRole.Roles);
+    }
+
+    private async void SaveEdit()
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", currentEditForm);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+
+        if (!isFormValid) return;
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+
+        await svUser.SetRoles(_currentEditUser.UserName, _crEditUserWithRole.Roles, AccessToken);
+        await svUser.UpdateUser(_currentEditUser, AccessToken);
+        ListUserInfo = await svUser.GetUserListAsync(AccessToken);
+
+        JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "success" });
+        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditUserInfo", "hide");
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async void DeleteUser()
+    {
+        //JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        //await Http.Delete("/api/users/Delete?username=" + _currentEditUser.UserName);
+        //_currentEditUser = authStateProvider.UserInfo;
+        //ListUserInfo = await Http.Get<List<UserInfo>>("/api/users/AllUserInfo");
+        //JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+        //JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "success" });
+        //StateHasChanged();
+    }
+
+    //private async void RegisterUserShow()
+    //{
+    //    registerParameters = new RegisterParameters();
+    //    registerParameters.UserName = "NewUser_" + DateTime.Now.ToString("yyyyMMddHHmmss");
+    //    StateHasChanged();
+    //}
+
+    //private async void handleFormNewUser()
+    //{
+    //    JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+    //    error = null;
+    //    try
+    //    {
+    //        var result = await Http.Post("/api/users/Register", registerParameters);
+    //        if (result.IsSuccessStatusCode)
+    //        {
+    //            registerParameters = new RegisterParameters();
+    //            ListUserInfo = await Http.Get<List<UserInfo>>("/api/users/AllUserInfo");
+    //            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    //            JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "success" });
+
+    //            StateHasChanged();
+    //        }
+    //        else
+    //        {
+    //            error = await result.Content.ReadAsStringAsync();
+    //            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    //            JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "error", text = error });
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        error = ex.Message;
+    //        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    //        JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "error", text = error });
+    //    }
+    //}
+
+    private async void SelectMultiAndBindRoles(FormAction action)
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCurrentMutipleSelectBox);
+        var ParseEnumValue = (Role)int.Parse(_tmpSelectArr[0].ToString());
+        if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix 
+        var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
+        if (stateOfValue)
+        {
+            if (action == FormAction.Add)
+            {
+                if (!_crEditUserWithRole.Roles.Contains(ParseEnumValue))
+                {
+                    _crEditUserWithRole.Roles.Add(ParseEnumValue);
+                }
+            }
+            else if (action == FormAction.Edit)
+            {
+                if (!_crEditUserWithRole.Roles.Contains(ParseEnumValue))
+                {
+                    _crEditUserWithRole.Roles.Add(ParseEnumValue);
+                }
+            }
+        }
+        else
+        {
+            if (action == FormAction.Add)
+            {
+                if (_crEditUserWithRole.Roles.Contains(ParseEnumValue))
+                {
+                    _crEditUserWithRole.Roles.Remove(ParseEnumValue);
+                }
+            }
+            else if (action == FormAction.Edit)
+            {
+                if (_crEditUserWithRole.Roles.Contains(ParseEnumValue))
+                {
+                    _crEditUserWithRole.Roles.Remove(ParseEnumValue);
+                }
+            }
+        }
+    }
+
+    protected void displayResult(ChangeEventArgs e, string el)
+    {
+        Console.WriteLine(e.Value);
+
+        JSHelper.InvokeVoidAsync("displayChange", el);
+    }
+
+    public class Row
+    {
+        public string uID { get; set; }
+        public string Role { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+    }
+    List<Row> rows = new();
+
+    protected void addRow()
+    {
+        rows.Add(new Row() { uID = Guid.NewGuid().ToString("N") });
+    }
+
+}

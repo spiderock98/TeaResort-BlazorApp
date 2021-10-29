@@ -1,0 +1,1331 @@
+@* @page "/scheduleBack" *@
+@inject NavigationManager uriHelper
+@using BlazorDateRangePicker
+@using Helper
+@inject IJSRuntime JSHelper
+@using SmartRetail.Shared
+@using SmartRetail.Services
+@using Share.Models
+@using System.Collections
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+@using System
+
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Schedule Profiles</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <div class="card card-primary">
+                <div class="card-body">
+                    <button class="btn btn-success m-2"
+                            type="button"
+                            data-toggle="modal"
+                            data-target="#mdNewSchedule"
+                            @onclick="PreNew">
+                        Add New Schedule
+                    </button>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr class="text-center">
+                                    <th>No.</th>
+                                    <th>NAME</th>
+                                    <th>TYPE</th>
+                                    <th>TIME</th>
+                                    <th>ENABLE</th>
+                                    <th>IS SCRIPT</th>
+                                    <th>LAST RUN</th>
+                                    <th>CONTROL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int idx = 0;
+                                    foreach (var profile in LstSchedule)
+                                    {
+                                        <tr class="text-center">
+                                            <th>@(++idx)</th>
+                                            <td>@profile.Name</td>
+                                            @{
+                                                var enumValue = (GlobalScheduleModel.ScheduleTypeEnum)profile.ScheduleType;
+                                                <td>@enumValue.ToString()</td>
+                                            }
+                                            <td>@UnixTime.UnixSecondToLocalTime(profile.Time)</td>
+                                            @{ if (profile.Enable)
+                                                {
+                                                    <td>
+                                                        <span class="badge badge-pill badge-success">Enable</span>
+
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td>
+                                                        <span class="badge badge-pill badge-danger">Disable</span>
+
+                                                    </td>
+                                                }
+                                            }
+                                            <td>@profile.IsJavaScriptAction</td>
+                                            <td>@UnixTime.UnixMillisToLocalTimeFormat(profile.LastRunTime)</td>
+                                            <td>
+                                                <div class="d-flex flex-wrap">
+                                                    <button class="btn btn-xs btn-primary m-1"
+                                                            type="button"
+                                                            data-toggle="modal"
+                                                            data-target="#mdEditSchedule"
+                                                            @onclick=@(()=> { PreEdit(profile); })>
+                                                        <i class="fas fa-pen-alt"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-xs btn-danger m-1"
+                                                            @onclick=@(()=> { DeleteItemHandle(profile); })>
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+            <!-- Modal New Schedule -->
+            <div class="modal fade" id="mdNewSchedule" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">
+                                New Schedule Profile
+                            </h3>
+
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"
+                                    @onclick=@(() => { FormNewClose(); })>
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form @ref="elFormNewSchedule"
+                                  class="needs-validation"
+                                  id="formNewWorker"
+                                  novalidate>
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">Time Settings</legend>
+
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fas fa-info-circle"></i>
+                                            Schedule Name
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <input @bind-value="NewScheduleParams.Name"
+                                                   type="text"
+                                                   class="form-control"
+                                                   required />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fas fa-clock"></i>
+                                            Time Trigger
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <DateRangePicker class="form-control"
+                                                             SingleDatePicker="true"
+                                                             TimePicker="true"
+                                                             TimePicker24Hour="true"
+                                                             DateFormat="dddd dd/MM/yyyy - hh:mm tt"
+                                                             @bind-StartDate="crDatetimeBinding"
+                                                             required />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fab fa-slack-hash"></i>
+                                            Schedule Type
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <select @ref="elCurrentSingleSelectBox1"
+                                                    @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(elCurrentSingleSelectBox1); NewScheduleParams.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
+                                                    id="slNewScheduleType"
+                                                    title="-- Select --"
+                                                    data-style="btn-light"
+                                                    class="form-control selectpicker"
+                                                    required>
+                                                @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
+                                                {
+                                                    var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
+                                                    var key = (int)obj;
+                                                    <option value="@key">@value</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fas fa-redo"></i>
+                                            Repeats
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <select @ref="elCurrentMutipleSelectBox"
+                                                    @onchange=@(()=> { SelectAndBindMulti(FormAction.Add); })
+                                                    title="-- Select --"
+                                                    data-style="btn-light"
+                                                    class="form-control selectpicker"
+                                                    disabled=@(NewScheduleParams.ScheduleType==GlobalScheduleModel.ScheduleTypeEnum.IntervalTime ? false : true)
+                                                    multiple
+                                                    required=@(NewScheduleParams.ScheduleType==GlobalScheduleModel.ScheduleTypeEnum.IntervalTime ? false : true)>
+                                                @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
+                                                {
+                                                    var value = Enum.GetName(typeof(DayOfWeek), obj);
+                                                    var key = (int)obj;
+                                                    <option value="@key">@value</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">Attribute Trigger</legend>
+
+                                    <div class="row">
+                                        <button class="btn btn-sm btn-success m-3 btn-block"
+                                                type="button"
+                                                @onclick=@(() => { NewScheduleParams.Actions.Add(new RunningActionModel()); })>
+                                            <i class="fas fa-plus-circle"></i>
+                                            Add Actions
+                                        </button>
+                                    </div>
+
+                                    <div class="accordion" id="accordion">
+                                        @{
+                                            var _genNewItemId = NewScheduleParams.Actions.Select(r => new { objItem = r, idItem = Guid.NewGuid().ToString("N") }).ToList();
+                                            foreach (var it in _genNewItemId)
+                                            {
+                                                <div class="card">
+                                                    <div class="card-header" id="AccordionHeading-@it.idItem">
+                                                        <h2 class="mb-0 d-flex">
+                                                            <button class="flex-grow-1 btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse-@it.idItem">
+                                                                Actions | Single Device
+                                                                <span class="badge badge-pill badge-info">#@it.objItem?.DeviceId</span>
+                                                                @*<span class="badge badge-pill badge-info">@LstDevice.Where(r=>r.Id == it.objItem.DeviceId).FirstOrDefault()?.Name</span>*@
+
+                                                            </button>
+
+                                                            <button class="m-2 btn btn-xs btn-outline-danger"
+                                                                    type="button"
+                                                                    @onclick=@(()=> { NewScheduleParams.Actions.Remove(it.objItem); })>
+                                                                <i class="far fa-trash-alt"></i>
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapse-@it.idItem" class="collapse" data-parent="#accordion">
+                                                        <div class="card-body">
+
+                                                            <div class="row">
+
+                                                                <div class="form-group col-12 col-lg-4">
+                                                                    <label>
+                                                                        Single/Group Device
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                @ref="elCurrentSingleSelectBox1"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(elCurrentSingleSelectBox1); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(ActionGroupDeviceEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(ActionGroupDeviceEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-12 col-lg-8">
+                                                                    <label>
+                                                                        Trigger Device
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                data-live-search="true"
+                                                                                @ref="elCurrentSingleSelectBox1"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(elCurrentSingleSelectBox1); it.objItem.DeviceId = _tmpKey; })>
+                                                                            @foreach (var _dv in LstDevice)
+                                                                            {
+                                                                                <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <hr class="dotted">
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        AC Power
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                @ref="elCurrentSingleSelectBox1"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(elCurrentSingleSelectBox1); var _tmpName=(ACPowerEnum)_tmpKey; it.objItem.SetValues["ACPower"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(ACPowerEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(ACPowerEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        iTM AC Mode
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                @ref="elCurrentSingleSelectBox1"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(elCurrentSingleSelectBox1); var _tmpName=(itmACModeEnum)_tmpKey; it.objItem.SetValues["itmACMode"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(itmACModeEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(itmACModeEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Set Temp
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <input type="number"
+                                                                               step="0.01"
+                                                                               min="-200"
+                                                                               max="200"
+                                                                               placeholder="-200:200"
+                                                                               class="form-control"
+                                                                               @onchange=@((e)=> { it.objItem.SetValues["SetTemp"] = e.Value.ToString(); }) />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Fan Direct
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <input type="number"
+                                                                               step="1"
+                                                                               min="-1"
+                                                                               max="100"
+                                                                               placeholder="-1:100"
+                                                                               class="form-control"
+                                                                               @onchange=@((e)=> { it.objItem.SetValues["FanDirect"] = e.Value.ToString(); }) />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Fan Speed
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                @ref="elCurrentSingleSelectBox1"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(elCurrentSingleSelectBox1); var _tmpName=(FanSpeedEnum)_tmpKey; it.objItem.SetValues["FanSpeed"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(FanSpeedEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(FanSpeedEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+
+                                    </div>
+
+                                </fieldset>
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">
+                                        @*<input type="checkbox"
+                                                   class="custom-control-input"
+                                                    />
+                                            <label class="custom-control-label">Custom JavaScript Actions</label>*@
+
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox"
+                                                       id="swNewJsAction"
+                                                       @bind-value="NewScheduleParams.IsJavaScriptAction"
+                                                       class="custom-control-input">
+                                                <label class="custom-control-label"
+                                                       for="swNewJsAction">
+                                                    Custom JavaScript Actions
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        @*<input type="checkbox"
+                                            data-off-color="default"
+                                            data-on-color="success"
+                                            data-on-text="USE"
+                                            data-off-text="NOT USE"
+                                            @onchange=@((e) => {Console.WriteLine(e.Value); Console.WriteLine((bool)e.Value); NewScheduleParams.IsJavaScriptAction = (bool)e.Value; }) />*@
+
+                                    </legend>
+
+                                    @if (NewScheduleParams.IsJavaScriptAction)
+                                    {
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">
+                                                <i class="fas fa-user-edit"></i>
+                                                Custom JavaScript
+                                            </label>
+                                            <div class="col-sm-10">
+                                                <textarea class="summernote"
+                                                          required=@(NewScheduleParams.IsJavaScriptAction ? true : false)
+                                                          id="tbNewJsAction"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label"></label>
+                                            <div class="col-sm-10">
+                                                <div class="d-flex justify-content-center">
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <button type="button" class="btn btn-primary">
+                                                            Run
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-danger">
+                                                            Stop
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-primary">
+                                                            Reload Data
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-primary">
+                                                            Save
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-primary">
+                                                            Close
+                                                        </button>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label"></label>
+                                            <div class="col-sm-10">
+                                                <textarea class="summernote"
+                                                          id="tbNewJsDebug"></textarea>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-warning" role="alert">
+                                            Javascript Action is not in used
+                                        </div>
+                                    }
+
+                                </fieldset>
+
+                            </form>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                    data-dismiss="modal"
+                                    @onclick=@(() => { FormNewClose(); })>
+                                Close
+                            </button>
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    @onclick=@(() => { FormNewScheduleHandle(); })>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Edit Schedule -->
+            <div class="modal fade" data-backdrop="static" data-keyboard="false" id="mdEditSchedule" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">
+                                Edit Schedule
+                            </h3>
+
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"
+                                    @onclick=@(() => { FormEditClose(); })>
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form @ref="elFormEditSchedule"
+                                  class="needs-validation"
+                                  id="formEditWorker"
+                                  novalidate>
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">Time Settings</legend>
+
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fas fa-clock"></i>
+                                            Time Trigger
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <DateRangePicker class="form-control"
+                                                             SingleDatePicker="true"
+                                                             TimePicker="true"
+                                                             TimePicker24Hour="true"
+                                                             DateFormat="dddd dd/MM/yyyy - hh:mm tt"
+                                                             @bind-StartDate="crDatetimeBinding"
+                                                             required />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fab fa-slack-hash"></i>
+                                            Schedule Type
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <select @ref="elCurrentSingleSelectBox2"
+                                                    @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(elCurrentSingleSelectBox2); crEditSchedule.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
+                                                    id="slEditScheduleType"
+                                                    title="-- Select --"
+                                                    data-style="btn-light"
+                                                    class="form-control selectpicker"
+                                                    required>
+                                                @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
+                                                {
+                                                    var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
+                                                    var key = (int)obj;
+                                                    <option value="@key">@value</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fas fa-redo"></i>
+                                            Repeats
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <select title="-- Select --"
+                                                    data-style="btn-light"
+                                                    class="form-control selectpicker"
+                                                    id="slEditRepeat"
+                                                    disabled=@(crEditSchedule.ScheduleType==GlobalScheduleModel.ScheduleTypeEnum.IntervalTime ? false : true)
+                                                    multiple
+                                                    required=@(crEditSchedule.ScheduleType==GlobalScheduleModel.ScheduleTypeEnum.IntervalTime ? false : true)>
+                                                @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
+                                                {
+                                                    var value = Enum.GetName(typeof(DayOfWeek), obj);
+                                                    var key = (int)obj;
+                                                    <option value="@key">@value</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">Attribute Trigger</legend>
+
+                                    <div class="row">
+                                        <button class="btn btn-sm btn-success m-3 btn-block"
+                                                type="button"
+                                                @onclick=@(() => { AddNewActionHandle(crEditSchedule); })>
+                                            <i class="fas fa-plus-circle"></i>
+                                            Add Actions
+                                        </button>
+                                    </div>
+
+                                    <div class="accordion" id="accordion">
+                                        @{
+                                            // This is List Action create by user and ready to update to DB
+                                            foreach(var it in crLstNewActionsOfEdit)
+                                            {
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h2 class="mb-0 d-flex">
+                                                            <button class="flex-grow-1 btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse-@it.ActionId">
+                                                                Sigle Actions | 
+                                                                <span class="badge badge-pill badge-info">#@it.ActionObj?.DeviceId</span>
+                                                            </button>
+
+                                                            <button class="m-2 btn btn-xs btn-outline-danger"
+                                                                    type="button"
+                                                                    @onclick=@(() => { crLstNewActionsOfEdit.Remove(it); crEditSchedule.Actions.Remove(it.ActionObj); })>
+                                                                <i class="far fa-trash-alt"></i>
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+
+                                                    <div id="collapse-@it.ActionId" class="collapse" data-parent="#accordion">
+                                                        <div class="card-body">
+
+                                                            <div class="row">
+
+                                                                <div class="form-group col-12">
+                                                                    <label>
+                                                                        Trigger Device
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                id="slEditTriggerDv-@it.ActionId"
+                                                                                data-style="btn-light"
+                                                                                data-live-search="true"
+                                                                                @onchange=@(async () => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditTriggerDv-"+@it.ActionId); it.ActionObj.DeviceId = _tmpKey; })>
+                                                                            @foreach (var _dv in LstDevice)
+                                                                            {
+                                                                                <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <hr class="dotted">
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        AC Power
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select title="-- Select --"
+                                                                                class="form-control selectpicker"
+                                                                                data-style="btn-light"
+                                                                                id="slEditACPower-@it.ActionId"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditACPower-" + @it.ActionId); var _tmpName=(ACPowerEnum)_tmpKey; it.ActionObj.SetValues["ACPower"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(ACPowerEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(ACPowerEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">
+                                                                                    @value
+                                                                                </option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        iTM AC Mode
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                id="slEditITMMode-@it.ActionId"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditITMMode-" + @it.ActionId); var _tmpName=(ACPowerEnum)_tmpKey; it.ActionObj.SetValues["itmACMode"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(itmACModeEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(itmACModeEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Set Temp
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <input type="number"
+                                                                               step="0.01"
+                                                                               min="-200"
+                                                                               max="200"
+                                                                               placeholder="-200:200"
+                                                                               class="form-control"
+                                                                               @onchange=@((e)=> { it.ActionObj.SetValues["SetTemp"] = e.Value.ToString(); }) />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Fan Direct
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <input type="number"
+                                                                               step="1"
+                                                                               min="-1"
+                                                                               max="100"
+                                                                               placeholder="-1:100"
+                                                                               class="form-control"
+                                                                               @onchange=@((e)=> { it.ActionObj.SetValues["FanDirect"] = e.Value.ToString(); }) />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Fan Speed
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                id="slEditFanSpeed-@it.ActionId"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditFanSpeed-" + @it.ActionId); var _tmpName=(FanSpeedEnum)_tmpKey; it.ActionObj.SetValues["FanSpeed"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(FanSpeedEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(FanSpeedEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+
+                                            // This is List Action fetch from server
+                                            foreach (var it in crLstEditActions)
+                                            {
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h2 class="mb-0 d-flex">
+                                                            <button class="flex-grow-1 btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse-@it.ActionId">
+                                                                Actions |
+                                                                <span class="badge badge-pill badge-info">#@it.ActionObj?.DeviceId</span>
+                                                            </button>
+
+                                                            @*<button class="m-2 btn btn-xs btn-outline-danger"
+                                                                        type="button"
+                                                                        @onclick=@(() => { DeleteActionRow(it.ActionObj); })>
+                                                                    <i class="far fa-trash-alt"></i>
+                                                                </button>*@
+
+                                                            <button class="m-2 btn btn-xs btn-outline-danger"
+                                                                    type="button"
+                                                                    @onclick=@(() => { crLstEditActions.Remove(it); crEditSchedule.Actions.Remove(it.ActionObj); })>
+                                                                <i class="far fa-trash-alt"></i>
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapse-@it.ActionId" class="collapse" data-parent="#accordion">
+                                                        <div class="card-body">
+
+                                                            <div class="row">
+
+                                                                <div class="form-group col-12">
+                                                                    <label>
+                                                                        Trigger Device
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                id="slEditTriggerDv-@it.ActionId"
+                                                                                data-style="btn-light"
+                                                                                data-live-search="true"
+                                                                                @onchange=@(async () => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditTriggerDv-" + @it.ActionId); it.ActionObj.DeviceId = _tmpKey; })>
+                                                                            @foreach (var _dv in LstDevice)
+                                                                            {
+                                                                                <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-12">
+                                                                    <hr class="dotted">
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        AC Power
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select title="-- Select --"
+                                                                                class="form-control selectpicker"
+                                                                                data-style="btn-light"
+                                                                                id="slEditACPower-@it.ActionId"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditACPower-" + @it.ActionId); var _tmpName=(ACPowerEnum)_tmpKey; it.ActionObj.SetValues["ACPower"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(ACPowerEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(ACPowerEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">
+                                                                                    @value
+                                                                                </option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        iTM AC Mode
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                id="slEditITMMode-@it.ActionId"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditITMMode-" + @it.ActionId); var _tmpName=(ACPowerEnum)_tmpKey; it.ActionObj.SetValues["itmACMode"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(itmACModeEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(itmACModeEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Set Temp
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <input type="number"
+                                                                               step="0.01"
+                                                                               min="-200"
+                                                                               max="200"
+                                                                               value="@it.ActionObj.SetValues["SetTemp"]"
+                                                                               placeholder="-200:200"
+                                                                               class="form-control"
+                                                                               @onchange=@((e)=> { it.ActionObj.SetValues["SetTemp"] = e.Value.ToString(); }) />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Fan Direct
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <input type="number"
+                                                                               step="1"
+                                                                               min="-1"
+                                                                               max="100"
+                                                                               placeholder="-1:100"
+                                                                               value="@it.ActionObj.SetValues["FanDirect"]"
+                                                                               class="form-control"
+                                                                               @onchange=@((e)=> { it.ActionObj.SetValues["FanDirect"] = e.Value.ToString(); }) />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group col-lg-4 col-12">
+                                                                    <label>
+                                                                        Fan Speed
+                                                                    </label>
+                                                                    <div class="input-group ">
+                                                                        <select class="selectpicker form-control"
+                                                                                title="-- Select --"
+                                                                                data-style="btn-light"
+                                                                                id="slEditFanSpeed-@it.ActionId"
+                                                                                @onchange=@(async() => { var _tmpKey = await SelectAndBindSingleByIdJquery("slEditFanSpeed-" + @it.ActionId); var _tmpName=(FanSpeedEnum)_tmpKey; it.ActionObj.SetValues["FanSpeed"] = _tmpName.ToString(); })>
+                                                                            @foreach (var obj in Enum.GetValues(typeof(FanSpeedEnum)))
+                                                                            {
+                                                                                var value = Enum.GetName(typeof(FanSpeedEnum), obj);
+                                                                                var key = (int)obj;
+                                                                                <option value="@key">@value</option>
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                </fieldset>
+
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">
+
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox"
+                                                       id="swEditJsAction"
+                                                       @bind-value="crEditSchedule.IsJavaScriptAction"
+                                                       checked="@(crEditSchedule.IsJavaScriptAction?true:false)"
+                                                       class="custom-control-input">
+                                                <label class="custom-control-label"
+                                                       for="swEditJsAction">
+                                                    Custom JavaScript Actions
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </legend>
+
+                                    @if (crEditSchedule.IsJavaScriptAction)
+                                    {
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">
+                                                <i class="fas fa-user-edit"></i>
+                                                Custom JavaScript
+                                            </label>
+                                            <div class="col-sm-10">
+                                                <textarea class="summernote"
+                                                          required=@(crEditSchedule.IsJavaScriptAction ? true : false)
+                                                          id="tbEditJsAction"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label"></label>
+                                            <div class="col-sm-10">
+                                                <div class="d-flex justify-content-center">
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <button type="button" class="btn btn-primary">
+                                                            Run
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-danger">
+                                                            Stop
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-primary">
+                                                            Reload Data
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-primary">
+                                                            Save
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-primary">
+                                                            Close
+                                                        </button>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label"></label>
+                                            <div class="col-sm-10">
+                                                <textarea class="summernote"
+                                                          required=@(crEditSchedule.IsJavaScriptAction ? true : false)
+                                                          id="tbEditJsDebug">
+                                        </textarea>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-warning" role="alert">
+                                            Javascript Action is not in used
+                                        </div>
+                                    }
+
+
+                                </fieldset>
+
+                            </form>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                    data-dismiss="modal"
+                                    @onclick=@(() => { FormEditClose(); })>
+                                CLOSE
+                            </button>
+                            <button type="button"
+                                    class="btn btn-danger"
+                                    @onclick=@(() => { DeleteItemHandle(crEditSchedule); })>
+                                DELETE SCHEDULE
+                            </button>
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    @onclick=@(() => { FormEditScheduleHandle(); })>
+                                UPDATE SCHEDULE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+@code {
+    // Hard Code Here
+    enum itmACModeEnum { Unknown, Fan, Heat, Cool, Ventilation, Dry, AutoHeat, AutoCool }
+    enum ACPowerEnum { On, Off, Unknown }
+    enum FanSpeedEnum { Low, Medium, High, Auto, Unknown }
+    enum ActionGroupDeviceEnum { Single, Zone, Section }
+
+    public GlobalScheduleModel crEditSchedule = new GlobalScheduleModel();
+    DateTimeOffset? crDatetimeBinding { get; set; }
+
+    GlobalScheduleModel NewScheduleParams = new GlobalScheduleModel() { Actions = new List<RunningActionModel>() };
+    List<GlobalScheduleModel> LstSchedule = new List<GlobalScheduleModel>();
+    List<DeviceModel> LstDevice = new List<DeviceModel>();
+    List<ZoneModel> LstZone = new List<ZoneModel>();
+    List<SectionModel> LstSection = new List<SectionModel>();
+    List<GenActionsId> crLstEditActions = new List<GenActionsId>();
+    List<GenActionsId> crLstNewActionsOfEdit = new List<GenActionsId>();
+
+    ElementReference elFormEditSchedule, elFormNewSchedule, elCurrentSingleSelectBox1, elCurrentSingleSelectBox2, elCurrentMutipleSelectBox;
+    //enum ScheduleTypeEnum { OneTime, Yearly, Monthly, Daily, IntervalTime }
+    enum DayOfWeek { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
+    enum FormAction { Add, Edit }
+
+    ScheduleService svShedule = new ScheduleService();
+    DeviceDataStore svDevice = new DeviceDataStore();
+    LayoutAreaSevice svAreaLayout = new LayoutAreaSevice();
+    string AccessToken = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == "")
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login");
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+        LstSchedule = await svShedule.GetItemsAsync(AccessToken);
+        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
+        LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //JSHelper.InvokeVoidAsync("InjectBootstrapSwitch");
+
+        foreach (var it in crLstEditActions)
+        {
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditTriggerDv-" + it.ActionId, it.ActionObj.DeviceId);
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditACPower-" + it.ActionId, (int)Enum.Parse(typeof(ACPowerEnum), it.ActionObj.SetValues["ACPower"]));
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditITMMode-" + it.ActionId, (int)Enum.Parse(typeof(itmACModeEnum), it.ActionObj.SetValues["itmACMode"]));
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditFanSpeed-" + it.ActionId, (int)Enum.Parse(typeof(FanSpeedEnum), it.ActionObj.SetValues["FanSpeed"]));
+        }
+
+
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbEditJsAction", 300, false, false);
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsAction", 300, false, false);
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbEditJsDebug", 200, false, false);
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsDebug", 200, false, false);
+        JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache"); //TODO: Test comment this line
+        if (!firstRender)
+        {
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbEditJsAction", 300, true, false);
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsAction", 300, true, false);
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbEditJsDebug", 200, true, true);
+        JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsDebug", 200, true, true);
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
+    }
+
+    async Task DeleteActionRow(RunningActionModel _obj)
+    {
+        crEditSchedule.Actions.Remove(_obj);
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task DeleteItemHandle(GlobalScheduleModel _item)
+    {
+        var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE THIS SCHEDULE", "#C70039", "Cancel", false);
+        if (!isConfirm) return;
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        var result = await svShedule.DeleteScheduleAsync(_item.Id, AccessToken);
+        if (result)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule Deleted", true);
+            JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "hide");
+
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+            LstSchedule = await svShedule.GetItemsAsync(AccessToken);
+            LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+            LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
+            LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            InvokeAsync(StateHasChanged);
+        }
+        else
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
+    }
+
+    async Task FormNewClose()
+    {
+
+    }
+
+    async Task PreNew()
+    {
+        NewScheduleParams = new GlobalScheduleModel();
+    }
+
+    //async Task CollapseEditActions(GlobalScheduleModel _item)
+    //{
+    //    await Task.Delay(1000);
+    //    foreach (var it in _item.ShallowCopy().Actions.Select(r => new { objItem = r, idItem = Guid.NewGuid().ToString("N") }).ToList())
+    //    {
+    //        await JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditTriggerDv-" + it.idItem, it.objItem.DeviceId);
+    //    }
+    //    await Task.Delay(1000);
+    //    await InvokeAsync(StateHasChanged);
+    //    await Task.Delay(1000);
+    //    await JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+    //    await Task.Delay(1000);
+    //    await InvokeAsync(StateHasChanged);
+    //    StateHasChanged();
+    //}
+
+    async Task AddNewActionHandle(GlobalScheduleModel _item)
+    {
+        var _tmpObj = new GenActionsId()
+        {
+            ActionId = Guid.NewGuid().ToString("N"),
+            ActionObj = new RunningActionModel()
+        };
+        crLstNewActionsOfEdit.Add(_tmpObj);
+    }
+
+    async Task FormEditClose()
+    {
+        crLstNewActionsOfEdit.Clear();
+        crLstEditActions.Clear();
+
+        //reset list sschedule in case user delete action in modal edit then close modal
+        LstSchedule = await svShedule.GetItemsAsync(AccessToken);
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task PreEdit(GlobalScheduleModel _item)
+    {
+        crLstEditActions.Clear();
+        crEditSchedule = _item.ShallowCopy();
+
+
+
+
+
+
+        var _tmpItemOnjectId = crEditSchedule.Actions.Select(r => new { objItem = r, idItem = Guid.NewGuid().ToString("N") }).ToList();
+        foreach (var it in _tmpItemOnjectId)
+        {
+            crLstEditActions.Add(new GenActionsId { ActionId = it.idItem, ActionObj = it.objItem });
+        }
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditScheduleType", (GlobalScheduleModel.ScheduleTypeEnum)crEditSchedule.ScheduleType);
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditRepeat", crEditSchedule.RepeatDayOfWeek);
+
+        // Parse some value to correct format
+        JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsAction", crEditSchedule.JavaScriptAction, 350);
+        var txtDebug = svShedule.GetDebugAsync(crEditSchedule.Id, AccessToken);
+        JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsDebug", txtDebug, 200);
+        var _tmpLocalConvert = UnixTime.UnixSecondToLocalTime(crEditSchedule.Time);
+        crDatetimeBinding = DateTime.SpecifyKind(_tmpLocalConvert, DateTimeKind.Local);
+
+        await JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task<int> SelectAndBindSingleByIdJquery(string slElId)
+    {
+        var slKeyItem = await JSHelper.InvokeAsync<string>("Interop_DisplayChangeByJqueryId", slElId);
+        return await Task.FromResult(int.Parse(slKeyItem));
+    }
+
+    async Task<int> SelectAndBindSingle(ElementReference refSelect)
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", refSelect);
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(int.Parse(slKeyItem.ToString()));
+    }
+
+    private async void SelectAndBindMulti(FormAction action)
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCurrentMutipleSelectBox);
+        var ParseValue = int.Parse(_tmpSelectArr[0].ToString());
+        if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix
+        var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
+        if (stateOfValue)
+        {
+            if (action == FormAction.Add)
+            {
+                if (!NewScheduleParams.RepeatDayOfWeek.Contains(ParseValue))
+                {
+                    NewScheduleParams.RepeatDayOfWeek.Add(ParseValue);
+                }
+            }
+            else if (action == FormAction.Edit)
+            {
+                if (!crEditSchedule.RepeatDayOfWeek.Contains(ParseValue))
+                {
+                    crEditSchedule.RepeatDayOfWeek.Add(ParseValue);
+                }
+            }
+        }
+        else
+        {
+            if (action == FormAction.Add)
+            {
+                if (NewScheduleParams.RepeatDayOfWeek.Contains(ParseValue))
+                {
+                    NewScheduleParams.RepeatDayOfWeek.Remove(ParseValue);
+                }
+            }
+            else if (action == FormAction.Edit)
+            {
+                if (crEditSchedule.RepeatDayOfWeek.Contains(ParseValue))
+                {
+                    crEditSchedule.RepeatDayOfWeek.Remove(ParseValue);
+                }
+            }
+        }
+    }
+
+    async Task FormNewScheduleHandle()
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormNewSchedule);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+
+        // Convert Some Prop to correct format
+        NewScheduleParams.Time = crDatetimeBinding.Value.ToUnixTimeSeconds();
+        if (NewScheduleParams.IsJavaScriptAction)
+        {
+            NewScheduleParams.JavaScriptAction = await JSHelper.InvokeAsync<string>("Interop_SummerGetCode", "tbNewJsAction");
+        }
+
+        var resultDvId = await svShedule.InsertItemAsync(NewScheduleParams, AccessToken);
+        if (resultDvId == -1)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Some thing went wrong", false);
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Device Id <strong>" + resultDvId.ToString() + "</strong> Added", false);
+
+        LstSchedule = await svShedule.GetItemsAsync(AccessToken);
+        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdNewSchedule", "hide");
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task FormEditScheduleHandle()
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormEditSchedule);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+
+        // add local list (crLstNewActionsOfEdit + crLstEditActions) to crEditSchedule
+        crEditSchedule.Actions.AddRange(crLstNewActionsOfEdit.Select(r=>r.ActionObj));
+
+        // Convert Some Prop to correct format
+        crEditSchedule.Time = crDatetimeBinding.Value.ToUnixTimeSeconds();
+        if (crEditSchedule.IsJavaScriptAction)
+        {
+            crEditSchedule.JavaScriptAction = await JSHelper.InvokeAsync<string>("Interop_SummerGetCode", "tbEditJsAction");
+        }
+        var result = await svShedule.UpdateItemAsync(crEditSchedule, AccessToken);
+        if (result)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule Updated", true);
+            JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "hide");
+
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+            LstSchedule = await svShedule.GetItemsAsync(AccessToken);
+            LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+            LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
+            LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            InvokeAsync(StateHasChanged);
+        }
+        else
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
+    }
+
+    class GenActionsId
+    {
+        public RunningActionModel ActionObj { get; set; }
+        public string ActionId { get; set; }
+    }
+}
