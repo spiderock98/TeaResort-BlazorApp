@@ -32,5 +32,9 @@ namespace SmartRetail.Share.Models
         public List<string> Infos { get; set; }
         public ZoneModel()
         { }
+        public ZoneModel ShallowCopy()
+        {
+            return (ZoneModel)this.MemberwiseClone();
+        }
     }
 }

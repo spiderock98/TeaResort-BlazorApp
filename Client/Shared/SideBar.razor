@@ -52,9 +52,19 @@
                 <li class="nav-item">
                     <a class="nav-link @CheckActiveStatus("schedule","active")" @onclick=@(() =>
                         SelectMenu("schedule"))>
-                        <i class="nav-icon fas fa-building"></i>
+                        <i class="nav-icon fas fa-calendar-alt"></i>
                         <p class="font-weight-bolder user-select-none">
                             SCHEDULE PROFILES
+                        </p>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("interlock","active")" @onclick=@(() =>
+                        SelectMenu("interlock"))>
+                        <i class="nav-icon fas fa-door-closed"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            INTERLOCK PROFILES
                         </p>
                     </a>
                 </li>
@@ -96,7 +106,7 @@
 @code {
     Dictionary<string, string> menuPaths = new Dictionary<string, string>()
 {
-{"dashboard","/dashboard"}, {"device","/device"} , {"schedule", "/schedule"}, {"daily", "/daily"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}
+{"dashboard","/dashboard"}, {"device","/device"} , {"schedule", "/schedule"}, {"daily", "/daily"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}, { "interlock", "/interlock" }
 };
 
     string currentMenu = "";
@@ -105,7 +115,7 @@
     {
         currentMenu = navigationHelper.ToBaseRelativePath(navigationHelper.Uri);
         //if (currentMenu == string.Empty) SelectMenu("dashboard");
-        if (currentMenu == string.Empty) navigationHelper.NavigateTo("/device");
+        if (currentMenu == string.Empty) navigationHelper.NavigateTo("/interlock");
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)

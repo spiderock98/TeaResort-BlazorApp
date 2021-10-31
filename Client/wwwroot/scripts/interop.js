@@ -203,6 +203,24 @@ function Interop_FormValidate(elForm) {
   return elForm.checkValidity();
 }
 
+async function Interop_Swal2InputAsync(inputType, title, confirmText) {
+  const result = await Swal.fire({
+    title: title,
+    input: inputType,
+    showCancelButton: false,
+    confirmButtonText: confirmText,
+    inputValidator: (value) => {
+      if (!value) {
+        return "Please fill all required field!";
+      }
+    },
+  });
+  if (result.isConfirmed) {
+    return result.value;
+  }
+  return "";
+}
+
 async function Interop_Swal2HelperAsync(
   icon,
   text,
@@ -257,6 +275,12 @@ function Interop_Swal2Helper(icon, text, isToast) {
       title: `${text}`,
     });
   }
+}
+
+function Interop_ToggleSwitch(cbId) {
+  let cbEl = $(`#${cbId}`);
+  cbEl.prop("checked", !cbEl.prop("checked"));
+  console.log(cbId);
 }
 
 function Interop_InjectBootstrapTable() {
@@ -336,7 +360,7 @@ function Interop_PurgeBootstrapSelectCache() {
 }
 
 function Interop_InjectBootstrapSelectionById(id, value) {
-  console.log(id, value);
+  //console.log(id, value);
   $(`#${id}`).selectpicker("val", value);
   $(".selectpicker").selectpicker("render");
   $(".selectpicker").selectpicker("refresh");

@@ -1,0 +1,15 @@
+fieldset {
+  border: 2px solid orange !important;
+}
+
+.btn-light {
+  color: #1f2d3d;
+  border-color: #d8d8d8;
+}
+
+/* Dotted Seperator line */
+hr.dotted {
+    border-top: 3px dotted #bbb;
+}
+
+/* Dotted Seperator line (vertical) */

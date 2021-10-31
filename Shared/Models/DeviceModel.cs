@@ -79,6 +79,10 @@ namespace SmartRetail.Share.Models
         [JsonProperty]
         public Dictionary<string, string> Status { get; set; } = new Dictionary<string, string>();
 
+        public DeviceModel ShallowCopy()
+        {
+            return (DeviceModel)this.MemberwiseClone();
+        }
         public List<string> UpdateStatus(Dictionary<string, string> data)
         {
             if (Status == null) Status = new Dictionary<string, string>();

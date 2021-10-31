@@ -71,7 +71,6 @@ namespace SmartRetail.Share.Models
             this.JavaScriptAction = _schedule.JavaScriptAction;
             this.LastRunTime = _schedule.LastRunTime;
 
-
             this.Actions.Clear();
             foreach (var item in _schedule.Actions) this.Actions.Add(item);
             this.RepeatDayOfWeek.Clear();

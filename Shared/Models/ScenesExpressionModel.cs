@@ -6,15 +6,18 @@ using static SmartRetail.Share.Models.MasterDataModel;
 
 namespace SmartRetail.Share.Models
 {
+    public enum LogicExpression { Or, And, Not, OpenpArenthesis, CloseParenthesis };
     public class ScenesExpressionModel
     {
-        public int DeviceId;
-        public string Attribute;
-        public CompareOperators Copareation;
-        public string CompareValue;
+        public bool IsLogicExpression { get; set; }
+        public LogicExpression Logic { get; set; }
+        public int DeviceId { get; set; }
+        public string Attribute { get; set; }
+        public CompareOperators Comparison { get; set; }
+        public string CompareValue { get; set; }
         /// <summary>
         /// Milisecond.
         /// </summary>
-        public int Interval;
+        public int Interval { get; set; }
     }
 }

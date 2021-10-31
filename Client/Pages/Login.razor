@@ -75,7 +75,7 @@
         var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormNewLogin);
         if (!isFormValid)
         {
-            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field!", true);
             return;
         }
 
@@ -90,6 +90,7 @@
             {
                 await JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Access Granted", false);
                 await LocalStorage.SetItemAsync("token", _TOKEN);
+                await LocalStorage.SetItemAsync("username", NewUserParameter.User);
 
                 NavHelper.NavigateTo("/dashboard");
             }

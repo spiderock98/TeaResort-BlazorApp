@@ -54,7 +54,6 @@ namespace SmartRetail.Services
 
         }
 
-
         public async Task<int> InsertItemAsync(GlobalScheduleModel item, string token)
         {
             var uri = new Uri(Resources.GetLink.POST_INSERT_SCHEDULE(token));

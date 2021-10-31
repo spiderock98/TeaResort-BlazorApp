@@ -46,5 +46,10 @@ namespace SmartRetail.Share.Models
             get { return _Icon; }
             set { SetProperty(ref _Icon, value); }
         }
+
+        public SectionModel ShallowCopy()
+        {
+            return (SectionModel)this.MemberwiseClone();
+        }
     }
 }

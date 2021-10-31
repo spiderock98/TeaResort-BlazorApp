@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SmartRetail.Share.Models;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace SmartRetail.Services
 {
@@ -131,9 +132,9 @@ namespace SmartRetail.Services
             return await Task.FromResult(true);
         }
 
-        public async Task<bool> UpdateStatusAsync(int id, Dictionary<string, string> data, string token)
+        public async Task<bool> UpdateDeviceStatusAsync(int dvId, Dictionary<string, string> data, string token)
         {
-            var uri = new Uri(Resources.GetLink.PUT_DEVICE_SETTING(id, token));
+            var uri = new Uri(Resources.GetLink.PUT_DEVICE_SETTING(dvId, token));
             var _JsonValue = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
             try
             {
@@ -145,6 +146,47 @@ namespace SmartRetail.Services
                 }
             }
             catch { return await Task.FromResult(false); }
+            return await Task.FromResult(true);
+        }
+
+        public async Task<bool> UpdateGroupDeviceStatusBySectionAsync(int sectionId, Dictionary<string, string> data, string token)
+        {
+            var LstDevice = await GetDevicesListAsync(token);
+
+            var lstDvIdInSection = LstDevice.Where(r => r.SectionId == sectionId).Select(r => r.Id).ToList();
+            foreach (var dvId in lstDvIdInSection)
+            {
+                var isSuccess = await UpdateDeviceStatusAsync(dvId, data, token);
+                if (!isSuccess) return await Task.FromResult(false);
+            }
+            return await Task.FromResult(true);
+        }
+
+        public async Task<bool> UpdateGroupDeviceStatusByZoneAsync(int zoneId, Dictionary<string, string> data, string token)
+        {
+            var svLayout = new LayoutAreaSevice();
+            var LstSection = await svLayout.GetSectionListAsync(token);
+
+            var lstSectionIdOfZone = LstSection.Where(r => r.Zone == zoneId).Select(r => r.Id).ToList();
+            foreach (var secId in lstSectionIdOfZone)
+            {
+                var isSuccess = await UpdateGroupDeviceStatusBySectionAsync(secId, data, token);
+                if (!isSuccess) return await Task.FromResult(false);
+            }
+            return await Task.FromResult(true);
+        }
+
+        public async Task<bool> UpdateGroupDeviceStatusByAreaAsync(int areaId, Dictionary<string, string> data, string token)
+        {
+            var svLayout = new LayoutAreaSevice();
+            var LstZone = await svLayout.GetZoneListAsync(token);
+
+            var lstZoneIdOfZone = LstZone.Where(r => r.Area == areaId).Select(r => r.Id).ToList();
+            foreach (var zoneId in lstZoneIdOfZone)
+            {
+                var isSuccess = await UpdateGroupDeviceStatusByZoneAsync(zoneId, data, token);
+                if (!isSuccess) return await Task.FromResult(false);
+            }
             return await Task.FromResult(true);
         }
 

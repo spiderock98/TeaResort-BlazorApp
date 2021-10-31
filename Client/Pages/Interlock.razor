@@ -1,4 +1,4 @@
-@page "/schedule"
+@page "/interlock"
 @inject NavigationManager uriHelper
 @using BlazorDateRangePicker
 @using Helper
@@ -18,7 +18,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
-                    <h1 style="font-size:50px;">Schedule Profiles</h1>
+                    <h1 style="font-size:50px;">Interlock Profiles</h1>
                 </div>
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -103,21 +103,21 @@
                                                     }
                                                     <button data-toggle="tooltip"
                                                             data-placement="top"
-                                                            title="@titleTooltip"                                                            class="btn btn-xs btn-@attrBtnEnable m-1"
+                                                            title="@titleTooltip" class="btn btn-xs btn-@attrBtnEnable m-1"
                                                             @onclick=@(() => { ChangeScheduleStateHandle(profile); })>
                                                         <i class="fas fa-power-off"></i>
                                                     </button>
 
                                                     @*<div class="form-group">
-                                                        <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                            <input type="checkbox"
-                                                                   class="custom-control-input"
-                                                                   checked="@(isAnyDvACPowerOFF ? false : true)"
-                                                                   id="swACPowerZone-@_zone.Id"
-                                                                   @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInZone, "swACPowerZone-" + _zone.Id); })>
-                                                            <label class="custom-control-label" for="swACPowerZone-@_zone.Id"></label>
-                                                        </div>
-                                                    </div>*@
+                                                            <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                <input type="checkbox"
+                                                                       class="custom-control-input"
+                                                                       checked="@(isAnyDvACPowerOFF ? false : true)"
+                                                                       id="swACPowerZone-@_zone.Id"
+                                                                       @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInZone, "swACPowerZone-" + _zone.Id); })>
+                                                                <label class="custom-control-label" for="swACPowerZone-@_zone.Id"></label>
+                                                            </div>
+                                                        </div>*@
 
                                                 </div>
                                             </td>
@@ -290,20 +290,20 @@
                                                     var _dvType = String.Empty;
                                                     _dvType = @LstDevice.Where(r => r.Id == cardNew.ActionObj.DeviceId).FirstOrDefault()?.DeviceType;
                                                 }
-                                            <div class="col-8">
-                                                <div class="callout callout-primary">
-                                                    <div class="d-flex">
-                                                        <div class=" flex-grow-1">
-                                                            <h3>Device Type </h3>
-                                                        </div>
-                                                        <div>
-                                                            <span class="badge badge-pill badge-primary">
-                                                                <h4>@_dvType</h4>
-                                                            </span>
+                                                <div class="col-8">
+                                                    <div class="callout callout-primary">
+                                                        <div class="d-flex">
+                                                            <div class=" flex-grow-1">
+                                                                <h3>Device Type </h3>
+                                                            </div>
+                                                            <div>
+                                                                <span class="badge badge-pill badge-primary">
+                                                                    <h4>@_dvType</h4>
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
                                                 <div class="col-12">
                                                     <hr class="dotted">
