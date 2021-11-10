@@ -45,7 +45,6 @@ namespace SmartRetail.Share.Models
         // Do Action
         public List<RunningActionModel> Actions { get; set; } = new List<RunningActionModel>();
 
-
         [JsonProperty]
         public long LastRunTime { get; set; }
         [JsonProperty]
@@ -55,6 +54,20 @@ namespace SmartRetail.Share.Models
         // Description For Scenes
         public string Description { get; set; }
 
+        public GlobalSceneModel ShallowCopy()
+        {
+            return (GlobalSceneModel)this.MemberwiseClone();
+        }
+
+        public void ReGenerateActionsFromGroupDvId()
+        {
+            var _finalLstActions = new List<RunningActionModel>();
+            foreach (var _action in this.Actions)
+            {
+                _finalLstActions.AddRange(_action.GenActionByLstDeviceId());
+            }
+            this.Actions = _finalLstActions;
+        }
 
         public void UpdateValue(GlobalSceneModel _scenes)
         {

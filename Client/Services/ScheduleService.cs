@@ -32,7 +32,6 @@ namespace SmartRetail.Services
             }
             catch { }
             return await Task.FromResult(false);
-
         }
 
         public async Task<string> GetDebugAsync(int scheduleId, string token)

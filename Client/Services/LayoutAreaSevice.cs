@@ -13,6 +13,7 @@ namespace SmartRetail.Services
         HttpClient _client = new HttpClient();
         public List<SectionModel> SectionList { get; set; }
         public List<ZoneModel> ZoneList { get; set; }
+        public List<AreaModel> AreaList { get; set; }
         public LayoutAreaSevice()
         {
 
@@ -177,6 +178,25 @@ namespace SmartRetail.Services
             {
                 return await Task.FromResult(false);
             }
+        }
+
+        public async Task<List<AreaModel>> GetAreaListAsync(string token)
+        {
+            var uri = new Uri(Resources.GetLink.GET_AREA_LIST(token));
+            try
+            {
+                HttpResponseMessage response = await _client.GetAsync(uri);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    AreaList = JsonConvert.DeserializeObject<List<AreaModel>>(content);
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return await Task.FromResult(AreaList);
         }
     }
 }

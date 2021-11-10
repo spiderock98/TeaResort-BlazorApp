@@ -228,6 +228,15 @@ namespace SmartRetail.Resources
             return url;
         }
 
+        public static string GET_USER_SCENES_2(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/GlobalScenes?Token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+
         public static string GET_RUN_SCENES(int scenesId, string token)
         {
             var url = "http://" + SERVER_IP + "/api/User/RunScene?Id=" + scenesId.ToString() + "&Token=" + token;
@@ -277,6 +286,15 @@ namespace SmartRetail.Resources
         public static string POST_UPDATE_SCHEDULE(string token)
         {
             var url = "http://" + SERVER_IP + "/api/GlobalSchedule/Update?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+
+        public static string POST_UPDATE_INSERT_SCENES(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/GlobalScenes?token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 url += "&ClientServer=" + CLIENT_SERVER;
@@ -340,15 +358,6 @@ namespace SmartRetail.Resources
         public static string POST_USER_INFO_UPDATE(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/user/UpdateAccountInfo?token=" + token;
-
-            if (CLIENT_SERVER.Trim() != "")
-                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
-            return RequestUrl;
-        }
-
-        public static string POST_UPDATE_SCENES(string token)
-        {
-            string RequestUrl = "http://" + SERVER_IP + "/api/User/UpdateScenes?token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
@@ -466,6 +475,14 @@ namespace SmartRetail.Resources
         public static string DELETE_ZONE(int Id, string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/zone/" + Id.ToString() + "?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
+        public static string GET_AREA_LIST(string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/All?token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
