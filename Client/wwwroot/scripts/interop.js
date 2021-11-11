@@ -211,12 +211,20 @@ function _handleSelect() {
     );
   });
 }
-async function Interop_jQueryDisplayChange() {
-  $("select").one("change", function (e) {
-    var valueSelected = this.value;
-    console.log(valueSelected);
-    return valueSelected;
+
+function _handlejQuerySelect() {
+  return new Promise((resolve, reject) => {
+    $("select").one("change", function (e) {
+      var valueSelected = this.value;
+      resolve(valueSelected);
+    });
   });
+}
+
+async function Interop_jQueryDisplayChange() {
+  let result = await _handlejQuerySelect();
+  console.log(result);
+  return result;
 }
 
 async function Interop_DisplayChange(el) {

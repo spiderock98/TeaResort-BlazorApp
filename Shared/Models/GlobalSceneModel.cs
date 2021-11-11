@@ -12,6 +12,7 @@ namespace SmartRetail.Share.Models
 
     public class GlobalSceneModel
     {
+
         public GlobalSceneModel()
         {
 
@@ -54,11 +55,28 @@ namespace SmartRetail.Share.Models
         // Description For Scenes
         public string Description { get; set; }
 
+        // ! misc function and attr
+
+        // [JsonIgnore]
+        // public List<RunningActionModel> BufferActions { get; set; } = new List<RunningActionModel>();
+
         public GlobalSceneModel ShallowCopy()
         {
             return (GlobalSceneModel)this.MemberwiseClone();
         }
 
+        public void createActionsByGrSetVal()
+        {
+            var grActionBySetVal = this.Actions.GroupBy(r => JsonConvert.SerializeObject(r.SetValues));
+            var finalLstAction = new List<RunningActionModel>();
+            foreach (var item in grActionBySetVal)
+            {
+                var objAction = item.FirstOrDefault();
+                objAction.LstDeviceId = item.Select(r => r.DeviceId).ToList();
+                finalLstAction.Add(objAction);
+            }
+            this.Actions = finalLstAction;
+        }
         public void ReGenerateActionsFromGroupDvId()
         {
             var _finalLstActions = new List<RunningActionModel>();

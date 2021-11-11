@@ -4,7 +4,7 @@
 @using Helper
 @inject IJSRuntime JSHelper
 @using SmartRetail.Shared
-@using SmartRetail.Services
+@using SmartRetail.Client.Services
 @using Share.Models
 @using System.Collections
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
@@ -35,7 +35,7 @@
                             data-toggle="modal"
                             data-target="#mdNewScene"
                             @onclick="PreNew">
-                        Add New Schedule
+                        Add New Scene
                     </button>
 
                     <div class="table-responsive">
@@ -52,7 +52,7 @@
                             </thead>
                             <tbody>
                                 @{
-                                    foreach (var profile in LstScene)
+                                    foreach (var profile in LstAllSceneWithGrSetVal)
                                     {
                                         <tr class="text-center">
                                             <th>@profile.Id</th>
@@ -80,14 +80,15 @@
                                                             data-toggle="modal"
                                                             data-target="#mdEditSchedule"
                                                             @onclick=@(() => { PreEdit(profile); })>
-                                                        <i class="fas fa-pen-alt"></i>
+                                                        <i class="fas fa-edit"></i>
                                                     </button>
 
-                                                    @*  
-                                                    <button class="btn btn-xs btn-danger m-1"
-                                                            @onclick=@(() => { DeleteItemHandle(profile); })>
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
+                                                    @*
+        <button class="btn btn-xs btn-danger m-1"
+                @onclick=@(() => { DeleteItemHandle(profile); })>
+            <i class="fas fa-trash-alt"></i>
+        </button>
+                                                    *@
 
                                                     @{
                                                         string attrBtnEnable = profile.Enable ? "light" : "success";
@@ -99,7 +100,16 @@
                                                             @onclick=@(() => { ChangeScheduleStateHandle(profile); })>
                                                         <i class="fas fa-power-off"></i>
                                                     </button>
-                                                    *@
+
+                                                    <button data-toggle="tooltip"
+                                                            data-placement="top"
+                                                            title="Clone" class="btn btn-xs btn-info m-1"
+                                                            @onclick=@(() => 
+                                                                       { 
+                                                                           CloneProfileHanlde(profile); 
+                                                                       })>
+                                                        <i class="far fa-clone"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -129,7 +139,7 @@
                             </button>
                         </div>
                         <div class="modal-body">
-                            <form @ref="elFormNewSchedule"
+                            <form @ref="elFormNewScene"
                                   class="needs-validation"
                                   id="formNewWorker"
                                   novalidate>
@@ -339,11 +349,12 @@
                                                                                     required
                                                                                     id=@("slNewCondDeviceAttr" + _DetailOfAttr.Name + "-" + idx)
                                                                                     @onchange=@(async () =>
-                                                                                            {
-                                                                                                var _tmpKey = await jQuerySelectAndBindSingleTextReturn();
-                                                                                               NewSceneParams.Expressions.ElementAtOrDefault(idx).CompareValue = _tmpKey;
-                                                                                            })>
+                                                                                                {
+                                                                                                    var _tmpKey = await jQuerySelectAndBindSingleTextReturn();
+                                                                                                    NewSceneParams.Expressions.ElementAtOrDefault(idx).CompareValue = _tmpKey;
+                                                                                                })>
 
+                                                                                <option value="">-- Select --</option>
                                                                                 @foreach (var _valRange in _DetailOfAttr.ValueRange)
                                                                                 {
                                                                                     <option value="@_valRange">
@@ -665,20 +676,23 @@
                                     <div class="row">
                                         <button class="btn btn-success m-3 btn-block"
                                                 type="button"
-                                                @onclick=@(() => { NewSceneParams.Actions.Add(new RunningActionModel()); InvokeAsync(StateHasChanged); })>
+                                                @onclick=@(() =>
+                                                           {
+                                                               NewSceneParams.Actions.Add(new RunningActionModel());
+                                                               crFilterTargetDevice = FilterTargetDevice(NewSceneParams);
+                                                               InvokeAsync(StateHasChanged);
+                                                           })>
                                             <i class="fas fa-plus-circle"></i>
                                             ADD NEW ACTIONS
                                         </button>
                                     </div>
 
-                                    @*@foreach (var cardNew in crNewLstAddActions)*@
                                     @foreach (var _card in NewSceneParams.Actions)
                                     {
                                         <div class="callout callout-primary">
                                             <div class="mb-4 d-flex">
                                                 <h4 class="mr-auto">
-                                                    <span class="badge badge-pill badge-primary">NEW</span>
-                                                    @*<span class="badge badge-pill badge-primary">#@cardNew.ActionObj.DeviceId</span>*@
+                                                    <span class="badge badge-pill badge-primary">NEW</span> action
                                                 </h4>
 
                                                 <button class="btn btn-outline-danger"
@@ -693,7 +707,7 @@
 
                                             <div class="row">
 
-                                                <div class="form-group col-4">
+                                                <div class="form-group col-5">
                                                     <label>
                                                         Target Devices
                                                     </label>
@@ -707,7 +721,8 @@
                                                                             { 
                                                                                 SelectAndBindMultiTargetDevice(FormAction.NewTargetDevice, _card);
                                                                             })>
-                                                            @foreach (var _dv in LstDevice.Where(r=>r.DeviceType == "AC"))
+                                                            @*@foreach (var _dv in LstDevice.Where(r=>r.DeviceType == "AC"))*@
+                                                            @foreach (var _dv in crFilterTargetDevice.Where(r=>r.DeviceType == "AC"))
                                                             {
                                                                 <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
                                                             }
@@ -719,20 +734,26 @@
                                                     var _dvType = String.Empty;
                                                     _dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
                                                 }
-                                                @*<div class="col-8">
+                                                <div class="col-7">
                                                     <div class="callout callout-primary">
                                                         <div class="d-flex">
                                                             <div class=" flex-grow-1">
-                                                                <h3>Device Type </h3>
-                                                            </div>
-                                                            <div>
-                                                                <span class="badge badge-pill badge-primary">
-                                                                    <h4>@_dvType</h4>
-                                                                </span>
+                                                                <ul>
+                                                                    @foreach(var dv in _card.LstDeviceId)
+                                                                    {
+                                                                        var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
+                                                                    <li>
+                                                                        <span class="badge badge-pill badge-primary">
+                                                                            @objDv.Id 
+                                                                        </span>
+                                                                        - [@objDv.Capabilitie] @objDv.Name
+                                                                    </li>
+                }
+                                                                </ul>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>*@
+                                                </div>
 
                                                 <div class="col-12">
                                                     <hr class="dotted">
@@ -747,7 +768,10 @@
                                                                 multiple
                                                                 data-actions-box="true"
                                                                 data-live-search="true"
-                                                                @onchange=@(async()=> { await SelectAndBindMultiAttr(_card.SetValues);  })>
+                                                                @onchange=@(async()=> 
+                                                                            { 
+                                                                                await SelectAndBindMultiAttr(_card.SetValues);
+                                                                            })>
                                                             @{
                                                                 if (_dvType != String.Empty && _dvType != "" && _dvType != null)
                                                                 {
@@ -827,188 +851,8 @@
                                                     </div>
                                                 </div>
                                             </div>
-
                                         </div>
-
                                     }
-
-
-
-
-
-
-
-                                    @*<div class="accordion" id="accordion">
-                                            @{
-                                                var _genNewItemId = NewInterlockParams.Actions.Select(r => new { objItem = r, idItem = Guid.NewGuid().ToString("N") }).ToList();
-                                                foreach (var it in _genNewItemId)
-                                                {
-                                                    <div class="card">
-                                                        <div class="card-header" id="AccordionHeading-@it.idItem">
-                                                            <h2 class="mb-0 d-flex">
-                                                                <button class="flex-grow-1 btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse-@it.idItem">
-                                                                    Actions | Single Device
-                                                                    <span class="badge badge-pill badge-info">#@it.objItem?.DeviceId</span>
-
-                                                                </button>
-
-                                                                <button class="m-2 btn btn-xs btn-outline-danger"
-                                                                        type="button"
-                                                                        @onclick=@(() => { NewInterlockParams.Actions.Remove(it.objItem); })>
-                                                                    <i class="far fa-trash-alt"></i>
-                                                                </button>
-                                                            </h2>
-                                                        </div>
-                                                        <div id="collapse-@it.idItem" class="collapse" data-parent="#accordion">
-                                                            <div class="card-body">
-
-                                                                <div class="row">
-
-                                                                    <div class="form-group col-12 col-lg-4">
-                                                                        <label>
-                                                                            Single/Group Device
-                                                                        </label>
-                                                                        <div class="input-group ">
-                                                                            <select class="selectpicker form-control"
-                                                                                    title="-- Select --"
-                                                                                    data-style="btn-light"
-                                                                                    @ref="elCurrentSingleSelectBox1"
-                                                                                    @onchange=@(async () => { var _tmpKey = await SelectAndBindSingle(); })>
-                                                                                @foreach (var obj in Enum.GetValues(typeof(ActionGroupDeviceEnum)))
-                                                                                {
-                                                                                    var value = Enum.GetName(typeof(ActionGroupDeviceEnum), obj);
-                                                                                    var key = (int)obj;
-                                                                                    <option value="@key">@value</option>
-                                                                                }
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group col-12 col-lg-8">
-                                                                        <label>
-                                                                            Target Device
-                                                                        </label>
-                                                                        <div class="input-group ">
-                                                                            <select class="selectpicker form-control"
-                                                                                    title="-- Select --"
-                                                                                    data-style="btn-light"
-                                                                                    data-live-search="true"
-                                                                                    @ref="elCurrentSingleSelectBox1"
-                                                                                    @onchange=@(async () => { var _tmpKey = await SelectAndBindSingle(); it.objItem.DeviceId = _tmpKey; })>
-                                                                                @foreach (var _dv in LstDevice)
-                                                                                {
-                                                                                    <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
-                                                                                }
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="col-12">
-                                                                        <hr class="dotted">
-                                                                    </div>
-
-                                                                    <div class="form-group col-lg-4 col-12">
-                                                                        <label>
-                                                                            AC Power
-                                                                        </label>
-                                                                        <div class="input-group ">
-                                                                            <select class="selectpicker form-control"
-                                                                                    title="-- Select --"
-                                                                                    data-style="btn-light"
-                                                                                    @ref="elCurrentSingleSelectBox1"
-                                                                                    @onchange=@(async () => { var _tmpKey = await SelectAndBindSingle(); var _tmpName = (ACPowerEnum)_tmpKey; it.objItem.SetValues["ACPower"] = _tmpName.ToString(); })>
-                                                                                @foreach (var obj in Enum.GetValues(typeof(ACPowerEnum)))
-                                                                                {
-                                                                                    var value = Enum.GetName(typeof(ACPowerEnum), obj);
-                                                                                    var key = (int)obj;
-                                                                                    <option value="@key">@value</option>
-                                                                                }
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group col-lg-4 col-12">
-                                                                        <label>
-                                                                            iTM AC Mode
-                                                                        </label>
-                                                                        <div class="input-group ">
-                                                                            <select class="selectpicker form-control"
-                                                                                    title="-- Select --"
-                                                                                    data-style="btn-light"
-                                                                                    @ref="elCurrentSingleSelectBox1"
-                                                                                    @onchange=@(async () => { var _tmpKey = await SelectAndBindSingle(); var _tmpName = (itmACModeEnum)_tmpKey; it.objItem.SetValues["itmACMode"] = _tmpName.ToString(); })>
-                                                                                @foreach (var obj in Enum.GetValues(typeof(itmACModeEnum)))
-                                                                                {
-                                                                                    var value = Enum.GetName(typeof(itmACModeEnum), obj);
-                                                                                    var key = (int)obj;
-                                                                                    <option value="@key">@value</option>
-                                                                                }
-                                                                            </select>
-
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group col-lg-4 col-12">
-                                                                        <label>
-                                                                            Set Temp
-                                                                        </label>
-                                                                        <div class="input-group ">
-                                                                            <input type="number"
-                                                                                   step="0.01"
-                                                                                   min="-200"
-                                                                                   max="200"
-                                                                                   placeholder="-200:200"
-                                                                                   class="form-control"
-                                                                                   @onchange=@((e) => { it.objItem.SetValues["SetTemp"] = e.Value.ToString(); }) />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group col-lg-4 col-12">
-                                                                        <label>
-                                                                            Fan Direct
-                                                                        </label>
-                                                                        <div class="input-group ">
-                                                                            <input type="number"
-                                                                                   step="1"
-                                                                                   min="-1"
-                                                                                   max="100"
-                                                                                   placeholder="-1:100"
-                                                                                   class="form-control"
-                                                                                   @onchange=@((e) => { it.objItem.SetValues["FanDirect"] = e.Value.ToString(); }) />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group col-lg-4 col-12">
-                                                                        <label>
-                                                                            Fan Speed
-                                                                        </label>
-                                                                        <div class="input-group ">
-                                                                            <select class="selectpicker form-control"
-                                                                                    title="-- Select --"
-                                                                                    data-style="btn-light"
-                                                                                    @ref="elCurrentSingleSelectBox1"
-                                                                                    @onchange=@(async () => { var _tmpKey = await SelectAndBindSingle(); var _tmpName = (FanSpeedEnum)_tmpKey; it.objItem.SetValues["FanSpeed"] = _tmpName.ToString(); })>
-                                                                                @foreach (var obj in Enum.GetValues(typeof(FanSpeedEnum)))
-                                                                                {
-                                                                                    var value = Enum.GetName(typeof(FanSpeedEnum), obj);
-                                                                                    var key = (int)obj;
-                                                                                    <option value="@key">@value</option>
-                                                                                }
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
-
-                                                                </div>
-
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                }
-                                            }
-
-                                        </div>*@
-
                                 </fieldset>
 
                                 <fieldset class="border p-2">
@@ -1110,7 +954,7 @@
                             </button>
                             <button type="button"
                                     class="btn btn-primary"
-                                    @onclick=@(() => { FormNewSubmitInterlock(); })>
+                                    @onclick=@(() => { FormNewSubmitScene(); })>
                                 Create
                             </button>
                         </div>
@@ -1135,7 +979,7 @@
                             </button>
                         </div>
                         <div class="modal-body">
-                            <form @ref="elFormEditSchedule"
+                            <form @ref="elFormEditScene"
                                   class="needs-validation"
                                   id="formEditWorker"
                                   novalidate>
@@ -1639,45 +1483,56 @@
                                     <div class="row">
                                         <button class="btn btn-success m-3 btn-block"
                                                 type="button"
-                                                @onclick=@(() => { AddNewActionHandle(FormAction.EditAddAction); })>
+                                                @onclick=@(() => 
+                                                           { 
+                                                               crEditScene.Actions.Add(new RunningActionModel());
+                                                               crFilterTargetDevice = FilterTargetDevice(crEditScene);
+                                                               InvokeAsync(StateHasChanged);
+                                                           })>
                                             <i class="fas fa-plus-circle"></i>
                                             ADD NEW ACTIONS
                                         </button>
                                     </div>
 
                                     @{
+                                        // new idea : merge 2 type action list and edit direct in crEditScene >> re fetch list scene item when close modal
+                                        // This is List Action fetch from server
                                         // This is List Action create by user and ready to update to DB
-                                        foreach (var cardNew in crEditLstAddActions)
+                                        foreach (var _card in crEditScene.Actions)
                                         {
                                             <div class="callout callout-warning">
                                                 <div class="mb-4 d-flex">
-                                                    <h4 class="mr-auto">
-                                                        <span class="badge badge-pill badge-warning">NEW</span>
-                                                        Single Actions |
-                                                        <span class="badge badge-pill badge-warning">#@cardNew.ActionObj.DeviceId</span>
-                                                    </h4>
+                                                <h4 class="mr-auto">
+                                                    <span class="badge badge-pill badge-primary">EDIT</span> action
+                                                </h4>
 
-                                                    <button class="btn btn-outline-danger"
-                                                            type="button"
-                                                            @onclick=@(() => { crEditLstAddActions.Remove(cardNew); crEditScene.Actions.Remove(cardNew.ActionObj); })>
-                                                        <i class="far fa-trash-alt"></i>
-                                                    </button>
-                                                </div>
+                                                <button class="btn btn-outline-danger"
+                                                        type="button"
+                                                        @onclick=@(() => 
+                                                                   { 
+                                                                       crEditScene.Actions.Remove(_card);
+                                                                   })>
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </div>
 
                                                 <div class="row">
-
-                                                    <div class="form-group col-4">
+                                                    <div class="form-group col-5">
                                                         <label>
-                                                            Target Device
+                                                            Target Devices
                                                         </label>
                                                         <div class="input-group ">
                                                             <select class="selectpicker form-control"
-                                                                    title="-- Select --"
-                                                                    id="slNewTriggerDv-@cardNew.ActionId"
-                                                                    data-style="btn-warning"
+                                                                    title="-- Change --"
+                                                                    id="slNewTriggerDv-@_card.ActionId"
+                                                                    data-style="btn-primary"
                                                                     data-live-search="true"
-                                                                    @onchange=@(async () => { var _tmpKey = await SelectAndBindSingle(); cardNew.ActionObj.DeviceId = _tmpKey; })>
-                                                                @foreach (var _dv in LstDevice)
+                                                                    multiple
+                                                                    @onchange=@(async () => 
+                                                                            { 
+                                                                                SelectAndBindMultiTargetDevice(FormAction.EditPlusTargetDevice, _card);
+                                                                            })>
+                                                                @foreach (var _dv in crFilterTargetDevice.Where(r => r.DeviceType == "AC"))
                                                                 {
                                                                     <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
                                                                 }
@@ -1687,38 +1542,45 @@
 
                                                     @{
                                                         var _dvType = String.Empty;
-                                                        _dvType = @LstDevice.Where(r => r.Id == cardNew.ActionObj.DeviceId).FirstOrDefault()?.DeviceType;
+                                                        _dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
                                                     }
-                                                    <div class="col-8">
-                                                        <div class="callout callout-warning">
-                                                            <div class="d-flex">
-                                                                <div class=" flex-grow-1">
-                                                                    <h3>Device Type </h3>
-                                                                </div>
-                                                                <div>
-                                                                    <span class="badge badge-pill badge-warning">
-                                                                        <h4>@_dvType</h4>
-                                                                    </span>
-                                                                </div>
+                                                <div class="col-7">
+                                                    <div class="callout callout-primary">
+                                                        <div class="d-flex">
+                                                            <div class=" flex-grow-1">
+                                                                <ul>
+                                                                    @foreach (var dv in _card.LstDeviceId)
+                                                                    {
+                                                                        var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
+                                                                    <li>
+                                                                        <span class="badge badge-pill badge-primary">
+                                                                            @objDv.Id
+                                                                        </span>
+                                                                        - [@objDv.Capabilitie] @objDv.Name
+                                                                    </li>
+                                                                    }
+                                                                </ul>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
 
                                                     <div class="col-12">
                                                         <hr class="dotted">
                                                     </div>
 
-
                                                     <div class="card col-12">
                                                         <div class="card-header">
                                                             <select title="-- Select Attributes --"
-                                                                    data-style="btn-warning"
+                                                                    data-style="btn-primary"
                                                                     class="form-control selectpicker"
                                                                     multiple
                                                                     data-actions-box="true"
                                                                     data-live-search="true"
-                                                                    id="slNewDeviceAttribute-@cardNew.ActionId"
-                                                                    @onchange=@(async()=> { await SelectAndBindMultiAttr(cardNew.ActionObj?.SetValues);  })>
+                                                                    @onchange=@(async()=>
+                                                                            {
+                                                                                await SelectAndBindMultiAttr(_card.SetValues);
+                                                                            })>
                                                                 @{
                                                                     if (_dvType != String.Empty && _dvType != "" && _dvType != null)
                                                                     {
@@ -1733,9 +1595,8 @@
                                                         </div>
                                                         <div class="card-body">
                                                             <div class="row">
-
                                                                 @{
-                                                                    foreach (var _attr in cardNew.ActionObj?.SetValues)
+                                                                    foreach (var _attr in _card?.SetValues)
                                                                     {
                                                                         var _DetailOfAttr = LstAttribute.Where(r => r.Name == _attr.Key).FirstOrDefault();
                                                                         <div class="form-group col-4">
@@ -1745,12 +1606,14 @@
                                                                             <div class="input-group ">
                                                                                 @if (_DetailOfAttr.ValueType == SERVER_TYPES.Enum || _DetailOfAttr.ValueType == SERVER_TYPES.Array)
                                                                                 {
-                                                                                    <select title="-- Select --"
+                                                                                    <select title="@_attr.Value"
                                                                                             class="form-control selectpicker"
                                                                                             data-style="btn-light"
-                                                                                            required
-                                                                                            id=@("slNew" + _attr.Key+ "-" + cardNew.ActionId)
-                                                                                            @onchange=@(async () => { var _tmpKeys = await SelectAndBindSingleTextReturn(); cardNew.ActionObj.SetValues[_attr.Key] = _tmpKeys; })>
+                                                                                            @onchange=@(async () =>
+                                                                                                    {
+                                                                                                        var _tmpKeys = await SelectAndBindSingleTextReturn();
+                                                                                                        _card.SetValues[_attr.Key] = _tmpKeys;
+                                                                                                    })>
 
                                                                                         @foreach (var _valRange in _DetailOfAttr.ValueRange)
                                                                                         {
@@ -1764,7 +1627,7 @@
                                                                                 {
                                                                                     <input class="form-control"
                                                                                            type="number"
-                                                                                           @bind-value="@cardNew.ActionObj.SetValues[_attr.Key]"
+                                                                                           @bind-value="@_card.SetValues[_attr.Key]"
                                                                                            required
                                                                                            step="0.01"
                                                                                            min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
@@ -1774,13 +1637,14 @@
                                                                                 {
                                                                                     <input class="form-control"
                                                                                            type="text"
-                                                                                           @bind-value="@cardNew.ActionObj.SetValues[_attr.Key]" />
+                                                                                           required
+                                                                                           @bind-value="@_card.SetValues[_attr.Key]" />
                                                                                 }
                                                                                 else if (_DetailOfAttr.ValueType == SERVER_TYPES.Integer)
                                                                                 {
                                                                                     <input class="form-control"
                                                                                            type="number"
-                                                                                           @bind-value="@cardNew.ActionObj.SetValues[_attr.Key]"
+                                                                                           @bind-value="@_card.SetValues[_attr.Key]"
                                                                                            step="1"
                                                                                            required
                                                                                            min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
@@ -1794,156 +1658,8 @@
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             </div>
-
-                                        }
-
-                                        // This is List Action fetch from server
-                                        foreach (var cardEdit in crLstEditActions)
-                                        {
-                                            <div id="cardEdit-@cardEdit.ActionObj.DeviceId" class="callout callout-success">
-                                                <div class="mb-4 d-flex">
-                                                    <h4 class="mr-auto">
-                                                        <span class="badge badge-pill badge-success">DEVICE</span>
-                                                        Single Actions |
-                                                        <span class="badge badge-pill badge-success">#@cardEdit.ActionObj?.DeviceId</span>
-                                                    </h4>
-
-                                                    <button class="btn btn-outline-danger"
-                                                            type="button"
-                                                            @onclick=@(() => { crLstEditActions.Remove(cardEdit); crEditScene.Actions.Remove(cardEdit.ActionObj); })>
-                                                        <i class="far fa-trash-alt"></i>
-                                                    </button>
-                                                </div>
-
-                                                <div class="row">
-                                                    <div class="form-group col-4">
-                                                        <label>
-                                                            Target Device
-                                                        </label>
-                                                        <div class="input-group ">
-                                                            <select class="selectpicker form-control"
-                                                                    title="-- Select --"
-                                                                    id="slEditTriggerDv-@cardEdit.ActionId"
-                                                                    data-style="btn-success"
-                                                                    data-live-search="true"
-                                                                    disabled
-                                                                    @onchange=@(async () => { cardEdit.ActionObj.DeviceId = await SelectAndBindSingle(); })>
-                                                                @foreach (var _dv in LstDevice)
-                                                                {
-                                                                    <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
-                                                                }
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    @{ var _dvType = @LstDevice.Where(r => r.Id == cardEdit.ActionObj.DeviceId).FirstOrDefault()?.DeviceType; }
-                                                    <div class="col-8">
-                                                        <div class="callout callout-success">
-                                                            <div class="d-flex">
-                                                                <div class=" flex-grow-1">
-                                                                    <h3>Device Type </h3>
-                                                                </div>
-                                                                <div>
-                                                                    <span class="badge badge-pill badge-success">
-                                                                        <h4>@_dvType</h4>
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-12">
-                                                        <hr class="dotted">
-                                                    </div>
-
-                                                    <div class="card col-12">
-                                                        <div class="card-header">
-                                                            <select title="-- Select Attributes --"
-                                                                    data-style="btn-success"
-                                                                    class="form-control selectpicker"
-                                                                    multiple
-                                                                    data-actions-box="true"
-                                                                    data-live-search="true"
-                                                                    disabled
-                                                                    id="slEditDeviceAttribute-@cardEdit.ActionId"
-                                                                    @onchange=@(async()=> { await SelectAndBindMultiAttr(cardEdit.ActionObj.SetValues);  })>
-                                                                @{
-                                                                    var _lstAttrOfDvType = LstDeviceType.Where(r => r.Name == _dvType).Select(r => r.Attributes).FirstOrDefault();
-                                                                    foreach (var _attr in _lstAttrOfDvType)
-                                                                    {
-                                                                        <option value="@_attr">@_attr</option>
                                                                     }
-                                                                }
-                                                            </select>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <div class="row">
-
-                                                                @{
-                                                                    foreach (var _attr in cardEdit.ActionObj.SetValues)
-                                                                    {
-                                                                        var _DetailOfAttr = LstAttribute.Where(r => r.Name == _attr.Key).FirstOrDefault();
-                                                                        <div class="form-group col-4">
-                                                                            <label>
-                                                                                @_attr.Key
-                                                                            </label>
-                                                                            <div class="input-group ">
-                                                                                @if (_DetailOfAttr.ValueType == SERVER_TYPES.Enum || _DetailOfAttr.ValueType == SERVER_TYPES.Array)
-                                                                                {
-                                                                                    <select title="-- Select --"
-                                                                                            class="form-control selectpicker"
-                                                                                            data-style="btn-light"
-                                                                                            required
-                                                                                            id=@("slEdit" + _attr.Key+ "-" + cardEdit.ActionId)
-                                                                                            @onchange=@(async () => { var _tmpKeys = await SelectAndBindSingleTextReturn(); cardEdit.ActionObj.SetValues[_attr.Key] = _tmpKeys; })>
-
-                                                                                        @foreach (var _valRange in _DetailOfAttr.ValueRange)
-                                                                                        {
-                                                                                            <option value="@_valRange">
-                                                                                                @_valRange
-                                                                                            </option>
-                                                                                        }
-                                                                                    </select>
-                                                                                }
-                                                                                else if (_DetailOfAttr.ValueType == SERVER_TYPES.Double)
-                                                                                {
-                                                                                    <input class="form-control"
-                                                                                           type="number"
-                                                                                           @bind-value="@cardEdit.ActionObj.SetValues[_attr.Key]"
-                                                                                           required
-                                                                                           step="0.01"
-                                                                                           min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
-                                                                                           max="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(1)" />
-                                                                                }
-                                                                                else if (_DetailOfAttr.ValueType == SERVER_TYPES.String)
-                                                                                {
-                                                                                    <input class="form-control"
-                                                                                           type="text"
-                                                                                           @bind-value="@cardEdit.ActionObj.SetValues[_attr.Key]" />
-                                                                                }
-                                                                                else if (_DetailOfAttr.ValueType == SERVER_TYPES.Integer)
-                                                                                {
-                                                                                    <input class="form-control"
-                                                                                           type="number"
-                                                                                           @bind-value="@cardEdit.ActionObj.SetValues[_attr.Key]"
-                                                                                           step="1"
-                                                                                           required
-                                                                                           min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
-                                                                                           max="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(1)" />
-                                                                                }
-                                                                            </div>
-                                                                        </div>
-                                                                    }
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                        }
                                     }
                                 </fieldset>
 
@@ -2024,8 +1740,6 @@
                                             Javascript Action is not in used
                                         </div>
                                     }
-
-
                                 </fieldset>
 
                             </form>
@@ -2040,12 +1754,12 @@
                             <button type="button"
                                     class="btn btn-danger"
                                     @onclick=@(() => { DeleteItemHandle(crEditScene); })>
-                                DELETE SCHEDULE
+                                DELETE SCENE
                             </button>
                             <button type="button"
                                     class="btn btn-primary"
-                                    @onclick=@(() => { FormEditScheduleHandle(); })>
-                                UPDATE SCHEDULE
+                                    @onclick=@(() => { FormEditSubmitScene(); })>
+                                UPDATE SCENE
                             </button>
                         </div>
                     </div>
@@ -2066,34 +1780,22 @@
 </div>
 
 @code {
-    // Hard Code Here
-    enum ExpressSceneEnum { DvEvent, Command }
-    enum itmACModeEnum { Unknown, Fan, Heat, Cool, Ventilation, Dry, AutoHeat, AutoCool }
-    enum ACPowerEnum { On, Off, Unknown }
-    enum FanSpeedEnum { Low, Medium, High, Auto, Unknown }
-    enum ActionGroupDeviceEnum { Single, Zone, Section }
-
-
     bool flagForceSelectInject = false;
 
+    List<DeviceModel> crFilterTargetDevice = new List<DeviceModel>();
     GlobalSceneModel crEditScene = new GlobalSceneModel();
     GlobalSceneModel NewSceneParams = new GlobalSceneModel();
     List<GlobalSceneModel> LstScene = new List<GlobalSceneModel>();
+    List<GlobalSceneModel> LstAllSceneWithGrSetVal = new List<GlobalSceneModel>();
     List<DeviceModel> LstDevice = new List<DeviceModel>();
     List<AreaModel> LstArea = new List<AreaModel>();
     List<ZoneModel> LstZone = new List<ZoneModel>();
     List<SectionModel> LstSection = new List<SectionModel>();
-    List<GenActionsId> crLstEditActions = new List<GenActionsId>();
-    List<GenActionsId> crEditLstAddActions = new List<GenActionsId>();
-    List<GenActionsId> crNewLstAddActions = new List<GenActionsId>();
-    List<MasterDataModel> LstMasterData = new List<MasterDataModel>();
     List<MasterDataModel.DeviceTypeModel> LstDeviceType = new List<MasterDataModel.DeviceTypeModel>();
     List<MasterDataModel.AttributeModel> LstAttribute = new List<MasterDataModel.AttributeModel>();
 
-    ElementReference elFormEditSchedule, elFormNewSchedule, elCurrentSingleSelectBox1, elCurrentSingleSelectBox2, elCurrentMutipleSelectBox;
-    //enum ScheduleTypeEnum { OneTime, Yearly, Monthly, Daily, IntervalTime }
-    enum DayOfWeek { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
-    enum FormAction { EditAddAction, NewAddAction, NewTargetDevice, EditExistTargetDevice, EditPlusTargetDevice }
+    ElementReference elFormEditScene, elFormNewScene;
+    enum FormAction { NewTargetDevice, EditPlusTargetDevice }
 
     ScenesService svScene = new ScenesService();
     DeviceDataStore svDevice = new DeviceDataStore();
@@ -2111,16 +1813,15 @@
         }
 
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-        LstScene = await svScene.GetScenesListAsync(AccessToken);
+
+        RefreshListItem();
         LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
         LstArea = await svAreaLayout.GetAreaListAsync(AccessToken);
         LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
         LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
-        LstMasterData = await svMasterData.GetMasterDataListAsync(AccessToken);
         LstDeviceType = await svMasterData.GetDeviceTypeListAsync(AccessToken);
         LstAttribute = await svMasterData.GetAttributeListAsync(AccessToken);
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-
 
         // In case navigate from query string
         //string queryScheduleId, queryDeviceId;
@@ -2138,11 +1839,9 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-
         if (flagForceSelectInject)
         {
             InjectSelectAfterModal(false);
-            //Console.WriteLine("OnAfterRenderAsync");
         }
 
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbEditJsAction", 300, false, false);
@@ -2159,6 +1858,27 @@
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsAction", 300, true, false);
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbEditJsDebug", 200, true, true);
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsDebug", 200, true, true);
+    }
+
+    public List<DeviceModel> FilterTargetDevice(GlobalSceneModel _scene)
+    {
+        var lstResult = new List<DeviceModel>();
+        var lstChosenDv = _scene.Actions.SelectMany(r => r.LstDeviceId).ToList();
+        lstResult = LstDevice.Where(r => lstChosenDv.Contains(r.Id) == false).ToList();
+        return lstResult;
+    }
+
+    async Task RefreshListItem()
+    {
+        LstAllSceneWithGrSetVal.Clear();
+        LstScene = await svScene.GetScenesListAsync(AccessToken);
+        foreach (var _scene in LstScene)
+        {
+            var objScene = _scene.ShallowCopy();
+            objScene.createActionsByGrSetVal();
+            LstAllSceneWithGrSetVal.Add(objScene);
+        }
+        InvokeAsync(StateHasChanged);
     }
 
     string GetCompareSign(MasterDataModel.CompareOperators _operator)
@@ -2182,20 +1902,6 @@
         }
     }
 
-    async Task PushNewLstExpressionDevice(DeviceModel _dv)
-    {
-        if (NewSceneParams.Expressions.Count == 0)
-        {
-
-        }
-    }
-
-    async Task DeleteActionRow(RunningActionModel _obj)
-    {
-        crEditScene.Actions.Remove(_obj);
-        InvokeAsync(StateHasChanged);
-    }
-
     async Task ChangeScheduleStateHandle(GlobalSceneModel _item)
     {
         var _objScene = _item.ShallowCopy();
@@ -2203,15 +1909,8 @@
         var result = await svScene.InsertUpdateItemAsync(_objScene, AccessToken);
         if (result)
         {
-            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule " + (_objScene.Enable ? "Enabled" : "Disabled"), true);
-
-            //JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-            LstScene = await svScene.GetScenesListAsync(AccessToken);
-            LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-            LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-            LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
-            //JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-            InvokeAsync(StateHasChanged);
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Scene " + (_objScene.Enable ? "Enabled" : "Disabled"), true);
+            RefreshListItem();
         }
         else
         {
@@ -2221,83 +1920,47 @@
 
     async Task DeleteItemHandle(GlobalSceneModel _item)
     {
-        //    var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE THIS SCHEDULE", "#C70039", "Cancel", false);
-        //    if (!isConfirm) return;
+        var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE THIS SCHEDULE", "#C70039", "Cancel", false);
+        if (!isConfirm) return;
 
-        //    JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
-        //    var result = await svShedule.DeleteScheduleAsync(_item.Id, AccessToken);
-        //    if (result)
-        //    {
-        //        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule Deleted", true);
-        //        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "hide");
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        var result = await svScene.DeleteItemAsync(_item.Id, AccessToken);
+        if (result)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule Deleted", true);
+            JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "hide");
 
-        //        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-        //        LstSchedule = await svShedule.GetItemsAsync(AccessToken);
-        //        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        //        LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-        //        LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
-        //        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-        //        InvokeAsync(StateHasChanged);
-        //    }
-        //    else
-        //        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+            RefreshListItem();
+            //LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+            //LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
+            //LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            InvokeAsync(StateHasChanged);
+        }
+        else
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
     }
 
     async Task FormNewClose()
     {
-        crNewLstAddActions.Clear();
-
         //reset list schedule in case user delete action in modal edit then close modal
-        LstScene = await svScene.GetScenesListAsync(AccessToken);
-        InvokeAsync(StateHasChanged);
+        RefreshListItem();
     }
 
     async Task PreNew()
     {
-        crNewLstAddActions.Clear();
-    }
-
-    async Task AddNewActionHandle(FormAction action)
-    {
-        if (action == FormAction.NewAddAction)
-        {
-            NewSceneParams.Actions.Add(new RunningActionModel());
-        }
-        //else if (action == FormAction.EditAddAction)
-        //{
-        //    crEditLstAddActions.Add(_tmpObj);
-        //}
+        NewSceneParams = new GlobalSceneModel();
     }
 
     async Task FormEditClose()
     {
-        crEditLstAddActions.Clear();
-        crLstEditActions.Clear();
-
         //reset list sschedule in case user delete action in modal edit then close modal
-        LstScene = await svScene.GetScenesListAsync(AccessToken);
-        InvokeAsync(StateHasChanged);
+        RefreshListItem();
     }
 
     async Task InjectSelectAfterModal(bool nextFlagState)
     {
-        foreach (var card in crLstEditActions)
-        {
-            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditTriggerDv-" + card.ActionId, card.ActionObj.DeviceId);
-
-            //JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditACPower-" + card.ActionId, (int)Enum.Parse(typeof(ACPowerEnum), card.ActionObj.SetValues["ACPower"]));
-            //JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditITMMode-" + card.ActionId, (int)Enum.Parse(typeof(itmACModeEnum), card.ActionObj.SetValues["itmACMode"]));
-            //JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditFanSpeed-" + card.ActionId, (int)Enum.Parse(typeof(FanSpeedEnum), card.ActionObj.SetValues["FanSpeed"]));
-
-            var LstAttrKey = card.ActionObj.SetValues.Select(r => r.Key).ToList();
-
-            foreach (var attr in LstAttrKey)
-            {
-                JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEdit" + attr + "-" + card.ActionId, card.ActionObj.SetValues[attr]);
-            }
-
-            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditDeviceAttribute-" + card.ActionId, LstAttrKey);
-        }
         flagForceSelectInject = nextFlagState;
     }
 
@@ -2308,16 +1971,10 @@
 
     async Task PreEdit(GlobalSceneModel _item)
     {
-        crLstEditActions.Clear();
         crEditScene = _item.ShallowCopy();
 
         flagForceSelectInject = true;
 
-        var _tmpItemOnjectId = crEditScene.Actions.Select(r => new { objItem = r, idItem = Guid.NewGuid().ToString("N") }).ToList();
-        foreach (var it in _tmpItemOnjectId)
-        {
-            crLstEditActions.Add(new GenActionsId { ActionId = it.idItem, ActionObj = it.objItem });
-        }
         // Parse some value to correct format
         JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsAction", crEditScene.JavaScriptCode, 350);
         // TODO: fix here 
@@ -2329,12 +1986,6 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    //async Task<int> SelectAndBindSingleByIdJquery(string slElId)
-    //{
-    //    var slKeyItem = await JSHelper.InvokeAsync<string>("Interop_DisplayChangeByJqueryId", slElId);
-    //    return await Task.FromResult(int.Parse(slKeyItem));
-    //}
-
     async Task<string> jQuerySelectAndBindSingleTextReturn()
     {
         var slKeyItem = await JSHelper.InvokeAsync<string>("Interop_jQueryDisplayChange");
@@ -2343,31 +1994,31 @@
 
     async Task<string> SelectAndBindSingleTextReturn()
     {
-        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCurrentSingleSelectBox1);
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
         var slKeyItem = _tmpSelectArr[0];
         return await Task.FromResult(slKeyItem.ToString());
     }
 
     async Task<int> SelectAndBindSingle()
     {
-        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCurrentSingleSelectBox1);
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
         var slKeyItem = _tmpSelectArr[0];
         return await Task.FromResult(int.Parse(slKeyItem.ToString()));
     }
 
     private async Task SelectAndBindMultiAttr(Dictionary<string, string> refSetValues)
     {
-        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCurrentMutipleSelectBox);
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
         var ParseValue = _tmpSelectArr[0].ToString();
         if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix
         var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
         if (stateOfValue)
         {
-            if (!refSetValues.ContainsKey(ParseValue)) refSetValues.Add(ParseValue, null);
+            if (refSetValues.ContainsKey(ParseValue) == false) refSetValues.Add(ParseValue, null);
         }
         else
         {
-            if (refSetValues.ContainsKey(ParseValue)) refSetValues.Remove(ParseValue);
+            if (refSetValues.ContainsKey(ParseValue) == true) refSetValues.Remove(ParseValue);
         }
         InvokeAsync(StateHasChanged);
     }
@@ -2380,7 +2031,7 @@
         var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
         if (stateOfValue == true)
         {
-            if (eventHandle == FormAction.NewTargetDevice)
+            if (eventHandle == FormAction.NewTargetDevice || eventHandle == FormAction.EditPlusTargetDevice)
             {
                 if (_action.LstDeviceId.Contains(ParseValue) == false)
                 {
@@ -2390,7 +2041,7 @@
         }
         else
         {
-            if (eventHandle == FormAction.NewTargetDevice)
+            if (eventHandle == FormAction.NewTargetDevice || eventHandle == FormAction.EditPlusTargetDevice)
             {
                 if (_action.LstDeviceId.Contains(ParseValue) == true)
                 {
@@ -2398,38 +2049,12 @@
                 }
             }
         }
-    }
-    async Task SelectAndBindMulti(FormAction action)
-    {
-        //var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
-        //var ParseValue = int.Parse(_tmpSelectArr[0].ToString());
-        //if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix
-        //var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
-        //if (stateOfValue == true)
-        //{
-        //    if (action == FormAction.NewTargetDevice)
-        //    {
-        //        if (!NewSceneParams.Actions.)
-        //        {
-        //            NewSceneParams.RepeatDayOfWeek.Add(ParseValue);
-        //        }
-        //    }
-        //}
-        //else
-        //{
-        //    if (action == FormAction.NewTargetDevice)
-        //    {
-        //        if (NewInterlockParams.RepeatDayOfWeek.Contains(ParseValue))
-        //        {
-        //            NewInterlockParams.RepeatDayOfWeek.Remove(ParseValue);
-        //        }
-        //    }
-        //}
+        InvokeAsync(StateHasChanged);
     }
 
-    async Task FormNewSubmitInterlock()
+    async Task FormNewSubmitScene()
     {
-        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormNewSchedule);
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormNewScene);
         if (!isFormValid)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
@@ -2438,7 +2063,6 @@
 
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
 
-        // add local list (crEditLstAddActions + crLstEditActions) to crEditScene
         //NewInterlockParams.Actions.AddRange(crNewLstAddActions.Select(r => r.ActionObj));
 
         // Convert Some Prop to correct format
@@ -2460,57 +2084,74 @@
 
         JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdNewScene", "hide");
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-        //LstSchedule = await svShedule.GetItemsAsync(AccessToken); // this is already called in FormNewClose()
-        //LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        //LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-        //LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
         FormNewClose();
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
         InvokeAsync(StateHasChanged);
     }
 
-    async Task FormEditScheduleHandle()
+    async Task CloneProfileHanlde(GlobalSceneModel _profile)
     {
-        //var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormEditSchedule);
-        //if (!isFormValid)
-        //{
-        //    JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
-        //    return;
-        //}
+        var ProfileObj = _profile.ShallowCopy();
+        var ProfileName = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "text", "Name your profile", "Clone");
+        if (ProfileName == "") return;
 
-        //JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
 
-        //// add local list (crEditLstAddActions + crLstEditActions) to crEditScene
-        //crEditScene.Actions.AddRange(crEditLstAddActions.Select(r => r.ActionObj));
+        // Convert Some Prop to correct format
+        if (ProfileObj.IsJavaScriptType)
+        {
+            NewSceneParams.JavaScriptCode = await JSHelper.InvokeAsync<string>("Interop_SummerGetCode", "tbNewJsAction");
+        }
+        ProfileObj.Name = ProfileName;
 
-        //// Convert Some Prop to correct format
-        //crEditScene.Time = crDatetimeBinding.Value.ToUnixTimeSeconds();
-        //if (crEditScene.IsJavaScriptAction)
-        //{
-        //    crEditScene.JavaScriptAction = await JSHelper.InvokeAsync<string>("Interop_SummerGetCode", "tbEditJsAction");
-        //}
-        //var result = await svScene.InsertUpdateItemAsync(crEditScene, AccessToken);
-        //if (result)
-        //{
-        //    JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule Updated", true);
-        //    JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "hide");
+        // Run script to gen list select mutiple device
+        ProfileObj.ReGenerateActionsFromGroupDvId();
 
-        //    JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-        //    //LstSchedule = await svShedule.GetItemsAsync(AccessToken); // this is already called in FormEditClose()
-        //    LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        //    LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-        //    LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
-        //    FormEditClose();
-        //    JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-        //    InvokeAsync(StateHasChanged);
-        //}
-        //else
-        //    JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
+        var resultDvId = await svScene.InsertUpdateItemAsync(ProfileObj, AccessToken);
+        if (resultDvId == false)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Some thing went wrong", false);
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Scene Cloned", true);
+
+        RefreshListItem();
     }
 
-    class GenActionsId
+    async Task FormEditSubmitScene()
     {
-        public RunningActionModel ActionObj { get; set; }
-        public string ActionId { get; set; }
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormEditScene);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+
+        // Run script to gen list select mutiple device
+        crEditScene.ReGenerateActionsFromGroupDvId();
+
+        // Convert Some Prop to correct format
+        if (crEditScene.IsJavaScriptType)
+        {
+            crEditScene.JavaScriptCode = await JSHelper.InvokeAsync<string>("Interop_SummerGetCode", "tbEditJsAction");
+        }
+        var result = await svScene.InsertUpdateItemAsync(crEditScene, AccessToken);
+        if (result)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule Updated", true);
+            JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "hide");
+
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+            //LstSchedule = await svShedule.GetItemsAsync(AccessToken); // this is already called in FormEditClose()
+            //LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+            //LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
+            //LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+            FormEditClose();
+            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+        }
+        else
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
+
+        InvokeAsync(StateHasChanged);
     }
 }

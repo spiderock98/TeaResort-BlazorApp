@@ -364,9 +364,9 @@ namespace SmartRetail.Resources
             return RequestUrl;
         }
 
-        public static string DELETE_SCENES(string id, string token)
+        public static string DELETE_SCENES(int id, string token)
         {
-            string RequestUrl = "http://" + SERVER_IP + "/api/User/Scenes?id=" + id + "&token=" + token;
+            string RequestUrl = "http://" + SERVER_IP + "/api/GlobalScenes?id=" + id.ToString() + "&token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;

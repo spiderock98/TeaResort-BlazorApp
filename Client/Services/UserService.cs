@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace SmartRetail.Services
+namespace SmartRetail.Client.Services
 {
     public class UserService
     {

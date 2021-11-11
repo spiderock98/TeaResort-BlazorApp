@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using SmartRetail.Share.Models;
 using Newtonsoft.Json;
 
-namespace SmartRetail.Services
+namespace SmartRetail.Client.Services
 {
     public class ScenesService
     {
@@ -89,7 +89,7 @@ namespace SmartRetail.Services
             return await Task.FromResult(false);
         }
 
-        public async Task<bool> DeleteItemAsync(string id, string token)
+        public async Task<bool> DeleteItemAsync(int id, string token)
         {
             try
             {

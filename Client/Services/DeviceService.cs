@@ -7,7 +7,7 @@ using SmartRetail.Share.Models;
 using Newtonsoft.Json;
 using System.Linq;
 
-namespace SmartRetail.Services
+namespace SmartRetail.Client.Services
 {
     public class DeviceDataStore
     {

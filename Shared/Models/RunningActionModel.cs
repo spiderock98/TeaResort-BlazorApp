@@ -10,11 +10,6 @@ namespace SmartRetail.Share.Models
     public enum MemberType { Device, Scenes, Schedule };
     public class RunningActionModel
     {
-        [JsonIgnore]
-        public string ActionId { get; set; } = Guid.NewGuid().ToString("N");
-        [JsonIgnore]
-        public List<int> LstDeviceId { get; set; } = new List<int>();
-
         public MemberType Type { get; set; }
         /// <summary>
         /// For Fix Value
@@ -28,6 +23,13 @@ namespace SmartRetail.Share.Models
         public Dictionary<string, Tuple<int, string>> SetReferValue { get; set; } = new Dictionary<string, Tuple<int, string>>();
         public int DeviceId { get; set; }
         public string ScheduleId { get; set; }
+
+
+        // ! misc function and attr
+        [JsonIgnore]
+        public string ActionId { get; set; } = Guid.NewGuid().ToString("N");
+        [JsonIgnore]
+        public List<int> LstDeviceId { get; set; } = new List<int>();
 
         public List<RunningActionModel> GenActionByLstDeviceId()
         {

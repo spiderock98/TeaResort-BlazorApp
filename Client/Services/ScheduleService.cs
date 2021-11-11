@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using SmartRetail.Share.Models;
 using Newtonsoft.Json;
 
-namespace SmartRetail.Services
+namespace SmartRetail.Client.Services
 {
     public class ScheduleService
     {
