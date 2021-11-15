@@ -55,6 +55,12 @@ namespace SmartRetail.Share.Models
         public string Description { get; set; }
         public bool IsRunning { get; set; } = false;
 
+        public GlobalScheduleModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<GlobalScheduleModel>(_tmpSerializeString);
+        }
+
         public GlobalScheduleModel ShallowCopy()
         {
             return (GlobalScheduleModel)this.MemberwiseClone();

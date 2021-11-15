@@ -9,7 +9,10 @@ fieldset {
 
 /* Dotted Seperator line */
 hr.dotted {
-    border-top: 3px dotted #bbb;
+  border-top: 3px dotted #bbb;
 }
 
-/* Dotted Seperator line (vertical) */
+/* backgound modal */
+.modal {
+  background: linear-gradient(#c1e2f1, #f7e8f6) !important;
+}

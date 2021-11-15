@@ -115,6 +115,27 @@ namespace SmartRetail.Client.Services
             return await Task.FromResult(true);
         }
 
+        public async Task<bool> UpdateAllDeviceData(DeviceModel item, string token)
+        {
+            var uri = new Uri(Resources.GetLink.POST_UPDATE_DEVICE(token));
+            var _JsonValue = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
+            try
+            {
+                HttpResponseMessage response = await _client.PostAsync(uri, _JsonValue);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    return await Task.FromResult(true);
+                }
+                return await Task.FromResult(false);
+            }
+            catch
+            {
+                return await Task.FromResult(false);
+            }
+        }
+
         public async Task<bool> UpdateItemAsync(int deviceId, string deviceType, string dataSource, string deviceName, int roomId, string token)
         {
             var uri = new Uri(Resources.GetLink.POST_DEVICE_UPDATE(deviceId, deviceType, dataSource, deviceName, roomId, token));

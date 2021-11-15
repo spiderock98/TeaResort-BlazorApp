@@ -1,4 +1,4 @@
-﻿@page "/layout_area"
+﻿@page "/layout_room"
 @inject IJSRuntime JSHelper
 @using SmartRetail.Client.Services
 @using Newtonsoft.Json
@@ -14,7 +14,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
-                    <h1 style="font-size:50px;">Layout Area</h1>
+                    <h1 style="font-size:50px;">Layout Room</h1>
                 </div>
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -27,10 +27,10 @@
             <button class="btn btn-success m-2"
                     type="button"
                     data-toggle="modal"
-                    data-target="#mdNewArea"
+                    data-target="#mdNewSection"
                     @onclick="PreNew">
                 <i class="fas fa-plus-circle"></i>
-                NEW AREA
+                NEW ROOM
             </button>
 
             <table class="bootstrap-table"
@@ -43,23 +43,26 @@
                     <tr class="text-center">
                         <th>ID</th>
                         <th>NAME</th>
+                        <th>ZONE</th>
                         <th>ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
                     @{
-                        foreach (var _area in LstAllArea.OrderByDescending(r => r.Id))
+                        foreach (var _section in LstAllSection.OrderByDescending(r => r.Id))
                         {
                             <tr class="text-center">
-                                <th>@_area.Id</th>
-                                <td>@_area.Name</td>
+                                <th>@_section.Id</th>
+                                <td>@_section.Name</td>
+                                <td>@LstAllZone.Where(r => r.Id == _section.Zone).FirstOrDefault()?.Name</td>
                                 <td>
                                     <div class="d-flex justify-content-center flex-wrap">
+
                                         <button type="button"
-                                                data-target="#mdEditArea"
+                                                data-target="#mdEditSection"
                                                 data-toggle="modal"
                                                 class="btn btn-xs btn-warning m-1"
-                                                @onclick=@(() => { PreEdit(_area); })>
+                                                @onclick=@(() => { PreEdit(_section); })>
                                             <i class="fas fa-pen"></i>
                                         </button>
 
@@ -67,7 +70,7 @@
                                                 data-placement="top"
                                                 title="Delete"
                                                 class="btn btn-xs btn-danger m-1"
-                                                @onclick=@(() => { ModalInfoHandle(_area, ModalType.Delete); })>
+                                                @onclick=@(() => { ModalInfoHandle(_section, ModalType.Delete); })>
                                             <i class="fas fa-trash"></i>
                                         </button>
 
@@ -84,8 +87,8 @@
     <!-- /.content -->
 </div>
 
-<!-- Modal Edit Area -->
-<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditArea" tabindex="-1">
+<!-- Modal Edit Section -->
+<div class="modal animate__animated  animate__bounceInUp" data-backdrop="static" id="mdEditSection" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered justify-content-center ">
         <div class="modal-content">
             <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
@@ -93,52 +96,76 @@
                     <i class="fas fa-cogs"></i>
                 </h1>
                 <h2 class="modal-title w-100">
-                    Edit Area
+                    Edit Room
                 </h2>
             </div>
             <div class="modal-body">
-                    <form @ref="elFormEdit">
-                        <div class="row">
-                            <div class="input-group mb-3 col-12">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-id-card"></i>
-                                    </span>
-                                </div>
-                                <input class="form-control"
-                                       type="text"
-                                       @bind-value="@CrEditArea.Name"
-                                       placeholder="Room Name"
-                                       required />
+                <form @ref="elFormEdit">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
                             </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@CrEditSection.Name"
+                                   placeholder="Room Name"
+                                   required />
                         </div>
 
-                        @foreach (var _zone in LstAllZone.Where(r => r.Area == CrEditArea.Id).ToList())
-                        {
-                            <div class="alert alert-light d-flex" role="alert">
-                                <div class="flex-grow-1">
-                                    <span class="badge badge-success">
-                                        <h5>@_zone.Name</h5>
-                                    </span>
-                                </div>
-                                <button class="btn btn-outline-success mr-1"
-                                        type="button"
-                                        @onclick=@(()=> { DetachZone(_zone); })>
-                                    <i class="fas fa-unlock-alt"></i>
-                                    Detach
-                                </button>
-                                <button class="btn btn-outline-success ml-1"
-                                        type="button">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </button>
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-paper-plane"></i>
+                                </span>
                             </div>
-                        }
-                    </form>
+                            <select @onchange=@(async() =>
+                                                {
+                                                    var slKey = await SelectAndBindSingleInt();
+                                                    CrEditSection.Zone = slKey;
+                                                })
+                                    id="slEditAssigned"
+                                    data-style="btn-light"
+                                    data-live-search="true"
+                                    class="form-control selectpicker"
+                                    required>
+                                <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                @foreach (var _zone in LstAllZone)
+                                {
+                                    <option value="@_zone.Id">@_zone.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @foreach (var _device in LstAllDevice.Where(r => r.SectionId == CrEditSection.Id).ToList())
+                    {
+                        <div class="alert alert-light d-flex" role="alert">
+                            <div class="flex-grow-1">
+                                <span class="badge badge-success">
+                                    <h5>@_device.Name</h5>
+                                </span>
+                            </div>
+                            <button class="btn btn-outline-success mr-1"
+                                    type="button"
+                                    @onclick=@(()=> { DetachDevice(_device); })>
+                                <i class="fas fa-unlock-alt"></i>
+                                Detach
+                            </button>
+                            <button class="btn btn-outline-success ml-1"
+                                    type="button">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                        </div>
+                    }
+                </form>
             </div>
             <div class="modal-footer d-flex justify-content-center">
-                <button type="button" 
-                        class="btn btn-outline-info" 
-                        data-dismiss="modal" 
+                <button type="button"
+                        class="btn btn-outline-info"
+                        data-dismiss="modal"
                         @onclick="PreCloseModalEdit">
                     Cancle
                 </button>
@@ -152,8 +179,9 @@
     </div>
 </div>
 
-<!-- Modal New Area -->
-<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdNewArea" tabindex="-1">
+
+<!-- Modal New Zone -->
+<div class="modal animate__animated  animate__bounceInUp" data-backdrop="static" id="mdNewSection" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered justify-content-center">
         <div class="modal-content">
             <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
@@ -161,7 +189,7 @@
                     <i class="fas fa-folder-plus"></i>
                 </h1>
                 <h2 class="modal-title w-100">
-                     New Area Layout
+                     New Room Layout
                 </h2>
             </div>
             <div class="modal-body">
@@ -175,14 +203,38 @@
                             </div>
                             <input class="form-control"
                                    type="text"
-                                   @bind-value="@NewAreaParam.Name"
-                                   placeholder="Area Name"
+                                   @bind-value="@NewSectionParam.Name"
+                                   placeholder="Room Name"
                                    required />
+                        </div>
+
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-paper-plane"></i>
+                                </span>
+                            </div>
+                            <select @onchange=@(async() =>
+                                                {
+                                                    var slKey = await SelectAndBindSingleInt();
+                                                    NewSectionParam.Zone = slKey;
+                                                })
+                                    title="-- Assigned to Zone --"
+                                    data-style="btn-light"
+                                    data-live-search="true"
+                                    class="form-control selectpicker"
+                                    required>
+                                <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                @foreach (var _zone in LstAllZone)
+                                {
+                                    <option value="@_zone.Id">@_zone.Name</option>
+                                }
+                            </select>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer d-flex justify-content-center">
+            <div class="modal-footer">
                 <button type="button"
                         class="btn btn-outline-info"
                         data-dismiss="modal">
@@ -205,14 +257,16 @@
     ElementReference elFormNew, elFormEdit;
     string AccessToken = "";
 
-    AreaModel NewAreaParam = new AreaModel();
-    AreaModel CrEditArea = new AreaModel();
+    SectionModel NewSectionParam = new SectionModel();
+    SectionModel CrEditSection = new SectionModel();
 
     List<AreaModel> LstAllArea = new List<AreaModel>();
     List<ZoneModel> LstAllZone = new List<ZoneModel>();
     List<SectionModel> LstAllSection = new List<SectionModel>();
+    List<DeviceModel> LstAllDevice = new List<DeviceModel>();
 
     LayoutAreaSevice svLayout = new LayoutAreaSevice();
+    DeviceDataStore svDevice = new DeviceDataStore();
 
     protected override async Task OnInitializedAsync()
     {
@@ -225,8 +279,10 @@
 
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
         LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        LstAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
         LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
         LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        ////LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
     }
 
@@ -250,32 +306,32 @@
         return await Task.FromResult(int.Parse(slKeyItem.ToString()));
     }
 
-    async Task DetachAllZoneInArea(AreaModel _area)
+    async Task DetachAllDeviceInSection(SectionModel _section)
     {
-        // get all zone belong to area then detach all
-        var _crLstZoneAssignedToArea = LstAllZone.Where(r => r.Area == _area.Id).ToList();
+        // get all device belong to section then detach all
+        var _crLstDvAssignedToSec = LstAllDevice.Where(r => r.SectionId == _section.Id).ToList();
         var isAllOk = true;
-        foreach (var _zone in _crLstZoneAssignedToArea)
+        foreach (var _device in _crLstDvAssignedToSec)
         {
-            _zone.Area = -1;
-            var _isThisOk = await svLayout.UpdateZoneAsync(_zone, AccessToken);
+            _device.SectionId = -1;
+            var _isThisOk = await svDevice.UpdateAllDeviceData(_device, AccessToken);
             if (_isThisOk == false) isAllOk = false;
         }
         if (isAllOk)
         {
-            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All zones of this area has been detached", true);
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All devices of this section has been detached", true);
         }
         else
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
         }
-        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
     }
 
-    async Task DetachZone(ZoneModel _zone)
+    async Task DetachDevice(DeviceModel _device)
     {
-        _zone.Area = -1;
-        var isOk = await svLayout.UpdateZoneAsync(_zone, AccessToken);
+        _device.SectionId = -1;
+        var isOk = await svDevice.UpdateAllDeviceData(_device, AccessToken);
         if (isOk)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item detached", true);
@@ -286,9 +342,9 @@
         }
         // Re fetch all List
         //LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
-        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        //LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
         //LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
-        //LstAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        LstAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
         //LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
 
         InvokeAsync(StateHasChanged);
@@ -306,11 +362,11 @@
         var isOk = false;
         if (submitType == ModalType.Create)
         {
-            isOk = await svLayout.InsertAreaAsync(NewAreaParam, AccessToken);
+            isOk = await svLayout.InsertSectionAsync(NewSectionParam, AccessToken);
         }
         else if (submitType == ModalType.Edit)
         {
-            isOk = await svLayout.UpdateAreaAsync(CrEditArea, AccessToken);
+            isOk = await svLayout.UpdateSectionAsync(CrEditSection, AccessToken);
         }
         // check response
         if (isOk)
@@ -322,42 +378,42 @@
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
         }
         JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
-        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", submitType == ModalType.Create ? "mdNewArea" : "mdEditArea", "hide");
+        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", submitType == ModalType.Create ? "mdNewSection" : "mdEditSection", "hide");
         // Re fetch all List
-        LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
         InvokeAsync(StateHasChanged);
     }
 
-    async Task ModalInfoHandle(AreaModel _area, ModalType action)
+    async Task ModalInfoHandle(SectionModel _section, ModalType action)
     {
-        string InputAreaName = "";
+        string InputSectionName = "";
         // Pre Validate
         if (action == ModalType.Delete)
         {
-            var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE AREA " + _area.Name, "#C70039", "Cancel", false);
+            var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE SECTION " + _section.Name, "#C70039", "Cancel", false);
             if (!isConfirm) return;
         }
         else
         {
-            InputAreaName = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "text", "Area Name", _area.Name, action == ModalType.Edit ? "Save Changed" : "Create");
-            if (InputAreaName == "") return;
-            _area.Name = InputAreaName;
+            InputSectionName = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "text", "Section Name", _section.Name, action == ModalType.Edit ? "Save Changed" : "Create");
+            if (InputSectionName == "") return;
+            _section.Name = InputSectionName;
         }
 
         // Request to server
         var isOk = false;
         if (action == ModalType.Create)
         {
-            isOk = await svLayout.InsertAreaAsync(_area, AccessToken);
+            isOk = await svLayout.InsertSectionAsync(_section, AccessToken);
         }
         else if (action == ModalType.Edit)
         {
-            isOk = await svLayout.UpdateAreaAsync(_area, AccessToken);
+            isOk = await svLayout.UpdateSectionAsync(_section, AccessToken);
         }
         else if (action == ModalType.Delete)
         {
-            isOk = await svLayout.DeleteAreaAsync(_area.Id, AccessToken);
-            DetachAllZoneInArea(_area);
+            isOk = await svLayout.DeleteSectionAsync(_section.Id, AccessToken);
+            DetachAllDeviceInSection(_section);
         }
 
         // check response
@@ -371,7 +427,7 @@
         }
 
         // Re fetch all List
-        LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
         InvokeAsync(StateHasChanged);
     }
 
@@ -381,13 +437,16 @@
     }
     async Task PreNew()
     {
-        NewAreaParam = new AreaModel();
+        NewSectionParam = new SectionModel();
         InvokeAsync(StateHasChanged);
     }
 
-    async Task PreEdit(AreaModel _area)
+    async Task PreEdit(SectionModel _section)
     {
-        CrEditArea = _area.ShallowCopy();
+        CrEditSection = _section.ShallowCopy();
+
+        var _crAssignTo = LstAllZone.Where(r => r.Id == CrEditSection.Zone).FirstOrDefault()?.Id;
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditAssigned", _crAssignTo);
 
         await InvokeAsync(StateHasChanged);
     }

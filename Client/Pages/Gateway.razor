@@ -1,0 +1,166 @@
+﻿@page "/gateway"
+@inject NavigationManager uriHelper
+@using BlazorDateRangePicker
+@using Helper
+@inject IJSRuntime JSHelper
+@using SmartRetail.Shared
+@using SmartRetail.Client.Services
+@using Share.Models
+@using System.Collections
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+@using Newtonsoft.Json
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Gateway Listing</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <table class="bootstrap-table"
+                   data-search="true"
+                   data-show-export="true"
+                   data-search-align="right"
+                   data-buttons-align="right"
+                   data-pagination="true"
+                   data-height="700">
+                <thead>
+                    <tr class="text-center">
+                        <th>No.</th>
+                        <th>Name</th>
+                        <th>SourceType</th>
+                        <th>IsRequestServer</th>
+                        <th>IsUpdateOutsideDevice</th>
+                        <th>Interval</th>
+                        <th>LastUpdateDeviceTime</th>
+                        <th>Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var _gateway in LstAllDataSource)
+            {
+                    <tr class="text-center">
+                        <th>@_gateway.ID</th>
+                        <td>@_gateway.Name</td>
+                        <td>@_gateway.SourceType</td>
+                        <td>@_gateway.IsRequestServer</td>
+                        <td>@_gateway.IsUpdateOutsideDevice</td>
+                        <td>@_gateway.Interval</td>
+                        <td>@UnixTime.UnixMillisToLocalTimeFormat(_gateway.LastUpdateDeviceTime)</td>
+                        <td>
+
+                        </td>
+                    </tr>
+            }
+                   
+                </tbody>
+            </table>
+
+
+            <!-- Modal Setting -->
+
+
+            @{
+                if (flagForceSelectInject)
+                {
+                    InjectSelectAfterModal(true);
+                    //Console.WriteLine("Inject Inline");
+                }
+            }
+
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+@code {
+    bool flagForceSelectInject = false;
+    string AccessToken = "";
+    ElementReference elModalEdit, elCrSingleSelectBox;
+
+
+    List<DataSourceModel> LstAllDataSource = new List<DataSourceModel>();
+
+    DataSourceService svDataSource = new DataSourceService();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == "")
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login");
+        }
+        RefetchData(true);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (flagForceSelectInject)
+        {
+            InjectSelectAfterModal(false);
+        }
+        await JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+        if (!firstRender)
+        {
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    async Task InjectSelectAfterModal(bool nextFlagState)
+    {
+        flagForceSelectInject = nextFlagState;
+    }
+
+
+    async Task RefetchData(bool isNoti)
+    {
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+
+        var taskLstAllDataSource =  svDataSource.GetDataSourceListAsync(AccessToken);
+
+        await Task.WhenAll(taskLstAllDataSource);
+
+        LstAllDataSource = await taskLstAllDataSource;
+
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task<int> SelectAndBindSingle()
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCrSingleSelectBox);
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(int.Parse(slKeyItem.ToString()));
+    }
+
+    async Task EditModalSubmit()
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elModalEdit);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+    }
+
+    async Task<string> SelectAndBindSingleTextReturn()
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(slKeyItem.ToString());
+    }
+}

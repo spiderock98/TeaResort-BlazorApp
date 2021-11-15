@@ -180,17 +180,6 @@ function Interop_ShowHideModal(mdId, state) {
   $(`#${mdId}`).modal(`${state}`);
 }
 
-function Interop_InjectBootstrapTable() {
-  const $table = $(`#table`);
-  $table.bootstrapTable({
-    exportDataType: "all",
-    exportTypes: ["json", "xml", "csv", "txt", "sql", "excel", "pdf"],
-    formatNoMatches: () => {
-      return "";
-    },
-  });
-}
-
 function Interop_GotoUrlAsync(uri, timeout) {
   setTimeout(() => {
     document.getElementById(uri).scrollIntoView({ behavior: "smooth" });
@@ -227,7 +216,7 @@ async function Interop_jQueryDisplayChange() {
   return result;
 }
 
-async function Interop_DisplayChange(el) {
+async function Interop_DisplayChange() {
   //console.log(el);
   let arrResult = await _handleSelect();
   //console.log($(el).val());
@@ -259,6 +248,18 @@ async function Interop_DisplayChangeByJqueryId(slElId) {
 function Interop_FormValidate(elForm) {
   elForm.classList.add("was-validated");
   return elForm.checkValidity();
+}
+
+// this is for event register and call this function once onAfterRender
+function OneTimeEventHandle() {
+  // $(".modal")
+  //   .on("show.bs.modal", function (e) {
+  //     $("body").addClass("example-open");
+  //   })
+  //   .on("hide.bs.modal", function (e) {
+  //     $("body").removeClass("example-open");
+  //   });
+  // $(".modal").on("hide.bs.modal", function (e) {});
 }
 
 async function Interop_Swal2InputAsync(inputType, title, confirmText) {
@@ -403,25 +404,24 @@ function Interop_PurgeValidBtCache() {
   $("form.was-validated").removeClass("was-validated");
 }
 
+function Interop_PurgeBootstrapSelectCache() {
+  $(".selectpicker").selectpicker("render");
+  $(".selectpicker").selectpicker("refresh");
+}
+
 function Interop_PurgeAllCache() {
   // clear all select bootstrap
   $(".selectpicker").selectpicker("deselectAll");
   $(".selectpicker").selectpicker("val", []);
 
   // clear all validate sign
-  $("form.was-validated").removeClass("was-validated");
-}
-
-function Interop_PurgeBootstrapSelectCache() {
-  $(".selectpicker").selectpicker("render");
-  $(".selectpicker").selectpicker("refresh");
+  Interop_PurgeValidBtCache();
 }
 
 function Interop_InjectBootstrapSelectionById(id, value) {
-  //console.log(id, value);
+  console.log(id, value);
   $(`#${id}`).selectpicker("val", value);
-  $(".selectpicker").selectpicker("render");
-  $(".selectpicker").selectpicker("refresh");
+  Interop_PurgeBootstrapSelectCache();
 }
 
 function InjectBootstrapSwitch() {
@@ -429,6 +429,7 @@ function InjectBootstrapSwitch() {
     $(this).bootstrapSwitch("state", $(this).prop("checked"));
   });
 }
+
 function InjectFormValidate() {
   // Fetch all the forms we want to apply custom Bootstrap validation styles to
   var forms = document.getElementsByClassName("needs-validation");

@@ -34,110 +34,106 @@
                             type="button"
                             data-toggle="modal"
                             data-target="#mdNewScene"
-                            @onclick="PreNew">
-                        Add New Scene
+                            @onclick=@(()=>
+                                       {
+                                           NewSceneParams = new GlobalSceneModel();
+                                           InvokeAsync(StateHasChanged);
+                                       })>
+                        Add New Interlock
                     </button>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr class="text-center">
-                                    <th>No.</th>
-                                    <th>NAME</th>
-                                    <th>ENABLE</th>
-                                    <th>IS SCRIPT</th>
-                                    <th>LAST RUN</th>
-                                    <th>CONTROL</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @{
-                                    foreach (var profile in LstAllSceneWithGrSetVal)
-                                    {
-                                        <tr class="text-center">
-                                            <th>@profile.Id</th>
-                                            <td>@profile.Name</td>
-                                            @{ if (profile.Enable)
-                                                {
-                                                    <td>
-                                                        <span class="badge badge-pill badge-success">Enable</span>
+                    <table class="bootstrap-table"
+                           data-search="true"
+                           data-show-export="true"
+                           data-search-align="right"
+                           data-buttons-align="right"
+                           data-pagination="true"
+                           data-height="700">
+                        <thead>
+                            <tr class="text-center">
+                                <th>No.</th>
+                                <th>NAME</th>
+                                <th>ENABLE</th>
+                                <th>LAST RUN</th>
+                                <th>CONTROL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                foreach (var profile in LstScene)
+                                {
+                                    <tr class="text-center">
+                                        <th>@profile.Id</th>
+                                        <td>@profile.Name</td>
+                                        @{ if (profile.Enable)
+                                            {
+                                                <td>
+                                                    <span class="badge badge-pill badge-success">Enable</span>
 
-                                                    </td>
-                                                }
-                                                else
-                                                {
-                                                    <td>
-                                                        <span class="badge badge-pill badge-danger">Disable</span>
-                                                    </td>
-                                                }
+                                                </td>
                                             }
-                                            <td>@profile.IsJavaScriptType</td>
-                                            <td>@UnixTime.UnixMillisToLocalTimeFormat(profile.LastRunTime)</td>
-                                            <td>
-                                                <div class="d-flex flex-wrap">
-                                                    <button class="btn btn-xs btn-primary m-1"
-                                                            type="button"
-                                                            data-toggle="modal"
-                                                            data-target="#mdEditSchedule"
-                                                            @onclick=@(() => { PreEdit(profile); })>
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
+                                            else
+                                            {
+                                                <td>
+                                                    <span class="badge badge-pill badge-danger">Disable</span>
+                                                </td>
+                                            }
+                                        }
+                                        <td>@UnixTime.UnixMillisToLocalTimeFormat(profile.LastRunTime)</td>
+                                        <td>
+                                            <div class="d-flex flex-wrap">
+                                                <button class="btn btn-xs btn-primary m-1"
+                                                        type="button"
+                                                        data-toggle="modal"
+                                                        data-target="#mdEditSchedule"
+                                                        @onclick=@(() => { PreEdit(profile); })>
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
 
-                                                    @*
-        <button class="btn btn-xs btn-danger m-1"
-                @onclick=@(() => { DeleteItemHandle(profile); })>
-            <i class="fas fa-trash-alt"></i>
-        </button>
-                                                    *@
+                                                @{
+                                                    string attrBtnEnable = profile.Enable ? "light" : "success";
+                                                    var titleTooltip = profile.Enable ? "Disable Schedule" : "Enable Schedule";
+                                                }
+                                                <button data-toggle="tooltip"
+                                                        data-placement="top"
+                                                        title="@titleTooltip" class="btn btn-xs btn-@attrBtnEnable m-1"
+                                                        @onclick=@(() => { ChangeScheduleStateHandle(profile); })>
+                                                    <i class="fas fa-power-off"></i>
+                                                </button>
 
-                                                    @{
-                                                        string attrBtnEnable = profile.Enable ? "light" : "success";
-                                                        var titleTooltip = profile.Enable ? "Disable Schedule" : "Enable Schedule";
-                                                    }
-                                                    <button data-toggle="tooltip"
-                                                            data-placement="top"
-                                                            title="@titleTooltip" class="btn btn-xs btn-@attrBtnEnable m-1"
-                                                            @onclick=@(() => { ChangeScheduleStateHandle(profile); })>
-                                                        <i class="fas fa-power-off"></i>
-                                                    </button>
-
-                                                    <button data-toggle="tooltip"
-                                                            data-placement="top"
-                                                            title="Clone" class="btn btn-xs btn-info m-1"
-                                                            @onclick=@(() => 
-                                                                       { 
-                                                                           CloneProfileHanlde(profile); 
+                                                <button data-toggle="tooltip"
+                                                        data-placement="top"
+                                                        title="Clone" class="btn btn-xs btn-info m-1"
+                                                        @onclick=@(() =>
+                                                                       {
+                                                                           CloneProfileHanlde(profile);
                                                                        })>
-                                                        <i class="far fa-clone"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
+                                                    <i class="far fa-clone"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
-
+                            }
+                        </tbody>
+                    </table>
                 </div>
                 <!-- /.card-body -->
             </div>
             <!-- /.card -->
             <!-- Modal New Schedule -->
-            <div class="modal fade" data-backdrop="static" id="mdNewScene" tabindex="-1">
+            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" data-keyboard="false"  id="mdNewScene" tabindex="-1">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h2 class="modal-title">
-                                Create Interlock Profile
+                        <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                            <h1 class="modal-title w-100">
+                                <i class="fas fa-plus-circle"></i>
+                            </h1>
+                            <h2 class="modal-title w-100">
+                                New Interlock Profile
                             </h2>
-
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"
-                                    @onclick=@(() => { FormNewClose(); })>
-                                <span aria-hidden="true">&times;</span>
-                            </button>
                         </div>
+                        
                         <div class="modal-body">
                             <form @ref="elFormNewScene"
                                   class="needs-validation"
@@ -156,45 +152,28 @@
                                             <input @bind-value="NewSceneParams.Name"
                                                    type="text"
                                                    class="form-control"
+                                                   placeholder="-- Name of new Interlock --"
                                                    required />
                                         </div>
                                     </div>
-
-                                    @*<div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">
-                                            <i class="fas fa-clock"></i>
-                                            Occurred In Time
-                                        </label>
-                                        <div class="col-sm-10">
-                                            <DateRangePicker class="form-control"
-                                                             SingleDatePicker="true"
-                                                             TimePicker="true"
-                                                             TimePicker24Hour="true"
-                                                             DateFormat="dddd dd/MM/yyyy - hh:mm tt"
-                                                             @bind-StartDate="crDatetimeBinding"
-                                                             required />
-                                        </div>
-                                    </div>*@
                                 </fieldset>
-
 
                                 <fieldset class="border p-2">
                                     <legend class="w-auto">
-                                        <h2 class="font-weight-bolder font-italic">IF</h2>
+                                        <h2 class="font-weight-bolder font-italic">IF STATEMENT</h2>
                                     </legend>
 
                                     <div class="container-fluid">
-                                        <div class="row">
-                                            <button class="btn btn-outline-primary m-1">Export Configure</button>
-                                            <button class="btn btn-outline-primary m-1">Import Configure</button>
-                                        </div>
+                                        @*<div class="row">
+                    <button class="btn btn-outline-primary m-1">Export Configure</button>
+                    <button class="btn btn-outline-primary m-1">Import Configure</button>
+                </div>*@
 
                                         @foreach (var _express in NewSceneParams.Expressions)
                                         {
                                             int idx = NewSceneParams.Expressions.IndexOf(_express);
 
                                             <div class="row align-items-center">
-                                                @*show the delete expression button*@
                                                 <div class="col-auto">
                                                     <button class="btn btn-danger btn-sm"
                                                             type="button"
@@ -423,6 +402,7 @@
                                             </div>
                                         }
 
+                                        <!-- Drop down select button -->
                                         <div class="dropdown">
                                             <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="fas fa-plus-circle"></i>
@@ -679,8 +659,7 @@
                                                 @onclick=@(() =>
                                                            {
                                                                NewSceneParams.Actions.Add(new RunningActionModel());
-                                                               crFilterTargetDevice = FilterTargetDevice(NewSceneParams);
-                                                               InvokeAsync(StateHasChanged);
+                                                               RefilterDvList(NewSceneParams);
                                                            })>
                                             <i class="fas fa-plus-circle"></i>
                                             ADD NEW ACTIONS
@@ -692,14 +671,15 @@
                                         <div class="callout callout-primary">
                                             <div class="mb-4 d-flex">
                                                 <h4 class="mr-auto">
-                                                    <span class="badge badge-pill badge-primary">NEW</span> action
+                                                    <span class="badge badge-pill badge-primary">NEW</span>
                                                 </h4>
 
                                                 <button class="btn btn-outline-danger"
                                                         type="button"
-                                                        @onclick=@(() => 
-                                                                   { 
+                                                        @onclick=@(() =>
+                                                                   {
                                                                        NewSceneParams.Actions.Remove(_card);
+                                                                       RefilterDvList(NewSceneParams);
                                                                    })>
                                                     <i class="far fa-trash-alt"></i>
                                                 </button>
@@ -717,12 +697,13 @@
                                                                 data-style="btn-primary"
                                                                 data-live-search="true"
                                                                 multiple
-                                                                @onchange=@(async () => 
-                                                                            { 
-                                                                                SelectAndBindMultiTargetDevice(FormAction.NewTargetDevice, _card);
+                                                                required
+                                                                @onchange=@(async () =>
+                                                                            {
+                                                                                SelectAndBindMultiTargetDevice(_card);
                                                                             })>
-                                                            @*@foreach (var _dv in LstDevice.Where(r=>r.DeviceType == "AC"))*@
-                                                            @foreach (var _dv in crFilterTargetDevice.Where(r=>r.DeviceType == "AC"))
+                                                            @*@foreach (var _dv in crFilterTargetDevice.Where(r => r.DeviceType == "AC"))*@
+                                                            @foreach (var _dv in LstDevice.Where(r => r.DeviceType == "AC"))
                                                             {
                                                                 <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
                                                             }
@@ -731,24 +712,24 @@
                                                 </div>
 
                                                 @{
-                                                    var _dvType = String.Empty;
-                                                    _dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
+                                                    var _dvType = "AC";
+                                                    //_dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
                                                 }
                                                 <div class="col-7">
                                                     <div class="callout callout-primary">
                                                         <div class="d-flex">
                                                             <div class=" flex-grow-1">
-                                                                <ul>
-                                                                    @foreach(var dv in _card.LstDeviceId)
+                                                                <ul style="list-style-type: none;">
+                                                                    @foreach (var dv in _card.DeviceList)
                                                                     {
                                                                         var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
-                                                                    <li>
-                                                                        <span class="badge badge-pill badge-primary">
-                                                                            @objDv.Id 
-                                                                        </span>
-                                                                        - [@objDv.Capabilitie] @objDv.Name
-                                                                    </li>
-                }
+                                                                        <li>
+                                                                            <span class="badge badge-pill badge-primary">
+                                                                                @objDv.Id
+                                                                            </span>
+                                                                            - [@objDv.Capabilitie] @objDv.Name
+                                                                        </li>
+                                                                    }
                                                                 </ul>
                                                             </div>
                                                         </div>
@@ -768,8 +749,8 @@
                                                                 multiple
                                                                 data-actions-box="true"
                                                                 data-live-search="true"
-                                                                @onchange=@(async()=> 
-                                                                            { 
+                                                                @onchange=@(async()=>
+                                                                            {
                                                                                 await SelectAndBindMultiAttr(_card.SetValues);
                                                                             })>
                                                             @{
@@ -802,10 +783,10 @@
                                                                                         class="form-control selectpicker"
                                                                                         data-style="btn-light"
                                                                                         required
-                                                                                        @onchange=@(async () => 
+                                                                                        @onchange=@(async () =>
                                                                                                     {
-                                                                                                        var _tmpKeys = await SelectAndBindSingleTextReturn(); 
-                                                                                                        _card.SetValues[_attr.Key] = _tmpKeys; 
+                                                                                                        var _tmpKeys = await SelectAndBindSingleTextReturn();
+                                                                                                        _card.SetValues[_attr.Key] = _tmpKeys;
                                                                                                     })>
 
                                                                                     @foreach (var _valRange in _DetailOfAttr.ValueRange)
@@ -855,105 +836,92 @@
                                     }
                                 </fieldset>
 
-                                <fieldset class="border p-2">
-                                    <legend class="w-auto">
-                                        @*<input type="checkbox"
-                                                   class="custom-control-input"
-                                                    />
-                                            <label class="custom-control-label">Custom JavaScript Actions</label>*@
+                                @if (CurrentUser.Roles.Contains(Role.System))
+                                {
+                                    <fieldset class="border p-2">
+                                        <legend class="w-auto">
+                                            <div class="form-group">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox"
+                                                           id="swNewJsAction"
+                                                           @bind-value="NewSceneParams.IsJavaScriptType"
+                                                           class="custom-control-input">
+                                                    <label class="custom-control-label"
+                                                           for="swNewJsAction">
+                                                        Custom JavaScript Actions
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </legend>
 
-                                        <div class="form-group">
-                                            <div class="custom-control custom-switch">
-                                                <input type="checkbox"
-                                                       id="swNewJsAction"
-                                                       @bind-value="NewSceneParams.IsJavaScriptType"
-                                                       class="custom-control-input">
-                                                <label class="custom-control-label"
-                                                       for="swNewJsAction">
-                                                    Custom JavaScript Actions
+                                        @if (NewSceneParams.IsJavaScriptType)
+                                        {
+                                            <div class="form-group row">
+                                                <label class="col-sm-2 col-form-label">
+                                                    <i class="fas fa-user-edit"></i>
+                                                    Custom JavaScript
                                                 </label>
+                                                <div class="col-sm-10">
+                                                    <textarea class="summernote"
+                                                              required=@(NewSceneParams.IsJavaScriptType ? true : false)
+                                                              id="tbNewJsAction"></textarea>
+                                                </div>
                                             </div>
-                                        </div>
+                                            <div class="form-group row">
+                                                <label class="col-sm-2 col-form-label"></label>
+                                                <div class="col-sm-10">
+                                                    <div class="d-flex justify-content-center">
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <button type="button" class="btn btn-primary">
+                                                                Run
+                                                            </button>
 
-                                        @*<input type="checkbox"
-                                            data-off-color="default"
-                                            data-on-color="success"
-                                            data-on-text="USE"
-                                            data-off-text="NOT USE"
-                                            @onchange=@((e) => {Console.WriteLine(e.Value); Console.WriteLine((bool)e.Value); NewInterlockParams.IsJavaScriptAction = (bool)e.Value; }) />*@
+                                                            <button type="button" class="btn btn-danger">
+                                                                Stop
+                                                            </button>
 
-                                    </legend>
+                                                            <button type="button" class="btn btn-primary">
+                                                                Reload Data
+                                                            </button>
 
-                                    @if (NewSceneParams.IsJavaScriptType)
-                                    {
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">
-                                                <i class="fas fa-user-edit"></i>
-                                                Custom JavaScript
-                                            </label>
-                                            <div class="col-sm-10">
-                                                <textarea class="summernote"
-                                                          required=@(NewSceneParams.IsJavaScriptType ? true : false)
-                                                          id="tbNewJsAction"></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label"></label>
-                                            <div class="col-sm-10">
-                                                <div class="d-flex justify-content-center">
-                                                    <div class="btn-group btn-group-sm" role="group">
-                                                        <button type="button" class="btn btn-primary">
-                                                            Run
-                                                        </button>
+                                                            <button type="button" class="btn btn-primary">
+                                                                Save
+                                                            </button>
 
-                                                        <button type="button" class="btn btn-danger">
-                                                            Stop
-                                                        </button>
+                                                            <button type="button" class="btn btn-primary">
+                                                                Close
+                                                            </button>
 
-                                                        <button type="button" class="btn btn-primary">
-                                                            Reload Data
-                                                        </button>
-
-                                                        <button type="button" class="btn btn-primary">
-                                                            Save
-                                                        </button>
-
-                                                        <button type="button" class="btn btn-primary">
-                                                            Close
-                                                        </button>
-
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label"></label>
-                                            <div class="col-sm-10">
-                                                <textarea class="summernote"
-                                                          id="tbNewJsDebug"></textarea>
+                                            <div class="form-group row">
+                                                <label class="col-sm-2 col-form-label"></label>
+                                                <div class="col-sm-10">
+                                                    <textarea class="summernote"
+                                                              id="tbNewJsDebug"></textarea>
+                                                </div>
                                             </div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="alert alert-warning" role="alert">
-                                            Javascript Action is not in used
-                                        </div>
-                                    }
-
-                                </fieldset>
-
+                                        }
+                                        else
+                                        {
+                                            <div class="alert alert-warning" role="alert">
+                                                Javascript Action is not in used
+                                            </div>
+                                        }
+                                    </fieldset>
+                                }
                             </form>
                         </div>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"
-                                    data-dismiss="modal"
-                                    @onclick=@(() => { FormNewClose(); })>
-                                Close
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="button" class="btn btn-lg btn-outline-info"
+                                    data-dismiss="modal">
+                                Cancle
                             </button>
                             <button type="button"
-                                    class="btn btn-primary"
+                                    class="btn btn-info btn-lg"
                                     @onclick=@(() => { FormNewSubmitScene(); })>
                                 Create
                             </button>
@@ -963,21 +931,18 @@
             </div>
 
             <!-- Modal Edit Schedule -->
-            <div class="modal fade" data-backdrop="static" data-keyboard="false" id="mdEditSchedule" tabindex="-1">
+            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" data-keyboard="false" id="mdEditSchedule" tabindex="-1">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h2 class="modal-title">
-                                Edit Schedule
-                                <span class="badge badge-pill badge-success">@crEditScene.Name</span>
+                        <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                            <h1 class="modal-title w-100">
+                                <i class="fas fa-cogs"></i>
+                            </h1>
+                            <h2 class="modal-title w-100">
+                                Edit Interlock
                             </h2>
-
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"
-                                    @onclick=@(() => { FormEditClose(); })>
-                                <span aria-hidden="true">&times;</span>
-                            </button>
                         </div>
+
                         <div class="modal-body">
                             <form @ref="elFormEditScene"
                                   class="needs-validation"
@@ -1008,8 +973,8 @@
 
                                     <div class="container-fluid">
                                         <div class="row">
-                                            <button class="btn btn-outline-primary m-1">Export Configure</button>
-                                            <button class="btn btn-outline-primary m-1">Import Configure</button>
+                                            @*<button class="btn btn-outline-primary m-1">Export Configure</button>
+                            <button class="btn btn-outline-primary m-1">Import Configure</button>*@
                                         </div>
 
                                         @foreach (var _express in crEditScene.Expressions)
@@ -1244,6 +1209,7 @@
                                             </div>
                                         }
 
+                                        <!-- Dropdown select button -->
                                         <div class="dropdown">
                                             <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="fas fa-plus-circle"></i>
@@ -1472,8 +1438,6 @@
                                                 </li>
                                             </ul>
                                         </div>
-
-
                                     </div>
                                 </fieldset>
 
@@ -1483,38 +1447,38 @@
                                     <div class="row">
                                         <button class="btn btn-success m-3 btn-block"
                                                 type="button"
-                                                @onclick=@(() => 
-                                                           { 
+                                                @onclick=@(() =>
+                                                           {
                                                                crEditScene.Actions.Add(new RunningActionModel());
-                                                               crFilterTargetDevice = FilterTargetDevice(crEditScene);
-                                                               InvokeAsync(StateHasChanged);
+                                                               RefilterDvList(crEditScene);
                                                            })>
                                             <i class="fas fa-plus-circle"></i>
-                                            ADD NEW ACTIONS
+                                            ADD ACTIONS
                                         </button>
                                     </div>
 
                                     @{
-                                        // new idea : merge 2 type action list and edit direct in crEditScene >> re fetch list scene item when close modal
+                                        // new idea : combine 2 type action list and edit direct in crEditScene >> re fetch list scene item when close modal
                                         // This is List Action fetch from server
                                         // This is List Action create by user and ready to update to DB
                                         foreach (var _card in crEditScene.Actions)
                                         {
                                             <div class="callout callout-warning">
                                                 <div class="mb-4 d-flex">
-                                                <h4 class="mr-auto">
-                                                    <span class="badge badge-pill badge-primary">EDIT</span> action
-                                                </h4>
+                                                    <h4 class="mr-auto">
+                                                        <span class="badge badge-pill badge-primary">EDIT</span> action
+                                                    </h4>
 
-                                                <button class="btn btn-outline-danger"
-                                                        type="button"
-                                                        @onclick=@(() => 
-                                                                   { 
+                                                    <button class="btn btn-outline-danger"
+                                                            type="button"
+                                                            @onclick=@(() =>
+                                                                   {
                                                                        crEditScene.Actions.Remove(_card);
+                                                                       RefilterDvList(crEditScene);
                                                                    })>
-                                                    <i class="far fa-trash-alt"></i>
-                                                </button>
-                                            </div>
+                                                        <i class="far fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
 
                                                 <div class="row">
                                                     <div class="form-group col-5">
@@ -1528,11 +1492,12 @@
                                                                     data-style="btn-primary"
                                                                     data-live-search="true"
                                                                     multiple
-                                                                    @onchange=@(async () => 
-                                                                            { 
-                                                                                SelectAndBindMultiTargetDevice(FormAction.EditPlusTargetDevice, _card);
+                                                                    @onchange=@(async () =>
+                                                                            {
+                                                                                SelectAndBindMultiTargetDevice(_card);
                                                                             })>
-                                                                @foreach (var _dv in crFilterTargetDevice.Where(r => r.DeviceType == "AC"))
+                                                                @*@foreach (var _dv in crFilterTargetDevice.Where(r => r.DeviceType == "AC"))*@
+                                                                @foreach (var _dv in LstDevice.Where(r => r.DeviceType == "AC"))
                                                                 {
                                                                     <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
                                                                 }
@@ -1541,29 +1506,29 @@
                                                     </div>
 
                                                     @{
-                                                        var _dvType = String.Empty;
-                                                        _dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
+                                                        var _dvType = "AC";
+                                                        //_dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
                                                     }
-                                                <div class="col-7">
-                                                    <div class="callout callout-primary">
-                                                        <div class="d-flex">
-                                                            <div class=" flex-grow-1">
-                                                                <ul>
-                                                                    @foreach (var dv in _card.LstDeviceId)
-                                                                    {
-                                                                        var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
-                                                                    <li>
-                                                                        <span class="badge badge-pill badge-primary">
-                                                                            @objDv.Id
-                                                                        </span>
-                                                                        - [@objDv.Capabilitie] @objDv.Name
-                                                                    </li>
-                                                                    }
-                                                                </ul>
+                                                    <div class="col-7">
+                                                        <div class="callout callout-primary">
+                                                            <div class="d-flex">
+                                                                <div class=" flex-grow-1">
+                                                                    <ul>
+                                                                        @foreach (var dv in _card.DeviceList)
+                                                                        {
+                                                                            var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
+                                                                            <li>
+                                                                                <span class="badge badge-pill badge-primary">
+                                                                                    @objDv.Id
+                                                                                </span>
+                                                                                - [@objDv.Capabilitie] @objDv.Name
+                                                                            </li>
+                                                                        }
+                                                                    </ul>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
 
                                                     <div class="col-12">
                                                         <hr class="dotted">
@@ -1659,97 +1624,102 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                                                    }
-                                    }
+                                        }
+
+
+}
                                 </fieldset>
 
+                                @if (CurrentUser.Roles.Contains(Role.System))
+            {
+                            <fieldset class="border p-2">
+                                <legend class="w-auto">
 
-                                <fieldset class="border p-2">
-                                    <legend class="w-auto">
-
-                                        <div class="form-group">
-                                            <div class="custom-control custom-switch">
-                                                <input type="checkbox"
-                                                       id="swEditJsAction"
-                                                       @bind-value="crEditScene.IsJavaScriptType"
-                                                       checked="@(crEditScene.IsJavaScriptType?true:false)"
-                                                       class="custom-control-input">
-                                                <label class="custom-control-label"
-                                                       for="swEditJsAction">
-                                                    Custom JavaScript Actions
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </legend>
-
-                                    @if (crEditScene.IsJavaScriptType)
-                                    {
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">
-                                                <i class="fas fa-user-edit"></i>
-                                                Custom JavaScript
+                                    <div class="form-group">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox"
+                                                   id="swEditJsAction"
+                                                   @bind-value="crEditScene.IsJavaScriptType"
+                                                   checked="@(crEditScene.IsJavaScriptType?true:false)"
+                                                   class="custom-control-input">
+                                            <label class="custom-control-label"
+                                                   for="swEditJsAction">
+                                                Custom JavaScript Actions
                                             </label>
-                                            <div class="col-sm-10">
-                                                <textarea class="summernote"
-                                                          required=@(crEditScene.IsJavaScriptType ? true : false)
-                                                          id="tbEditJsAction"></textarea>
-                                            </div>
                                         </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label"></label>
-                                            <div class="col-sm-10">
-                                                <div class="d-flex justify-content-center">
-                                                    <div class="btn-group btn-group-sm" role="group">
-                                                        <button type="button" class="btn btn-primary">
-                                                            Run
-                                                        </button>
+                                    </div>
+                                </legend>
 
-                                                        <button type="button" class="btn btn-danger">
-                                                            Stop
-                                                        </button>
+                                @if (crEditScene.IsJavaScriptType)
+                                {
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">
+                                            <i class="fas fa-user-edit"></i>
+                                            Custom JavaScript
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <textarea class="summernote"
+                                                      required=@(crEditScene.IsJavaScriptType ? true : false)
+                                                      id="tbEditJsAction"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label"></label>
+                                        <div class="col-sm-10">
+                                            <div class="d-flex justify-content-center">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-primary">
+                                                        Run
+                                                    </button>
 
-                                                        <button type="button" class="btn btn-primary">
-                                                            Reload Data
-                                                        </button>
+                                                    <button type="button" class="btn btn-danger">
+                                                        Stop
+                                                    </button>
 
-                                                        <button type="button" class="btn btn-primary">
-                                                            Save
-                                                        </button>
+                                                    <button type="button" class="btn btn-primary">
+                                                        Reload Data
+                                                    </button>
 
-                                                        <button type="button" class="btn btn-primary">
-                                                            Close
-                                                        </button>
+                                                    <button type="button" class="btn btn-primary">
+                                                        Save
+                                                    </button>
 
-                                                    </div>
+                                                    <button type="button" class="btn btn-primary">
+                                                        Close
+                                                    </button>
+
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label"></label>
-                                            <div class="col-sm-10">
-                                                <textarea class="summernote"
-                                                          required=@(crEditScene.IsJavaScriptType ? true : false)
-                                                          id="tbEditJsDebug">
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label"></label>
+                                        <div class="col-sm-10">
+                                            <textarea class="summernote"
+                                                      required=@(crEditScene.IsJavaScriptType ? true : false)
+                                                      id="tbEditJsDebug">
                                         </textarea>
-                                            </div>
                                         </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="alert alert-warning" role="alert">
-                                            Javascript Action is not in used
-                                        </div>
-                                    }
-                                </fieldset>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning" role="alert">
+                                        Javascript Action is not in used
+                                    </div>
+                                }
+                            </fieldset>
+            } 
+                                
 
                             </form>
                         </div>
 
-                        <div class="modal-footer">
+                        <div class="modal-footer d-flex justify-content-center">
                             <button type="button" class="btn btn-secondary"
                                     data-dismiss="modal"
                                     @onclick=@(() => { FormEditClose(); })>
-                                CLOSE
+                                CANCLE
                             </button>
                             <button type="button"
                                     class="btn btn-danger"
@@ -1782,6 +1752,7 @@
 @code {
     bool flagForceSelectInject = false;
 
+    CloudUser CurrentUser = new CloudUser() { Infor = new UserInfor(), Roles = new List<Role>() };
     List<DeviceModel> crFilterTargetDevice = new List<DeviceModel>();
     GlobalSceneModel crEditScene = new GlobalSceneModel();
     GlobalSceneModel NewSceneParams = new GlobalSceneModel();
@@ -1798,6 +1769,7 @@
     enum FormAction { NewTargetDevice, EditPlusTargetDevice }
 
     ScenesService svScene = new ScenesService();
+    UserService svUser = new UserService();
     DeviceDataStore svDevice = new DeviceDataStore();
     LayoutAreaSevice svAreaLayout = new LayoutAreaSevice();
     MasterDataService svMasterData = new MasterDataService();
@@ -1811,17 +1783,12 @@
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
             NavHelper.NavigateTo("/login");
         }
+        CurrentUser = await svUser.GetUserAllInforAsync(AccessToken);
 
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
 
         RefreshListItem();
-        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        LstArea = await svAreaLayout.GetAreaListAsync(AccessToken);
-        LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-        LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
-        LstDeviceType = await svMasterData.GetDeviceTypeListAsync(AccessToken);
-        LstAttribute = await svMasterData.GetAttributeListAsync(AccessToken);
-        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+        RefetchData(true);
 
         // In case navigate from query string
         //string queryScheduleId, queryDeviceId;
@@ -1858,27 +1825,56 @@
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsAction", 300, true, false);
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbEditJsDebug", 200, true, true);
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbNewJsDebug", 200, true, true);
+
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
     }
 
-    public List<DeviceModel> FilterTargetDevice(GlobalSceneModel _scene)
-    {
+    async Task RefilterDvList(GlobalSceneModel _refScene) {
         var lstResult = new List<DeviceModel>();
-        var lstChosenDv = _scene.Actions.SelectMany(r => r.LstDeviceId).ToList();
-        lstResult = LstDevice.Where(r => lstChosenDv.Contains(r.Id) == false).ToList();
-        return lstResult;
+        var lstChosenDv = _refScene.Actions.SelectMany(r => r.DeviceList).ToList();
+        crFilterTargetDevice = LstDevice.Where(r => lstChosenDv.Contains(r.Id) == false).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task RefetchData(bool isNoti)
+    {
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+
+        var taskLstScene = svScene.GetScenesListAsync(AccessToken);
+        var taskLstDevice = svDevice.GetOwnerDevicesListAsync(AccessToken);
+        var taskLstArea = svAreaLayout.GetAreaListAsync(AccessToken);
+        var taskLstZone = svAreaLayout.GetZoneListAsync(AccessToken);
+        var taskLstSection = svAreaLayout.GetSectionListAsync(AccessToken);
+        var taskLstDeviceType = svMasterData.GetDeviceTypeListAsync(AccessToken);
+        var taskLstAttribute = svMasterData.GetAttributeListAsync(AccessToken);
+
+        await Task.WhenAll(taskLstScene, taskLstDevice, taskLstArea, taskLstZone, taskLstSection, taskLstDeviceType, taskLstAttribute);
+
+        LstScene = await taskLstScene;
+        LstDevice = await taskLstDevice;
+        LstArea = await taskLstArea;
+        LstZone = await taskLstZone;
+        LstSection = await taskLstSection;
+        LstDeviceType = await taskLstDeviceType;
+        LstAttribute = await taskLstAttribute;
+
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        InvokeAsync(StateHasChanged);
     }
 
     async Task RefreshListItem()
     {
-        LstAllSceneWithGrSetVal.Clear();
-        LstScene = await svScene.GetScenesListAsync(AccessToken);
-        foreach (var _scene in LstScene)
-        {
-            var objScene = _scene.ShallowCopy();
-            objScene.createActionsByGrSetVal();
-            LstAllSceneWithGrSetVal.Add(objScene);
-        }
-        InvokeAsync(StateHasChanged);
+        //LstAllSceneWithGrSetVal.Clear();
+        //LstScene = await svScene.GetScenesListAsync(AccessToken);
+        //foreach (var _scene in LstScene)
+        //{
+        //    var objScene = _scene.ShallowCopy();
+        //    objScene.createActionsByGrSetVal();
+        //    LstAllSceneWithGrSetVal.Add(objScene);
+        //}
+        //InvokeAsync(StateHasChanged);
     }
 
     string GetCompareSign(MasterDataModel.CompareOperators _operator)
@@ -1904,9 +1900,9 @@
 
     async Task ChangeScheduleStateHandle(GlobalSceneModel _item)
     {
-        var _objScene = _item.ShallowCopy();
+        var _objScene = _item.DeepCopy();
         _objScene.Enable = !_objScene.Enable;
-        var result = await svScene.InsertUpdateItemAsync(_objScene, AccessToken);
+        var result = await svScene.UpdateItemAsync(_objScene, AccessToken);
         if (result)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Scene " + (_objScene.Enable ? "Enabled" : "Disabled"), true);
@@ -1942,16 +1938,11 @@
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
     }
 
-    async Task FormNewClose()
-    {
-        //reset list schedule in case user delete action in modal edit then close modal
-        RefreshListItem();
-    }
-
-    async Task PreNew()
-    {
-        NewSceneParams = new GlobalSceneModel();
-    }
+    //async Task FormNewClose()
+    //{
+    //    //reset list schedule in case user delete action in modal edit then close modal
+    //    RefreshListItem();
+    //}
 
     async Task FormEditClose()
     {
@@ -1971,7 +1962,7 @@
 
     async Task PreEdit(GlobalSceneModel _item)
     {
-        crEditScene = _item.ShallowCopy();
+        crEditScene = _item.DeepCopy();
 
         flagForceSelectInject = true;
 
@@ -2023,31 +2014,21 @@
         InvokeAsync(StateHasChanged);
     }
 
-    async Task SelectAndBindMultiTargetDevice(FormAction eventHandle, RunningActionModel _action)
+    private async void SelectAndBindMultiTargetDevice(RunningActionModel _refAction)
     {
         var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
         var ParseValue = int.Parse(_tmpSelectArr[0].ToString());
         if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix
         var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
-        if (stateOfValue == true)
+        // ADD ITEM
+        if (stateOfValue)
         {
-            if (eventHandle == FormAction.NewTargetDevice || eventHandle == FormAction.EditPlusTargetDevice)
-            {
-                if (_action.LstDeviceId.Contains(ParseValue) == false)
-                {
-                    _action.LstDeviceId.Add(ParseValue);
-                }
-            }
+            if (_refAction.DeviceList.Contains(ParseValue) == false) _refAction.DeviceList.Add(ParseValue);
         }
+        // REMOVE ITEM
         else
         {
-            if (eventHandle == FormAction.NewTargetDevice || eventHandle == FormAction.EditPlusTargetDevice)
-            {
-                if (_action.LstDeviceId.Contains(ParseValue) == true)
-                {
-                    _action.LstDeviceId.Remove(ParseValue);
-                }
-            }
+            if (_refAction.DeviceList.Contains(ParseValue) == true) _refAction.DeviceList.Remove(ParseValue);
         }
         InvokeAsync(StateHasChanged);
     }
@@ -2063,38 +2044,28 @@
 
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
 
-        //NewInterlockParams.Actions.AddRange(crNewLstAddActions.Select(r => r.ActionObj));
-
         // Convert Some Prop to correct format
         if (NewSceneParams.IsJavaScriptType)
         {
             NewSceneParams.JavaScriptCode = await JSHelper.InvokeAsync<string>("Interop_SummerGetCode", "tbNewJsAction");
         }
 
-        // Run script to gen list select mutiple device
-        NewSceneParams.ReGenerateActionsFromGroupDvId();
-
-        var resultDvId = await svScene.InsertUpdateItemAsync(NewSceneParams, AccessToken);
+        var resultDvId = await svScene.InsertItemAsync(NewSceneParams, AccessToken);
         if (resultDvId == false)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Some thing went wrong", false);
             return;
         }
         JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Device Id <strong>" + resultDvId.ToString() + "</strong> Added", false);
-
         JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdNewScene", "hide");
-        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-        FormNewClose();
-        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-        InvokeAsync(StateHasChanged);
+        RefetchData(false);
     }
 
     async Task CloneProfileHanlde(GlobalSceneModel _profile)
     {
-        var ProfileObj = _profile.ShallowCopy();
+        var ProfileObj = _profile.DeepCopy();
         var ProfileName = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "text", "Name your profile", "Clone");
         if (ProfileName == "") return;
-
 
         // Convert Some Prop to correct format
         if (ProfileObj.IsJavaScriptType)
@@ -2103,10 +2074,7 @@
         }
         ProfileObj.Name = ProfileName;
 
-        // Run script to gen list select mutiple device
-        ProfileObj.ReGenerateActionsFromGroupDvId();
-
-        var resultDvId = await svScene.InsertUpdateItemAsync(ProfileObj, AccessToken);
+        var resultDvId = await svScene.InsertItemAsync(ProfileObj, AccessToken);
         if (resultDvId == false)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Some thing went wrong", false);
@@ -2127,27 +2095,23 @@
         }
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
 
-        // Run script to gen list select mutiple device
-        crEditScene.ReGenerateActionsFromGroupDvId();
-
         // Convert Some Prop to correct format
         if (crEditScene.IsJavaScriptType)
         {
             crEditScene.JavaScriptCode = await JSHelper.InvokeAsync<string>("Interop_SummerGetCode", "tbEditJsAction");
         }
-        var result = await svScene.InsertUpdateItemAsync(crEditScene, AccessToken);
+        var result = await svScene.UpdateItemAsync(crEditScene, AccessToken);
         if (result)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Schedule Updated", true);
             JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "hide");
 
-            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
             //LstSchedule = await svShedule.GetItemsAsync(AccessToken); // this is already called in FormEditClose()
             //LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
             //LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
             //LstSection = await svAreaLayout.GetSectionListAsync(AccessToken);
             FormEditClose();
-            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            RefetchData(false);
         }
         else
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);

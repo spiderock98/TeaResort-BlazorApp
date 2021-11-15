@@ -44,7 +44,7 @@
 
                 <div class="card-body">
 
-                    <table id="table"
+                    <table class="bootstrap-table"
                            data-search="true"
                            data-show-export="true"
                            data-search-align="right"
@@ -192,14 +192,17 @@
             </div>*@
 
             @* Modal Edit User Info *@
-            <div class="modal fade" id="mdEditUserInfo" data-backdrop="static" data-keyboard="false">
+            <div class="modal animate__animated animate__bounceInUp" id="mdEditUserInfo" data-backdrop="static" data-keyboard="false">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content bg-light">
-                        <div class="modal-header">
-                            <h4 class="modal-title">Edit User Infomation</h4>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+
+                        <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                            <h1 class="modal-title w-100">
+                                <i class="fas fa-plus-circle"></i>
+                            </h1>
+                            <h2 class="modal-title w-100">
+                                Edit User Infomation
+                            </h2>
                         </div>
 
                         <div class="modal-body">
@@ -213,10 +216,10 @@
                                         <label>
                                             User Name
                                         </label>
-                                        <input value="@_currentEditUser.UserName" 
-                                               class="form-control" 
-                                               type="text" 
-                                               autocomplete="nope" 
+                                        <input value="@_currentEditUser.UserName"
+                                               class="form-control"
+                                               type="text"
+                                               autocomplete="nope"
                                                readonly>
                                         <div class="invalid-feedback">
                                             Please fill your User Name.
@@ -227,17 +230,17 @@
                                         <label>
                                             Email
                                         </label>
-                                        <input @bind-value="@_currentEditUser.Email" 
-                                               class="form-control" 
-                                               type="email" >
+                                        <input @bind-value="@_currentEditUser.Email"
+                                               class="form-control"
+                                               type="email">
                                     </div>
 
                                     <div class="form-group col-12">
                                         <label>
                                             Phone Number
                                         </label>
-                                        <input @bind-value="@_currentEditUser.PhoneNumber" 
-                                               class="form-control" 
+                                        <input @bind-value="@_currentEditUser.PhoneNumber"
+                                               class="form-control"
                                                type="text">
                                     </div>
 
@@ -245,8 +248,8 @@
                                         <label>
                                             Company
                                         </label>
-                                        <input @bind-value="@_currentEditUser.Company" 
-                                               class="form-control" 
+                                        <input @bind-value="@_currentEditUser.Company"
+                                               class="form-control"
                                                type="text">
                                     </div>
 
@@ -254,8 +257,8 @@
                                         <label>
                                             Location
                                         </label>
-                                        <input @bind-value="@_currentEditUser.Location" 
-                                               class="form-control" 
+                                        <input @bind-value="@_currentEditUser.Location"
+                                               class="form-control"
                                                type="text">
                                     </div>
 
@@ -282,9 +285,9 @@
                             </form>
                         </div>
 
-                        <div class="modal-footer d-flex">
-                            <button type="button" class="mr-auto btn btn-outline-danger" data-dismiss="modal">
-                                Close
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="button" class="btn btn-outline-danger" data-dismiss="modal">
+                                CANCLE
                             </button>
                             <button @onclick="DeleteUser" type="button" data-dismiss="modal" class="btn btn-danger">
                                 <i class="fas fa-user-slash"></i>
@@ -295,7 +298,7 @@
                                 @(_currentEditUser.IsActive ? "DISABLE USER" : "ENABLE USER")
                             </button>
                             <button @onclick=@(() => { SaveEdit(); }) type="button" class="btn btn-outline-info">
-                                Update User Info
+                                UPDATE USER INFO
                             </button>
                         </div>
                     </div>

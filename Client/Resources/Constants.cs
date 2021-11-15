@@ -219,6 +219,16 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
+        public static string POST_UPDATE_DEVICE(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/IotDevice/UpdateAll?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+
         public static string GET_USER_SCENES(string token)
         {
             var url = "http://" + SERVER_IP + "/api/User/Scenes?Token=" + token;
@@ -292,9 +302,17 @@ namespace SmartRetail.Resources
             return url;
         }
 
-        public static string POST_UPDATE_INSERT_SCENES(string token)
+        public static string POST_INSERT_SCENES(string token)
         {
-            var url = "http://" + SERVER_IP + "/api/GlobalScenes?token=" + token;
+            var url = "http://" + SERVER_IP + "/api/GlobalScenes/Insert?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+        public static string POST_UPDATE_SCENES(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/GlobalScenes/Update?token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 url += "&ClientServer=" + CLIENT_SERVER;
@@ -488,7 +506,30 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+        public static string DELETE_AREA(int Id, string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/" + Id.ToString() + "?token=" + token;
 
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
+        public static string POST_INSERT_AREA(string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/Add?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
+        public static string PUT_UPDATE_AREA(string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/Update?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
         public static string GET_ALL_SOURCE(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datasource?token=" + token;

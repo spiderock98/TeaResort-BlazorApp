@@ -70,9 +70,28 @@ namespace SmartRetail.Client.Services
         //     catch { }
         // }
 
-        public async Task<bool> InsertUpdateItemAsync(GlobalSceneModel item, string token)
+        public async Task<bool> UpdateItemAsync(GlobalSceneModel item, string token)
         {
-            var uri = new Uri(Resources.GetLink.POST_UPDATE_INSERT_SCENES(token));
+            var uri = new Uri(Resources.GetLink.POST_UPDATE_SCENES(token));
+
+            var _JsonValue = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
+            try
+            {
+                HttpResponseMessage response = await _client.PostAsync(uri, _JsonValue);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    return await Task.FromResult(true);
+                }
+            }
+            catch { }
+            return await Task.FromResult(false);
+        }
+
+        public async Task<bool> InsertItemAsync(GlobalSceneModel item, string token)
+        {
+            var uri = new Uri(Resources.GetLink.POST_INSERT_SCENES(token));
 
             var _JsonValue = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
             try

@@ -1,4 +1,4 @@
-﻿@page "/device"
+﻿@page "/ac"
 @inject NavigationManager uriHelper
 @using BlazorDateRangePicker
 @using Helper
@@ -17,7 +17,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
-                    <h1 style="font-size:50px;">AC Device Listing</h1>
+                    <h1 style="font-size:50px;">AC Air Cool Listing</h1>
                 </div>
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -33,7 +33,7 @@
                         <div class="col-10">
                             <div class="tab-content">
 
-                                @* ALL DEVICES *@
+                                @* ALL AIRCOOL *@
                                 <div class="tab-pane fade" id="vert-tabs-right-all" role="tabpanel">
 
 
@@ -47,12 +47,10 @@
                                                 <select title="-- Select --"
                                                         data-style="btn-light"
                                                         class="form-control selectpicker">
-                                                    <option>TP. Hồ Chí Minh</option>
-                                                    <option>Hà Nội</option>
-                                                    <option>Hải Phòng</option>
-                                                    <option>Đà Nẵng</option>
-                                                    <option>Hội An</option>
-                                                    <option>Nha Trang</option>
+                                                    @foreach(var _area in LstAllArea)
+            {
+                                                        <option value="@_area.Id">@_area.Name</option>
+            }
                                                 </select>
 
                                                 <div class="input-group-append">
@@ -112,103 +110,170 @@
                                         </div>
                                     </div>
 
-
-
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
+                                    <table class="bootstrap-table"
+                                           data-search="true"
+                                           data-show-export="true"
+                                           data-search-align="right"
+                                           data-buttons-align="right"
+                                           data-pagination="true"
+                                           data-height="700">
+                                        <thead>
+                                            <tr class="text-center">
+                                                <th></th>
+                                                <th>Id</th>
+                                                <th>Name</th>
+                                                <th>Gateway</th>
+                                                <th>Model</th>
+                                                <th>Set Temp.</th>
+                                                <th>Sensor Temp.</th>
+                                                <th>Mode</th>
+                                                <th>Fan</th>
+                                                <th>Angle</th>
+                                                <th>Status</th>
+                                                <th>Schedule</th>
+                                                <th>Setting</th>
+                                                <th>ON/OFF</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var dv in LstDevice.Where(r => r.DeviceType == "AC"))
+                                            {
                                                 <tr class="text-center">
-                                                    <th></th>
-                                                    <th>Name</th>
-                                                    <th>Model</th>
-                                                    <th>Set Temp.</th>
-                                                    <th>Sensor Temp.</th>
-                                                    <th>Mode</th>
-                                                    <th>Fan</th>
-                                                    <th>Angle</th>
-                                                    <th>Status</th>
-                                                    <th>Schedule</th>
-                                                    <th>Setting</th>
-                                                    <th>ON/OFF</th>
+                                                    <td>
+                                                        <div class="custom-control custom-checkbox">
+                                                            <input class="custom-control-input custom-control-input-success" type="checkbox"
+                                                                   id="cbSelectDevice0">
+                                                            <label for="cbSelectDevice0" class="custom-control-label"></label>
+                                                        </div>
+                                                    </td>
+                                                    <th>@dv.Id</th>
+                                                    <td>@dv.Name</td>
+                                                    <td>@LstAllDataSource.Where(r => r.ID == dv.DataSourceId).FirstOrDefault()?.Name</td>
+                                                    <td>[@dv.Capabilitie] @dv.DeviceType</td>
+                                                    <td>@dv.Status["SetTemp"]</td>
+                                                    <td>@dv.Status["RoomTemp"]</td>
+                                                    <td>@dv.Status["itmACMode"]</td>
+                                                    <td>@dv.Status["FanSpeed"]</td>
+                                                    <td>@dv.Status["FanDirect"]</td>
+                                                    <td>@dv.Status["ACStatus"]</td>
+                                                    <td>
+                                                        <button class="btn"
+                                                                type="button"
+                                                                data-toggle="modal"
+                                                                data-target="#mdEditSchedule"
+                                                                @onclick=@(() => { PreEditScheduleRoom(dv); })>
+                                                            <i class="fas fa-calendar-alt"></i>
+                                                        </button>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn"
+                                                                type="button"
+                                                                data-toggle="modal"
+                                                                data-target="#mdEditDevice"
+                                                                @onclick=@(() => { PreEditDeviceAll(dv); })>
+                                                            <i class="fas fa-cog"></i>
+                                                        </button>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-group">
+                                                            <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                <input type="checkbox"
+                                                                       class="custom-control-input"
+                                                                       checked="@(dv.Status["ACPower"]=="On" ? true : false)"
+                                                                       id="swACPower-@dv.Id"
+                                                                       @onchange=@((e)=> { toggleACPowerHandle(bool.Parse(e.Value.ToString()), dv); })>
+                                                                <label class="custom-control-label" for="swACPower-@dv.Id"></label>
+                                                            </div>
+                                                        </div>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-
-                                                @foreach (var dv in LstDevice)
-                                                {
-                                                    if (dv.DeviceType == "AC")
-                                                    {
-                                                        <tr class="text-center">
-                                                            <td>
-                                                                <div class="custom-control custom-checkbox">
-                                                                    <input class="custom-control-input custom-control-input-success" type="checkbox"
-                                                                           id="cbSelectDevice0">
-                                                                    <label for="cbSelectDevice0" class="custom-control-label"></label>
-                                                                </div>
-                                                            </td>
-                                                            <td>@dv.Id - @dv.Name</td>
-                                                            <td>@dv.Capabilitie - @dv.DeviceType</td>
-                                                            <td>@dv.Status["SetTemp"]</td>
-                                                            <td>@dv.Status["RoomTemp"]</td>
-                                                            <td>@dv.Status["itmACMode"]</td>
-                                                            <td>@dv.Status["FanSpeed"]</td>
-                                                            <td>@dv.Status["FanDirect"]</td>
-                                                            <td>@dv.Status["ACStatus"]</td>
-                                                            <td>
-                                                                <button class="btn"
-                                                                        type="button"
-                                                                        data-toggle="modal"
-                                                                        data-target="#mdEditSchedule"
-                                                                        @onclick=@(() => { PreEditScheduleRoom(dv); })>
-                                                                    <i class="fas fa-calendar-alt"></i>
-                                                                </button>
-                                                            </td>
-                                                            <td>
-                                                                <button class="btn"
-                                                                        type="button"
-                                                                        data-toggle="modal"
-                                                                        data-target="#mdEditDevice"
-                                                                        @onclick=@(() => { PreEditDeviceAll(dv); })>
-                                                                    <i class="fas fa-cog"></i>
-                                                                </button>
-                                                            </td>
-                                                            <td>
-                                                                <div class="form-group">
-                                                                    <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                                        <input type="checkbox"
-                                                                               class="custom-control-input"
-                                                                               checked="@(dv.Status["ACPower"]=="On" ? true : false)"
-                                                                               id="swACPower-@dv.Id"
-                                                                               @onchange=@((e)=> { toggleACPowerHandle(bool.Parse(e.Value.ToString()), dv); })>
-                                                                        <label class="custom-control-label" for="swACPower-@dv.Id"></label>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-
-                                                        </tr>
-                                                    }
-                                                }
-
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            }
+                                        </tbody>
+                                    </table>
                                 </div>
-
-
 
 
                                 @* Area Pane *@
-                                <div class="callout callout-danger tab-pane fade" id="vert-tabs-right-area" role="tabpanel">
-                                    <h5>I am a danger callout!</h5>
-                                    <p>
-                                        There is a problem that we need to fix. A wonderful serenity has taken possession of my entire
-                                        soul,
-                                        like these sweet mornings of spring which I enjoy with my whole heart.
-                                    </p>
+                            <div class="tab-pane fade show active" id="vert-tabs-right-area" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr class="text-center">
+                                                <th>Id</th>
+                                                <th>Name</th>
+                                                <th>Status</th>
+                                                <th>Setting</th>
+                                                <th>ON/OFF ALL AIRCOOL IN AREA</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @foreach (var _area in LstAllArea)
+                                            {
+                                                var _lstZoneIdInArea = LstZone.Where(r => r.Area == _area.Id).Select(r => r.Id).ToList();
+                                                var _lstSectionIdInZone = LstAllSection.Where(r=>_lstZoneIdInArea.Contains(r.Zone)).Select(r=>r.Id).ToList();
+                                                var _lstDeviceInArea = LstDevice.Where(r => _lstSectionIdInZone.Contains(r.SectionId)).ToList();
+
+                                                <tr class="text-center">
+                                                    <th>@_area.Id</th>
+                                                    <td>@_area.Name</td>
+                                                    <td>
+                                                        @{
+                                                            var isAnyDeviceDisconnect = _lstDeviceInArea.Select(r => r.IsConnect).Contains(false);
+
+                                                            if (isAnyDeviceDisconnect)
+                                                            {
+                                                                <div class="text-danger">
+                                                                    <i class="fas fa-exclamation-circle"></i>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+
+                                                                <div class="text-success">
+                                                                    <i class="fas fa-check-circle"></i>
+                                                                </div>
+                                                            }
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        <button class="btn"
+                                                                type="button"
+                                                                data-toggle="modal"
+                                                                data-target="#mdEditDevice"
+                                                                @onclick=@(() => { PreEditDeviceArea(_area); })>
+                                                            <i class="fas fa-cog"></i>
+                                                        </button>
+                                                    </td>
+
+                                                    <td>
+                                                        @{
+                                                            var isAnyDvACPowerOFF = _lstDeviceInArea.Select(r => r.Status["ACPower"]).Contains("Off");
+                                                        }
+                                                        <div class="form-group">
+                                                            <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                <input type="checkbox"
+                                                                       class="custom-control-input"
+                                                                       checked="@(isAnyDvACPowerOFF ? false : true)"
+                                                                       id="swACPowerArea-@_area.Id"
+                                                                       @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInArea, "swACPowerArea-" + _area.Id); })>
+                                                                <label class="custom-control-label" for="swACPowerArea-@_area.Id"></label>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                </tr>
+                                            }
+                                        </tbody>
+
+                                    </table>
                                 </div>
 
+                            </div>
+
                                 @* Zone Pane *@
-                                <div class="tab-pane fade show active" id="vert-tabs-right-zone" role="tabpanel">
+                                <div class="tab-pane fade " id="vert-tabs-right-zone" role="tabpanel">
                                     <div class="table-responsive">
                                         <table class="table table-hover">
                                             <thead>
@@ -217,7 +282,7 @@
                                                     <th>Name</th>
                                                     <th>Status</th>
                                                     <th>Setting</th>
-                                                    <th>ON/OFF ALL DEVICE IN ZONE</th>
+                                                    <th>ON/OFF ALL AIRCOOL IN ZONE</th>
                                                 </tr>
                                             </thead>
 
@@ -284,6 +349,7 @@
                                     </div>
                                 </div>
 
+
                                 @* Room Pane *@
                                 <div class="tab-pane fade" id="vert-tabs-right-room" role="tabpanel">
                                     <div class="table-responsive">
@@ -294,7 +360,7 @@
                                                     <th>Name</th>
                                                     <th>Status</th>
                                                     <th>Setting</th>
-                                                    <th>ON/OFF ALL DEVICE IN ROOM</th>
+                                                    <th>ON/OFF ALL AIRCOOL IN ROOM</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -364,30 +430,30 @@
                                         </table>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
+
                         <div class="col-2">
                             <div class="nav flex-column nav-tabs nav-tabs-right h-100" role="tablist">
-                                <a class="nav-link text-center h5 " data-toggle="pill"
+                                <a class="nav-link text-center h5 active" data-toggle="pill"
                                    href="#vert-tabs-right-area" role="tab">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    All Area
+                                    All Areas
                                 </a>
-                                <a class="nav-link text-center h5 active" data-toggle="pill"
+                                <a class="nav-link text-center h5 " data-toggle="pill"
                                    href="#vert-tabs-right-zone" role="tab">
                                     <i class="fas fa-city"></i>
-                                    All Zone
+                                    All Zones
                                 </a>
                                 <a class="nav-link text-center h5" data-toggle="pill"
                                    href="#vert-tabs-right-room" role="tab">
                                     <i class="fas fa-store"></i>
-                                    All Room
+                                    All Rooms
                                 </a>
                                 <a class="nav-link text-center h5" data-toggle="pill"
                                    href="#vert-tabs-right-all" role="tab">
                                     <i class="fas fa-microchip"></i>    
-                                    All Devices
+                                    All ACs
                                 </a>
                             </div>
                         </div>
@@ -559,7 +625,7 @@
             </div>
 
             <!-- Modal Edit Schedule -->
-            <div class="modal fade" data-backdrop="static" id="mdEditSchedule" tabindex="-1">
+            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditSchedule" tabindex="-1">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -575,130 +641,139 @@
                         <div class="modal-body">
 
                             <div id="accordion">
+                                @if (LstScheduleOfCrDeviceRoom.Count > 0)
+                                {
+                                    <form @ref="elFormEditSchedule"
+                                          class="needs-validation"
+                                          id="formEditSchedule"
+                                          novalidate>
 
-                                <form @ref="elFormEditSchedule"
-                                      class="needs-validation"
-                                      id="formEditSchedule"
-                                      novalidate>
+                                        @foreach (var _profile in LstScheduleOfCrDeviceRoom)
+                                        {
+                                            <div class="card card-light">
+                                                <div class="card-header">
+                                                    <h4 class="card-title w-100 d-flex">
+                                                        <a class="d-block w-100 flex-grow-1" data-toggle="collapse" href="#collapse-@_profile.Id">
+                                                            <span class="badge badge-pill badge-info ">
+                                                                <h4>
+                                                                    @_profile.Name
+                                                                </h4>
+                                                            </span>
+                                                        </a>
 
-                                    @foreach (var _profile in LstScheduleOfCrDeviceRoom)
-                                    {
-                                        <div class="card card-light">
-                                            <div class="card-header">
-                                                <h4 class="card-title w-100 d-flex">
-                                                    <a class="d-block w-100 flex-grow-1" data-toggle="collapse" href="#collapse-@_profile.Id">
-                                                        <span class="badge badge-pill badge-info ">
-                                                            <h4>
-                                                                @_profile.Name
-                                                            </h4>
-                                                        </span>
-                                                    </a>
-
-                                                    <a class="btn btn-primary mr-auto"
-                                                       href="/schedule?scheduleId=@_profile.Id&deviceId=@crEditDeviceAll.Id"
-                                                       target="_blank">
-                                                        <i class="fas fa-external-link-alt"></i>
-                                                    </a>
-                                                </h4>
-                                            </div>
-                                            <div id="collapse-@_profile.Id" class="collapse" data-parent="#accordion">
-                                                <div class="card-body">
+                                                        <a class="btn btn-primary mr-auto"
+                                                           href="/schedule?scheduleId=@_profile.Id&deviceId=@crEditDeviceAll.Id"
+                                                           target="_blank">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </a>
+                                                    </h4>
+                                                </div>
+                                                <div id="collapse-@_profile.Id" class="collapse" data-parent="#accordion">
+                                                    <div class="card-body">
 
 
 
-                                                    <fieldset class="border p-2">
-                                                        <legend class="w-auto">Time Settings</legend>
+                                                        <fieldset class="border p-2">
+                                                            <legend class="w-auto">Time Settings</legend>
 
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fas fa-clock"></i>
-                                                                Time Range
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <DateRangePicker class="form-control"
-                                                                                 SingleDatePicker="true"
-                                                                                 TimePicker="true"
-                                                                                 TimePicker24Hour="true"
-                                                                                 DateFormat="dddd dd/MM/yyyy - hh:mm tt"
-                                                                                 @bind-StartDate="DictDatetimeBinding[_profile.Id.ToString()]"
-                                                                                 OnRangeSelect=@(() => { DateRangeBinding(FormAction.Edit, _profile); })
-                                                                                 required />
+                                                            <div class="form-group row">
+                                                                <label class="col-sm-2 col-form-label">
+                                                                    <i class="fas fa-clock"></i>
+                                                                    Time Range
+                                                                </label>
+                                                                <div class="col-sm-10">
+                                                                    <DateRangePicker class="form-control"
+                                                                                     SingleDatePicker="true"
+                                                                                     TimePicker="true"
+                                                                                     TimePicker24Hour="true"
+                                                                                     DateFormat="dddd dd/MM/yyyy - hh:mm tt"
+                                                                                     @bind-StartDate="DictDatetimeBinding[_profile.Id.ToString()]"
+                                                                                     OnRangeSelect=@(() => { DateRangeBinding(FormAction.Edit, _profile); })
+                                                                                     required />
+                                                                </div>
                                                             </div>
-                                                        </div>
 
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fab fa-slack-hash"></i>
-                                                                Schedule Type
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <select @ref="elCurrentSingleSelectBox"
-                                                                        @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(); _profile.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
-                                                                        title="-- Select --"
-                                                                        data-style="btn-light"
-                                                                        class="form-control selectpicker"
-                                                                        id="slEditScheduleType-@_profile.Id"
-                                                                        required>
-                                                                    @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
-                                                                    {
-                                                                        var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
-                                                                        var key = (int)obj;
-                                                                        <option value="@key">@value</option>
-                                                                    }
-                                                                </select>
+                                                            <div class="form-group row">
+                                                                <label class="col-sm-2 col-form-label">
+                                                                    <i class="fab fa-slack-hash"></i>
+                                                                    Schedule Type
+                                                                </label>
+                                                                <div class="col-sm-10">
+                                                                    <select @ref="elCurrentSingleSelectBox"
+                                                                            @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(); _profile.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
+                                                                            title="-- Select --"
+                                                                            data-style="btn-light"
+                                                                            class="form-control selectpicker"
+                                                                            id="slEditScheduleType-@_profile.Id"
+                                                                            required>
+                                                                        @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
+                                                                        {
+                                                                            var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
+                                                                            var key = (int)obj;
+                                                                            <option value="@key">@value</option>
+                                                                        }
+                                                                    </select>
+                                                                </div>
                                                             </div>
-                                                        </div>
 
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fas fa-redo"></i>
-                                                                Repeats
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <select title="-- Select --"
-                                                                        data-style="btn-light"
-                                                                        class="form-control selectpicker"
-                                                                        @ref="elCurrentMutipleSelectBox"
-                                                                        @onchange=@(()=> { SelectAndBindMulti(FormAction.Add, _profile); })
-                                                                        id="slEditRepeat-@_profile.Id"
-                                                                        multiple
-                                                                        required>
-                                                                    @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
-                                                                    {
-                                                                        var value = Enum.GetName(typeof(DayOfWeek), obj);
-                                                                        var key = (int)obj;
-                                                                        <option value="@key">@value</option>
-                                                                    }
-                                                                </select>
+                                                            <div class="form-group row">
+                                                                <label class="col-sm-2 col-form-label">
+                                                                    <i class="fas fa-redo"></i>
+                                                                    Repeats
+                                                                </label>
+                                                                <div class="col-sm-10">
+                                                                    <select title="-- Select --"
+                                                                            data-style="btn-light"
+                                                                            class="form-control selectpicker"
+                                                                            @ref="elCurrentMutipleSelectBox"
+                                                                            @onchange=@(()=> { SelectAndBindMulti(FormAction.Add, _profile); })
+                                                                            id="slEditRepeat-@_profile.Id"
+                                                                            multiple
+                                                                            required>
+                                                                        @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
+                                                                        {
+                                                                            var value = Enum.GetName(typeof(DayOfWeek), obj);
+                                                                            var key = (int)obj;
+                                                                            <option value="@key">@value</option>
+                                                                        }
+                                                                    </select>
+                                                                </div>
                                                             </div>
-                                                        </div>
 
-                                                    </fieldset>
+                                                        </fieldset>
 
-                                                    <fieldset class="    p-2">
-                                                        <legend class="w-auto">Attribute Trigger</legend>
+                                                        <fieldset class="    p-2">
+                                                            <legend class="w-auto">Attribute Trigger</legend>
 
-                                                        @*@if (crEditSchedule.Actions == )*@
+                                                            @*@if (crEditSchedule.Actions == )*@
 
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fas fa-user-edit"></i>
-                                                                Custom JavaScript
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <textarea id="tbEditJsAction"
-                                                                          class="summernote"></textarea>
+                                                            <div class="form-group row">
+                                                                <label class="col-sm-2 col-form-label">
+                                                                    <i class="fas fa-user-edit"></i>
+                                                                    Custom JavaScript
+                                                                </label>
+                                                                <div class="col-sm-10">
+                                                                    <textarea id="tbEditJsAction"
+                                                                              class="summernote"></textarea>
+                                                                </div>
                                                             </div>
-                                                        </div>
 
 
-                                                    </fieldset>
+                                                        </fieldset>
 
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    }
-                                </form>
+                                        }
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-info h3" role="alert">
+                                        Not assigned to any Schedule yet
+                                    </div>
+                                }
+
 
 
                             </div>
@@ -737,6 +812,7 @@
 
     GlobalScheduleModel crEditSchedule = new GlobalScheduleModel();
     DeviceModel crEditDeviceAll = new DeviceModel() { Status = new Dictionary<string, string>() };
+    AreaModel crEditDeviceArea = new AreaModel();
     ZoneModel crEditDeviceZone = new ZoneModel();
     SectionModel crEditDeviceSection = new SectionModel();
     Dictionary<string, string> crDictDvAttrPUT = new Dictionary<string, string>();
@@ -750,6 +826,8 @@
     List<SectionModel> LstAllSection = new List<SectionModel>();
     List<ZoneModel> LstZone = new List<ZoneModel>();
     List<DeviceModel> LstDevice = new List<DeviceModel>();
+    List<AreaModel> LstAllArea = new List<AreaModel>();
+    List<DataSourceModel> LstAllDataSource = new List<DataSourceModel>();
     List<MasterDataModel.DeviceTypeModel> LstDeviceType = new List<MasterDataModel.DeviceTypeModel>();
     List<string> LstACAttr = new List<string>();
     List<MasterDataModel.AttributeModel> LstAllAttribute = new List<MasterDataModel.AttributeModel>();
@@ -768,6 +846,7 @@
     DeviceDataStore svDevice = new DeviceDataStore();
     MasterDataService svMasterData = new MasterDataService();
     UserService svUser = new UserService();
+    DataSourceService svDataSource = new DataSourceService();
 
     string AccessToken = "";
 
@@ -779,11 +858,7 @@
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
             NavHelper.NavigateTo("/login");
         }
-        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-        LstSchedule = await svShedule.GetItemsAsync(AccessToken);
-        LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        LstAllSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+        RefetchData(true);
 
         //init Dict AC Attr
         LstDeviceType = await svMasterData.GetDeviceTypeListAsync(AccessToken);
@@ -795,7 +870,6 @@
 
         LstAllAttribute = await svMasterData.GetAttributeListAsync(AccessToken);
 
-        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -812,12 +886,42 @@
             return;
         }
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbSummer", 400, true, false);
-        JSHelper.InvokeVoidAsync("InjectDataTable");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    async Task RefetchData(bool isNoti)
+    {
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+
+        var taskLstSchedule =  svShedule.GetItemsAsync(AccessToken);
+        var taskLstZone =  svAreaLayout.GetZoneListAsync(AccessToken);
+        var taskLstDevice =  svDevice.GetOwnerDevicesListAsync(AccessToken);
+        var taskLstAllSection =  svAreaLayout.GetSectionListAsync(AccessToken);
+        var taskLstAllArea =  svAreaLayout.GetAreaListAsync(AccessToken);
+        var taskLstAllDataSource = svDataSource.GetDataSourceListAsync(AccessToken);
+
+        await Task.WhenAll(taskLstSchedule, taskLstZone, taskLstDevice, taskLstAllSection, taskLstAllArea, taskLstAllDataSource);
+
+        LstSchedule = await taskLstSchedule;
+        LstZone = await taskLstZone;
+        LstDevice = await taskLstDevice;
+        LstAllSection = await taskLstAllSection;
+        LstAllArea = await taskLstAllArea;
+        LstAllDataSource = await taskLstAllDataSource;
+
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        InvokeAsync(StateHasChanged);
     }
 
     async Task PreCloseDeviceModal()
     {
         JSHelper.InvokeVoidAsync("Interop_PurgeValidBtCache");
+    }
+
+    async Task PreEditDeviceArea(AreaModel _item)
+    {
+        crEditDeviceArea = _item.ShallowCopy();
     }
 
     async Task PreEditDeviceZone(ZoneModel _item)
@@ -883,7 +987,11 @@
     {
         // Grant User before action
         var _pwd = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "password","Retype your password", "Submit");
-        if (_pwd == "") return;
+        if (_pwd == "")
+        {
+            JSHelper.InvokeVoidAsync("Interop_ToggleSwitch", cbId);
+            return;
+        }
         var response = await svUser.Login(await LocalStorage.GetItemAsync<string>("username"), _pwd) ?? "";
         ResultModel objResult = (ResultModel)JsonConvert.DeserializeObject(response, typeof(ResultModel));
         var _reToken = objResult.Token ?? "";
@@ -900,7 +1008,7 @@
                     return;
                 }
             }
-            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All Device in this Group is " + (_ACPower ? "On" : "Off"), true);
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All AirCool in this Group is " + (_ACPower ? "On" : "Off"), true);
         }
         else
         {
@@ -943,7 +1051,7 @@
             var _tmpAllSection = await svAreaLayout.GetSectionListAsync(AccessToken);
             LstSection = _tmpAllSection.Where(r => r.Zone == _slValue).ToList();
 
-            // get all device in Zone then clear crLstDvInSection
+            // get all aircool in Zone then clear crLstDvInSection
             crLstDvInAllZone = LstDevice.Where(r => r.DeviceType == "AC").Where(r => LstSection.Select(z => z.Id).Contains(r.SectionId)).ToList();
 
             InvokeAsync(StateHasChanged);

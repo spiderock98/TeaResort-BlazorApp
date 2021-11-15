@@ -56,6 +56,7 @@ namespace SmartRetail.Client.Services
             return await Task.FromResult(token);
         }
 
+
         // public async Task<List<CurrentRole>> GetRoles(string token)
         // {
         //     var roleItem = new List<CurrentRole>();

@@ -21,7 +21,13 @@ namespace SmartRetail.Share.Models
         /// Key: Attribute; Value : Tupble<ref Device Id, ref Attribut> 
         /// </summary>
         public Dictionary<string, Tuple<int, string>> SetReferValue { get; set; } = new Dictionary<string, Tuple<int, string>>();
+
+        public List<int> DeviceList { get; set; } = new List<int>();
+        public string ScheduleScenesId { get; set; }
+
+        [JsonIgnore]
         public int DeviceId { get; set; }
+        [JsonIgnore]
         public string ScheduleId { get; set; }
 
 

@@ -60,6 +60,11 @@ namespace SmartRetail.Share.Models
         // [JsonIgnore]
         // public List<RunningActionModel> BufferActions { get; set; } = new List<RunningActionModel>();
 
+        public GlobalSceneModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<GlobalSceneModel>(_tmpSerializeString);
+        }
         public GlobalSceneModel ShallowCopy()
         {
             return (GlobalSceneModel)this.MemberwiseClone();
