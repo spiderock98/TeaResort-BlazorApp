@@ -6,7 +6,7 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavHelper
 @using System.Collections
-
+@using Helper 
 
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -284,6 +284,19 @@
         LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
         ////LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        // In case navigate from query string
+        string querySecId;
+        if (NavigationHelper.TryGetQueryString<string>(NavHelper, "SectionId", out querySecId) && querySecId != null)
+        {
+            var _objSection = LstAllSection.Where(r => r.Id == Convert.ToInt32(querySecId)).FirstOrDefault();
+            if (_objSection == default) return;
+
+            await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSection", "show");
+
+            InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
+            PreEdit(_objSection);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

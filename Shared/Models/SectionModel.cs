@@ -51,5 +51,10 @@ namespace SmartRetail.Share.Models
         {
             return (SectionModel)this.MemberwiseClone();
         }
+        public SectionModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<SectionModel>(_tmpSerializeString);
+        }
     }
 }

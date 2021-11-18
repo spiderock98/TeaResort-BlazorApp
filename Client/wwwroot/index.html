@@ -7,6 +7,8 @@
     <title>Daikin TEA RESORT</title>
     <base href="/" />
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <!-- <link href="_content/Havit.Blazor.Components.Web.Bootstrap/bootstrap.css" rel="stylesheet" /> -->
+
     <link href="css/app.css" rel="stylesheet" />
     <link href="SmartRetail.Client.styles.css" rel="stylesheet" />
     <link href="manifest.json" rel="manifest" />
@@ -48,6 +50,9 @@
     <!-- Animate.Style -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
+    <!-- Default values for additional CSS Variables (+ import Bootstrap Icons) -->
+    <link href="_content/Havit.Blazor.Components.Web.Bootstrap/defaults.css" rel="stylesheet" />
+
     <!-- Theme style -->
     <link rel="stylesheet" href="AdminLte/dist/css/adminlte.min.css" />
 
@@ -76,7 +81,7 @@
             width: 400px;
         }
     </style>
-    <script>
+    <!-- <script>
         const bc = new BroadcastChannel('blazor-channel');
         bc.onmessage = function (message) {
             if (message && message.data == "new-version-found") {
@@ -103,15 +108,16 @@
                 window.location.href = window.location.href
             }
         }
-    </script>
-    <script>
+    </script> -->
+    <!-- <script>
         navigator.serviceWorker.register("service-worker.js");
-    </script>
+    </script> -->
 
     <!-- jQuery -->
     <script src="AdminLte/plugins/jquery/jquery.min.js"></script>
     <!-- Bootstrap 4 -->
     <script src="AdminLte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
     <!-- overlayScrollbars -->
     <!--<script src="AdminLte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>-->
     <!-- jQuery UI 1.11.4 -->

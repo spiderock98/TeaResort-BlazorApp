@@ -280,6 +280,11 @@ async function Interop_Swal2InputAsync(inputType, title, confirmText) {
   return "";
 }
 
+function OpenInNewTab(url) {
+  console.log("haah");
+  window.open(url, "_blank").focus();
+}
+
 async function Interop_Swal2HelperAsync(
   icon,
   text,

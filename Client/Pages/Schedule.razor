@@ -96,7 +96,7 @@
                                                         data-toggle="modal"
                                                         data-target="#mdEditSchedule"
                                                         @onclick=@(() => { PreEdit(profile); })>
-                                                    <i class="fas fa-pen-alt"></i>
+                                                    <i class="fas fa-edit"></i>
                                                 </button>
 
                                                 <button class="btn btn-xs btn-danger m-1"
@@ -668,7 +668,8 @@
                                         // This is List Action create by user and ready to update to DB
                                         foreach (var _action in crEditSchedule.Actions)
                                         {
-                                            <div class="callout callout-warning">
+                                            <div class="callout callout-warning"
+                                                 id="cardEdit-@_action.DeviceList.ElementAtOrDefault(0)">
                                                 <div class="mb-4 d-flex">
                                                     <h4 class="mr-auto">
                                                         <span class="badge badge-pill badge-warning">NEW</span>
@@ -977,7 +978,7 @@
         }
         CurrentUser = await svUser.GetUserAllInforAsync(AccessToken);
 
-        RefetchData(true);
+        await RefetchData(true);
 
         // In case navigate from query string
         string queryScheduleId, queryDeviceId;
@@ -986,7 +987,10 @@
             var _objSchedule = await svShedule.GetScheduleAsync(Convert.ToInt32(queryScheduleId), AccessToken);
 
             await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "show");
-            await JSHelper.InvokeVoidAsync("Interop_GotoUrlAsync", "cardEdit-" + queryDeviceId, 2000);
+
+            // because cardEdit-* id danh dau theo id cua element dau tien nen phai tim ra listDevice roi lay el dau >> jumptourl
+            var _firtDvId = _objSchedule.Actions.Where(r => r.DeviceList.Contains(Convert.ToInt32(queryDeviceId))).FirstOrDefault()?.DeviceList.ElementAtOrDefault(0);
+            await JSHelper.InvokeVoidAsync("Interop_GotoUrlAsync", "cardEdit-" + _firtDvId, 2000);
 
             InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
             PreEdit(_objSchedule);

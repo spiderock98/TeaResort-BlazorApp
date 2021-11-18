@@ -85,6 +85,12 @@ namespace SmartRetail.Share.Models
         {
             return (DeviceModel)this.MemberwiseClone();
         }
+
+        public DeviceModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<DeviceModel>(_tmpSerializeString);
+        }
         public List<string> UpdateStatus(Dictionary<string, string> data)
         {
             if (Status == null) Status = new Dictionary<string, string>();

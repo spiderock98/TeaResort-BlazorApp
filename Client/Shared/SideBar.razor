@@ -79,7 +79,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link @CheckActiveStatus("daily","active")" @onclick=@(() => SelectMenu("daily"))>
+                    <a class="nav-link @CheckActiveStatus("energy","active")" @onclick=@(() => SelectMenu("energy"))>
                         <i class="nav-icon fas fa-chart-line"></i>
                         <p class="font-weight-bolder user-select-none">
                             ENERGY DAILY USE
@@ -156,7 +156,7 @@
 @code {
     Dictionary<string, string> menuPaths = new Dictionary<string, string>()
 {
-{"dashboard","/dashboard"}, {"ac","/ac"} , {"schedule", "/schedule"}, {"daily", "/daily"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}, { "interlock", "/interlock" }, { "layout_area", "/layout_area" },{ "layout_zone", "/layout_zone" }, { "layout_room", "/layout_room" }, { "gateway", "/gateway" }
+{"dashboard","/dashboard"}, {"ac","/ac"} , {"schedule", "/schedule"}, {"energy", "/energy"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}, { "interlock", "/interlock" }, { "layout_area", "/layout_area" },{ "layout_zone", "/layout_zone" }, { "layout_room", "/layout_room" }, { "gateway", "/gateway" }
 };
 
     Dictionary<string, bool> arrowDir = new Dictionary<string, bool>()
@@ -169,7 +169,7 @@
     {
         currentMenu = navigationHelper.ToBaseRelativePath(navigationHelper.Uri);
         //if (currentMenu == string.Empty) SelectMenu("dashboard");
-        if (currentMenu == string.Empty) navigationHelper.NavigateTo("/interlock");
+        if (currentMenu == string.Empty) navigationHelper.NavigateTo("/ac");
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)

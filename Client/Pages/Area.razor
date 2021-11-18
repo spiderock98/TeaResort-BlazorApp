@@ -2,6 +2,7 @@
 @inject IJSRuntime JSHelper
 @using SmartRetail.Client.Services
 @using Newtonsoft.Json
+@using Helper
 @using Share.Models
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavHelper
@@ -97,48 +98,48 @@
                 </h2>
             </div>
             <div class="modal-body">
-                    <form @ref="elFormEdit">
-                        <div class="row">
-                            <div class="input-group mb-3 col-12">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-id-card"></i>
-                                    </span>
-                                </div>
-                                <input class="form-control"
-                                       type="text"
-                                       @bind-value="@CrEditArea.Name"
-                                       placeholder="Room Name"
-                                       required />
+                <form @ref="elFormEdit">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
                             </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@CrEditArea.Name"
+                                   placeholder="Room Name"
+                                   required />
                         </div>
+                    </div>
 
-                        @foreach (var _zone in LstAllZone.Where(r => r.Area == CrEditArea.Id).ToList())
-                        {
-                            <div class="alert alert-light d-flex" role="alert">
-                                <div class="flex-grow-1">
-                                    <span class="badge badge-success">
-                                        <h5>@_zone.Name</h5>
-                                    </span>
-                                </div>
-                                <button class="btn btn-outline-success mr-1"
-                                        type="button"
-                                        @onclick=@(()=> { DetachZone(_zone); })>
-                                    <i class="fas fa-unlock-alt"></i>
-                                    Detach
-                                </button>
-                                <button class="btn btn-outline-success ml-1"
-                                        type="button">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </button>
+                    @foreach (var _zone in LstAllZone.Where(r => r.Area == CrEditArea.Id).ToList())
+                    {
+                        <div class="alert alert-light d-flex" role="alert">
+                            <div class="flex-grow-1">
+                                <span class="badge badge-success">
+                                    <h5>@_zone.Name</h5>
+                                </span>
                             </div>
-                        }
-                    </form>
+                            <button class="btn btn-outline-success mr-1"
+                                    type="button"
+                                    @onclick=@(()=> { DetachZone(_zone); })>
+                                <i class="fas fa-unlock-alt"></i>
+                                Detach
+                            </button>
+                            <button class="btn btn-outline-success ml-1"
+                                    type="button">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                        </div>
+                    }
+                </form>
             </div>
             <div class="modal-footer d-flex justify-content-center">
-                <button type="button" 
-                        class="btn btn-outline-info" 
-                        data-dismiss="modal" 
+                <button type="button"
+                        class="btn btn-outline-info"
+                        data-dismiss="modal"
                         @onclick="PreCloseModalEdit">
                     Cancle
                 </button>
@@ -161,7 +162,7 @@
                     <i class="fas fa-folder-plus"></i>
                 </h1>
                 <h2 class="modal-title w-100">
-                     New Area Layout
+                    New Area Layout
                 </h2>
             </div>
             <div class="modal-body">
@@ -228,6 +229,19 @@
         LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
         LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        // In case navigate from query string
+        string queryAreaId;
+        if (NavigationHelper.TryGetQueryString<string>(NavHelper, "AreaId", out queryAreaId) && queryAreaId != null)
+        {
+            var _objArea = LstAllArea.Where(r=>r.Id == Convert.ToInt32(queryAreaId)).FirstOrDefault();
+            if (_objArea == default) return;
+
+            await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditArea", "show");
+
+            InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
+            PreEdit(_objArea);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -387,8 +401,7 @@
 
     async Task PreEdit(AreaModel _area)
     {
-        CrEditArea = _area.ShallowCopy();
-
+        CrEditArea = _area.DeepCopy();
         await InvokeAsync(StateHasChanged);
     }
 }

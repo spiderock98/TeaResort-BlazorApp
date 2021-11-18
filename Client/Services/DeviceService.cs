@@ -211,6 +211,15 @@ namespace SmartRetail.Client.Services
             return await Task.FromResult(true);
         }
 
+        // public async Task<List<GlobalScheduleModel>> GetLstScheduleOfDv(string token, int dvId)
+        // {
+        //     var result = new List<GlobalScheduleModel>();
+        //     var svSchedule = new ScheduleService();
+        //     var LstAllSchedule = await svSchedule.GetItemsAsync(token);
+        //     result = LstAllSchedule.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(dvId)).ToList();
+        //     return result;
+        // }
+
         //public async Task<bool> UpdateStatusAsync(List<DeviceParaListTransfer> datas, string token)
         //{
         //    var uri = new Uri(Resources.GetLink.PUT_MUL_DEVICE_SETTING(token));

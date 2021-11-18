@@ -60,7 +60,7 @@
                         </thead>
                         <tbody>
                             @{
-                                foreach (var profile in LstScene)
+                                foreach (var profile in LstScene.OrderByDescending(r=>r.Id))
                                 {
                                     <tr class="text-center">
                                         <th>@profile.Id</th>
@@ -85,7 +85,7 @@
                                                 <button class="btn btn-xs btn-primary m-1"
                                                         type="button"
                                                         data-toggle="modal"
-                                                        data-target="#mdEditSchedule"
+                                                        data-target="#mdEditScene"
                                                         @onclick=@(() => { PreEdit(profile); })>
                                                     <i class="fas fa-edit"></i>
                                                 </button>
@@ -118,11 +118,10 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
+
             <!-- Modal New Schedule -->
-            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" data-keyboard="false"  id="mdNewScene" tabindex="-1">
+            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" data-keyboard="false" id="mdNewScene" tabindex="-1">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                         <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
@@ -133,7 +132,7 @@
                                 New Interlock Profile
                             </h2>
                         </div>
-                        
+
                         <div class="modal-body">
                             <form @ref="elFormNewScene"
                                   class="needs-validation"
@@ -164,20 +163,16 @@
                                     </legend>
 
                                     <div class="container-fluid">
-                                        @*<div class="row">
-                    <button class="btn btn-outline-primary m-1">Export Configure</button>
-                    <button class="btn btn-outline-primary m-1">Import Configure</button>
-                </div>*@
-
                                         @foreach (var _express in NewSceneParams.Expressions)
                                         {
                                             int idx = NewSceneParams.Expressions.IndexOf(_express);
 
-                                            <div class="row align-items-center">
+                                            <div class="row align-items-center"
+                                                 id="row-@_express.RandExpId">
                                                 <div class="col-auto">
-                                                    <button class="btn btn-danger btn-sm"
+                                                    <button class="btn btn-outline-danger btn-xs"
                                                             type="button"
-                                                            @onclick=@(() => { NewSceneParams.Expressions.Remove(_express); })>
+                                                            @onclick=@(() => { NewSceneParams.Expressions.Remove(_express); InvokeAsync(StateHasChanged); })>
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
                                                 </div>
@@ -216,10 +211,11 @@
                                                     }
 
                                                     <div class="col-3">
-                                                        <select title="-- Change --"
+                                                        <select title="-- Select Expression --"
                                                                 id="slNewCondLogicExpress-@idx"
                                                                 data-style="btn-light btn-sm"
                                                                 class="form-control selectpicker"
+                                                                required
                                                                 @onchange=@(async()=>
                                                                                     {
                                                                                        var _tmpKey =  await SelectAndBindSingle();
@@ -240,34 +236,43 @@
 
                                                     <div class="col-3">
                                                         <div class="info-box">
-                                                            <span class="info-box-icon bg-success">@_objDevice.Capabilitie</span>
                                                             <div class="info-box-content">
-                                                                <span class="info-box-text">@_objDevice.Id</span>
-                                                                <span class="info-box-number">@_objDevice.Name</span>
-                                                                <span class="info-box-number">
-                                                                    <select title="-- Change --"
-                                                                            id="slNewCondDevice-@idx"
-                                                                            data-style="btn-light btn-sm"
-                                                                            class="form-control selectpicker"
-                                                                            data-live-search="true"
-                                                                            @onchange=@(async()=>
+                                                                <select title="-- Select AC --"
+                                                                        id="slNewCondDevice-@idx"
+                                                                        data-style="btn-light btn-sm"
+                                                                        class="form-control selectpicker"
+                                                                        data-live-search="true"
+                                                                        @onchange=@(async()=>
                                                                                     {
                                                                                        var _tmpKey =  await SelectAndBindSingle();
                                                                                         NewSceneParams.Expressions.ElementAtOrDefault(idx).DeviceId = _tmpKey;
                                                                                     })>
-                                                                        @foreach (var _dv in LstDevice)
+                                                                    @foreach (var _dv in LstDevice)
+                                                                    {
+                                                                        var resultSubText = "";
+                                                                        var secOfDv = LstSection.Where(r => r.Id == _dv.SectionId).FirstOrDefault();
+                                                                        if (secOfDv != default)
                                                                         {
-                                                                            <option value="@_dv.Id">@_dv.Id - @_dv.Name</option>
+                                                                            var zoneOfDv = LstZone.Where(r => r.Id == secOfDv.Zone).FirstOrDefault();
+                                                                            if (zoneOfDv != default)
+                                                                            {
+                                                                                var areaOfDv = LstArea.Where(r => r.Id == zoneOfDv.Area).FirstOrDefault();
+                                                                                if (areaOfDv != default)
+                                                                                {
+                                                                                    resultSubText = areaOfDv.Name + " > " + zoneOfDv.Name + " > " + secOfDv.Name;
+                                                                                }
+                                                                            }
                                                                         }
-                                                                    </select>
-                                                                </span>
+                                                                        <option data-subtext="@resultSubText" value="@_dv.Id">[@_dv.Capabilitie] @_dv.Id - @_dv.Name</option>
+                                                                    }
+                                                                </select>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <div class="col-2">
                                                         <div class="info-box">
-                                                            <span class="info-box-icon bg-success">
+                                                            <span class="info-box-icon bg-info">
                                                                 <i class="@GetCompareSign(NewSceneParams.Expressions.ElementAtOrDefault(idx).Comparison)"></i>
                                                             </span>
                                                             <div class="info-box-content">
@@ -293,9 +298,6 @@
 
                                                     <div class="col-3">
                                                         <div class="info-box">
-                                                            <span class="info-box-icon bg-success">
-                                                                Value
-                                                            </span>
                                                             <div class="info-box-content">
                                                                 <select title="-- Select Attribute --"
                                                                         id="slNewCondDeviceAttr-@idx"
@@ -308,12 +310,14 @@
                                                                                         var _tmpKey = await SelectAndBindSingleTextReturn();
                                                                                         NewSceneParams.Expressions.ElementAtOrDefault(idx).Attribute = _tmpKey;
                                                                                     })>
-
                                                                     @{
-                                                                        var _dictDvAttr = LstDevice.Where(r => r.Id == _express.DeviceId).FirstOrDefault().Status;
-                                                                        foreach (var DvAttr in _dictDvAttr)
+                                                                        var _dictDvAttr = LstDevice.Where(r => r.Id == _express.DeviceId).FirstOrDefault()?.Status;
+                                                                        if (_dictDvAttr != default)
                                                                         {
-                                                                            <option value="@DvAttr.Key">@DvAttr.Key</option>
+                                                                            foreach (var DvAttr in _dictDvAttr)
+                                                                            {
+                                                                                <option value="@DvAttr.Key">@DvAttr.Key</option>
+                                                                            }
                                                                         }
                                                                     }
                                                                 </select>
@@ -326,7 +330,7 @@
                                                                         {
                                                                             <select class="form-control"
                                                                                     required
-                                                                                    id=@("slNewCondDeviceAttr" + _DetailOfAttr.Name + "-" + idx)
+                                                                                    id=@("slNewCondDeviceAttr" + _DetailOfAttr.Name + "-" + _express.RandExpId)
                                                                                     @onchange=@(async () =>
                                                                                                 {
                                                                                                     var _tmpKey = await jQuerySelectAndBindSingleTextReturn();
@@ -376,7 +380,7 @@
 
                                                     <div class="col-3">
                                                         <div class="info-box">
-                                                            <span class="info-box-icon bg-success">
+                                                            <span class="info-box-icon bg-info">
                                                                 <i class="fas fa-stopwatch"></i>
                                                             </span>
                                                             <div class="info-box-content">
@@ -402,249 +406,26 @@
                                             </div>
                                         }
 
-                                        <!-- Drop down select button -->
-                                        <div class="dropdown">
-                                            <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <i class="fas fa-plus-circle"></i>
+                                        <div class="btn-group" role="group">
+                                            <button type="button"
+                                                    class="btn btn-primary"
+                                                    @onclick=@(()=>
+                                                               {
+                                                                   NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic= LogicExpression.None});
+                                                               })>
+                                                <i class="fas fa-plus"></i>
+                                                Command
                                             </button>
-
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item btn d-flex">
-                                                        <div class="flex-grow-1">COMMAND</div>
-                                                        <i class="fas fa-chevron-right"></i>
-                                                    </a>
-                                                    <ul class="submenu dropdown-menu">
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.And });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                And
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.Or });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                Or
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.Not });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                Not
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.OpenpArenthesis });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                OpenpArenthesis
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.CloseParenthesis });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                CloseArenthesis
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item btn d-flex">
-                                                        <div class="flex-grow-1">TRIGGER BLOCK</div>
-                                                        <i class="fas fa-chevron-right"></i>
-                                                    </a>
-                                                    <ul class="submenu dropdown-menu">
-                                                        @* AREA Level *@
-                                                        <li>
-                                                            @{
-                                                                var LstAreaLV1 = LstArea;
-                                                                var numOfAreaLV1 = LstAreaLV1.Count;
-                                                            }
-                                                            <a class="dropdown-item btn d-flex">
-                                                                <div class="flex-grow-1">Area</div>
-                                                                @if (numOfAreaLV1 > 0)
-                                                                {
-                                                                    <span class="badge badge-pill badge-success">@LstAreaLV1.Count</span>
-                                                                }
-                                                            </a>
-                                                            @if (numOfAreaLV1 > 0)
-                                                            {
-                                                                <ul class="submenu dropdown-menu">
-                                                                    @{
-                                                                        foreach (var _area in LstAreaLV1)
-                                                                        {
-                                                                            var _LstZoneIdInAreaItem = LstZone.Where(r => r.Area == _area.Id).Select(x => x.Id).ToList();
-                                                                            var _LstSectionIdInZoneItem = LstSection.Where(r => _LstZoneIdInAreaItem.Contains(r.Zone)).Select(x => x.Id).ToList();
-                                                                            var LstAreaLV2 = LstDevice.Where(r => _LstSectionIdInZoneItem.Contains(r.SectionId)).ToList();
-                                                                            var numOfAreaLV2 = LstAreaLV2.Count;
-                                                                            <li>
-                                                                                <a class="dropdown-item btn d-flex">
-                                                                                    <div class="flex-grow-1">@_area.Name</div>
-                                                                                    @if (numOfAreaLV2 > 0)
-                                                                                    {
-                                                                                        <span class="badge badge-pill badge-success">@numOfAreaLV2</span>
-                                                                                    }
-                                                                                </a>
-                                                                                @if (numOfAreaLV2 > 0)
-                                                                                {
-                                                                                    <ul class="submenu dropdown-menu">
-                                                                                        @foreach (var _device in LstAreaLV2)
-                                                                                        {
-                                                                                            <li>
-                                                                                                <a class="dropdown-item btn"
-                                                                                                   @onclick=@(()=>
-                                                                                                   {
-                                                                                                       NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, DeviceId = _device.Id, Comparison= MasterDataModel.CompareOperators.Equal });
-                                                                                                   })> @_device.Name </a>
-                                                                                            </li>
-                                                                                        }
-                                                                                    </ul>
-                                                                                }
-                                                                            </li>
-                                                                        }
-                                                                    }
-                                                                </ul>
-                                                            }
-
-                                                        </li>
-
-                                                        @* ZONE Level *@
-                                                        <li>
-                                                            @{
-                                                                var LstZoneLV1 = LstZone;
-                                                                var numOfZoneLV1 = LstZoneLV1.Count;
-                                                            }
-                                                            <a class="dropdown-item btn d-flex">
-
-                                                                <div class="flex-grow-1">Zone</div>
-                                                                @if (numOfZoneLV1 > 0)
-                                                                {
-                                                                    <span class="badge badge-pill badge-success">@numOfZoneLV1</span>
-                                                                }
-                                                            </a>
-                                                            @if (numOfZoneLV1 > 0)
-                                                            {
-                                                                <ul class="submenu dropdown-menu">
-                                                                    @{
-                                                                        foreach (var _zone in LstZoneLV1)
-                                                                        {
-                                                                            var _LstSectionIdInZoneItem = LstSection.Where(r => r.Zone == _zone.Id).Select(x => x.Id).ToList();
-                                                                            var LstZoneLV2 = LstDevice.Where(r => _LstSectionIdInZoneItem.Contains(r.SectionId)).ToList();
-                                                                            var numOfZoneLV2 = LstZoneLV2.Count;
-                                                                            <li>
-                                                                                <a class="dropdown-item btn d-flex">
-                                                                                    <div class="flex-grow-1"> @_zone.Name </div>
-                                                                                    @if (numOfZoneLV2 > 0)
-                                                                                    {
-                                                                                        <span class="badge badge-pill badge-success">@numOfZoneLV2</span>
-                                                                                    }
-                                                                                </a>
-                                                                                @if (numOfZoneLV2 > 0)
-                                                                                {
-                                                                                    <ul class="submenu dropdown-menu">
-
-                                                                                        @foreach (var _device in LstZoneLV2)
-                                                                                        {
-                                                                                            <li>
-                                                                                                <a class="dropdown-item btn"
-                                                                                                   @onclick=@(()=>
-                                                                                                   {
-                                                                                                       NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, DeviceId = _device.Id, Comparison= MasterDataModel.CompareOperators.Equal });
-                                                                                                   })> @_device.Name </a>
-                                                                                            </li>
-                                                                                        }
-                                                                                    </ul>
-                                                                                }
-                                                                            </li>
-                                                                        }
-                                                                    }
-                                                                </ul>
-                                                            }
-
-                                                        </li>
-
-                                                        @* ROOM Level *@
-                                                        <li>
-                                                            @{
-                                                                var LstSectionLV1 = LstSection;
-                                                                var numOfSectionLV1 = LstSectionLV1.Count;
-                                                            }
-                                                            <a class="dropdown-item btn d-flex">
-                                                                <div class="flex-grow-1">Room</div>
-                                                                @if (numOfSectionLV1 > 0)
-                                                                {
-                                                                    <span class="badge badge-pill badge-success">@numOfSectionLV1</span>
-                                                                }
-
-                                                            </a>
-                                                            @if (numOfSectionLV1 > 0)
-                                                            {
-                                                                <ul class="submenu dropdown-menu">
-                                                                    @{
-                                                                        foreach (var _section in LstSectionLV1)
-                                                                        {
-                                                                            var LstSectionLV2 = LstDevice.Where(r => r.SectionId == _section.Id).ToList();
-                                                                            var numOfSectionLV2 = LstSectionLV2.Count;
-                                                                            <li>
-                                                                                <a class="dropdown-item btn d-flex">
-                                                                                    <div class="flex-grow-1">@_section.Name</div>
-                                                                                    @if (numOfSectionLV2 > 0)
-                                                                                    {
-                                                                                        <span class="badge badge-pill badge-success">@numOfSectionLV2</span>
-                                                                                    }
-                                                                                </a>
-                                                                                @if (numOfSectionLV2 > 0)
-                                                                                {
-                                                                                    <ul class="submenu dropdown-menu">
-                                                                                        @foreach (var _device in LstSectionLV2)
-                                                                                        {
-                                                                                            <li>
-                                                                                                <a class="dropdown-item btn"
-                                                                                                   @onclick=@(()=>
-                                                                                                   {
-                                                                                                       NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, DeviceId = _device.Id, Comparison= MasterDataModel.CompareOperators.Equal });
-                                                                                                   })> @_device.Name </a>
-                                                                                            </li>
-                                                                                        }
-                                                                                    </ul>
-                                                                                }
-                                                                            </li>
-                                                                        }
-                                                                    }
-                                                                </ul>
-                                                            }
-
-                                                        </li>
-                                                    </ul>
-                                                </li>
-                                            </ul>
+                                            <button type="button"
+                                                    class="btn btn-info"
+                                                    @onclick=@(()=>
+                                                                   {
+                                                                       NewSceneParams.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, Comparison= MasterDataModel.CompareOperators.Equal });
+                                                                   })>
+                                                <i class="fas fa-plus"></i>
+                                                Trigger Block
+                                            </button>
                                         </div>
-
-
                                     </div>
                                 </fieldset>
 
@@ -687,9 +468,14 @@
 
                                             <div class="row">
 
+                                                @{
+                                                    var _dvType = "AC";
+                                                    //_dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
+                                                }
+
                                                 <div class="form-group col-5">
                                                     <label>
-                                                        Target Devices
+                                                        Target AC
                                                     </label>
                                                     <div class="input-group ">
                                                         <select class="selectpicker form-control"
@@ -702,47 +488,32 @@
                                                                             {
                                                                                 SelectAndBindMultiTargetDevice(_card);
                                                                             })>
-                                                            @*@foreach (var _dv in crFilterTargetDevice.Where(r => r.DeviceType == "AC"))*@
                                                             @foreach (var _dv in LstDevice.Where(r => r.DeviceType == "AC"))
                                                             {
-                                                                <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
+                                                                var resultSubText = "";
+                                                                var secOfDv = LstSection.Where(r => r.Id == _dv.SectionId).FirstOrDefault();
+                                                                if (secOfDv != default)
+                                                                {
+                                                                    var zoneOfDv = LstZone.Where(r => r.Id == secOfDv.Zone).FirstOrDefault();
+                                                                    if (zoneOfDv != default)
+                                                                    {
+                                                                        var areaOfDv = LstArea.Where(r => r.Id == zoneOfDv.Area).FirstOrDefault();
+                                                                        if (areaOfDv != default)
+                                                                        {
+                                                                            resultSubText = areaOfDv.Name + " > " + zoneOfDv.Name + " > " + secOfDv.Name;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                <option data-subtext="@resultSubText" value="@_dv.Id">[@_dv.Capabilitie] @_dv.Id - @_dv.Name</option>
                                                             }
                                                         </select>
                                                     </div>
-                                                </div>
-
-                                                @{
-                                                    var _dvType = "AC";
-                                                    //_dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
-                                                }
-                                                <div class="col-7">
-                                                    <div class="callout callout-primary">
-                                                        <div class="d-flex">
-                                                            <div class=" flex-grow-1">
-                                                                <ul style="list-style-type: none;">
-                                                                    @foreach (var dv in _card.DeviceList)
-                                                                    {
-                                                                        var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
-                                                                        <li>
-                                                                            <span class="badge badge-pill badge-primary">
-                                                                                @objDv.Id
-                                                                            </span>
-                                                                            - [@objDv.Capabilitie] @objDv.Name
-                                                                        </li>
-                                                                    }
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12">
-                                                    <hr class="dotted">
-                                                </div>
 
 
-                                                <div class="card col-12">
-                                                    <div class="card-header">
+                                                    <label class="m-3">
+                                                        Attributes
+                                                    </label>
+                                                    <div class="input-group">
                                                         <select title="-- Select Attributes --"
                                                                 data-style="btn-primary"
                                                                 class="form-control selectpicker"
@@ -765,9 +536,33 @@
                                                             }
                                                         </select>
                                                     </div>
-                                                    <div class="card-body">
-                                                        <div class="row">
+                                                </div>
 
+
+                                                <div class="col-7">
+                                                    <div class="callout callout-primary">
+                                                        <div class="d-flex">
+                                                            <div class=" flex-grow-1">
+                                                                <ul style="list-style-type: none;">
+                                                                    @foreach (var dv in _card.DeviceList)
+                                                                    {
+                                                                        var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
+                                                                        <li>
+                                                                            <span class="badge badge-pill badge-primary">
+                                                                                @objDv.Id
+                                                                            </span>
+                                                                            - [@objDv.Capabilitie] @objDv.Name
+                                                                        </li>
+                                                                    }
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-12">
+                                                            <hr class="dotted">
+                                                        </div>
+
+                                                        <div class="row">
                                                             @{
                                                                 foreach (var _attr in _card?.SetValues)
                                                                 {
@@ -931,7 +726,7 @@
             </div>
 
             <!-- Modal Edit Schedule -->
-            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" data-keyboard="false" id="mdEditSchedule" tabindex="-1">
+            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" data-keyboard="false" id="mdEditScene" tabindex="-1">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                         <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
@@ -968,23 +763,18 @@
 
                                 <fieldset class="border p-2">
                                     <legend class="w-auto">
-                                        <h2 class="font-weight-bolder font-italic">IF</h2>
+                                        <h2 class="font-weight-bolder font-italic">IF STATEMENT</h2>
                                     </legend>
 
                                     <div class="container-fluid">
-                                        <div class="row">
-                                            @*<button class="btn btn-outline-primary m-1">Export Configure</button>
-                            <button class="btn btn-outline-primary m-1">Import Configure</button>*@
-                                        </div>
 
                                         @foreach (var _express in crEditScene.Expressions)
                                         {
                                             int idx = crEditScene.Expressions.IndexOf(_express);
 
                                             <div class="row align-items-center">
-                                                @*show the delete expression button*@
                                                 <div class="col-auto">
-                                                    <button class="btn btn-danger btn-sm"
+                                                    <button class="btn btn-outline-danger btn-xs"
                                                             type="button"
                                                             @onclick=@(() => { crEditScene.Expressions.Remove(_express); })>
                                                         <i class="fas fa-trash-alt"></i>
@@ -1049,27 +839,36 @@
 
                                                     <div class="col-3">
                                                         <div class="info-box">
-                                                            <span class="info-box-icon bg-success">@_objDevice.Capabilitie</span>
                                                             <div class="info-box-content">
-                                                                <span class="info-box-text">@_objDevice.Id</span>
-                                                                <span class="info-box-number">@_objDevice.Name</span>
-                                                                <span class="info-box-number">
-                                                                    <select title="-- Change --"
-                                                                            id="slEditCondDevice-@idx"
-                                                                            data-style="btn-light btn-sm"
-                                                                            class="form-control selectpicker"
-                                                                            data-live-search="true"
-                                                                            @onchange=@(async()=>
+                                                                <select title="-- Change AC --"
+                                                                        id="slEditCondDevice-@idx"
+                                                                        data-style="btn-light btn-sm"
+                                                                        class="form-control selectpicker"
+                                                                        data-live-search="true"
+                                                                        @onchange=@(async()=>
                                                                                     {
                                                                                        var _tmpKey =  await SelectAndBindSingle();
                                                                                         crEditScene.Expressions.ElementAtOrDefault(idx).DeviceId = _tmpKey;
                                                                                     })>
-                                                                        @foreach (var _dv in LstDevice)
+                                                                    @foreach (var _dv in LstDevice)
+                                                                    {
+                                                                        var resultSubText = "";
+                                                                        var secOfDv = LstSection.Where(r => r.Id == _dv.SectionId).FirstOrDefault();
+                                                                        if (secOfDv != default)
                                                                         {
-                                                                            <option value="@_dv.Id">@_dv.Id - @_dv.Name</option>
+                                                                            var zoneOfDv = LstZone.Where(r => r.Id == secOfDv.Zone).FirstOrDefault();
+                                                                            if (zoneOfDv != default)
+                                                                            {
+                                                                                var areaOfDv = LstArea.Where(r => r.Id == zoneOfDv.Area).FirstOrDefault();
+                                                                                if (areaOfDv != default)
+                                                                                {
+                                                                                    resultSubText = areaOfDv.Name + " > " + zoneOfDv.Name + " > " + secOfDv.Name;
+                                                                                }
+                                                                            }
                                                                         }
-                                                                    </select>
-                                                                </span>
+                                                                        <option data-subtext="@resultSubText" value="@_dv.Id">@_dv.Id - @_dv.Name</option>
+                                                                    }
+                                                                </select>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1100,11 +899,9 @@
                                                         </div>
                                                     </div>
 
+
                                                     <div class="col-3">
                                                         <div class="info-box">
-                                                            <span class="info-box-icon bg-success">
-                                                                Value
-                                                            </span>
                                                             <div class="info-box-content">
                                                                 <select title="-- Change Attribute --"
                                                                         id="slEditCondDeviceAttr-@idx"
@@ -1116,12 +913,14 @@
                                                                                         var _tmpKey = await SelectAndBindSingleTextReturn();
                                                                                         crEditScene.Expressions.ElementAtOrDefault(idx).Attribute = _tmpKey;
                                                                                     })>
-
                                                                     @{
-                                                                        var _dictDvAttr = LstDevice.Where(r => r.Id == _express.DeviceId).FirstOrDefault().Status;
-                                                                        foreach (var DvAttr in _dictDvAttr)
+                                                                        var _dictDvAttr = LstDevice.Where(r => r.Id == _express.DeviceId).FirstOrDefault()?.Status;
+                                                                        if (_dictDvAttr != default)
                                                                         {
-                                                                            <option value="@DvAttr.Key">@DvAttr.Key</option>
+                                                                            foreach (var DvAttr in _dictDvAttr)
+                                                                            {
+                                                                                <option value="@DvAttr.Key">@DvAttr.Key</option>
+                                                                            }
                                                                         }
                                                                     }
                                                                 </select>
@@ -1181,6 +980,7 @@
                                                         </div>
                                                     </div>
 
+
                                                     <div class="col-3">
                                                         <div class="info-box">
                                                             <span class="info-box-icon bg-success">
@@ -1204,245 +1004,37 @@
                                                             </div>
                                                         </div>
                                                     </div>
-
                                                 }
                                             </div>
                                         }
 
-                                        <!-- Dropdown select button -->
-                                        <div class="dropdown">
-                                            <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <i class="fas fa-plus-circle"></i>
+                                        <div class="btn-group" role="group">
+                                            <button type="button"
+                                                    class="btn btn-primary"
+                                                    @onclick=@(()=>
+                                                               {
+                                                                   crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic= LogicExpression.None});
+                                                               })>
+                                                <i class="fas fa-plus"></i>
+                                                Command
                                             </button>
-
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item btn d-flex">
-                                                        <div class="flex-grow-1">COMMAND</div>
-                                                        <i class="fas fa-chevron-right"></i>
-                                                    </a>
-                                                    <ul class="submenu dropdown-menu">
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.And });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                And
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.Or });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                Or
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.Not });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                Not
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.OpenpArenthesis });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                OpenpArenthesis
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a class="dropdown-item btn"
-                                                               @onclick=@(() =>
-                                                               {
-                                                                   crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = true, Logic = LogicExpression.CloseParenthesis });
-                                                                   InvokeAsync(StateHasChanged);
-                                                               })>
-                                                                CloseArenthesis
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item btn d-flex">
-                                                        <div class="flex-grow-1">TRIGGER BLOCK</div>
-                                                        <i class="fas fa-chevron-right"></i>
-                                                    </a>
-                                                    <ul class="submenu dropdown-menu">
-                                                        @* AREA Level *@
-                                                        <li>
-                                                            <a class="dropdown-item btn d-flex">
-                                                                <div class="flex-grow-1">Area</div>
-                                                                @if (numOfAreaLV1 > 0)
-                                                                {
-                                                                    <span class="badge badge-pill badge-success">@LstAreaLV1.Count</span>
-                                                                }
-                                                            </a>
-                                                            @if (numOfAreaLV1 > 0)
-                                                            {
-                                                                <ul class="submenu dropdown-menu">
-                                                                    @{
-                                                                        foreach (var _area in LstAreaLV1)
-                                                                        {
-                                                                            var _LstZoneIdInAreaItem = LstZone.Where(r => r.Area == _area.Id).Select(x => x.Id).ToList();
-                                                                            var _LstSectionIdInZoneItem = LstSection.Where(r => _LstZoneIdInAreaItem.Contains(r.Zone)).Select(x => x.Id).ToList();
-                                                                            var LstAreaLV2 = LstDevice.Where(r => _LstSectionIdInZoneItem.Contains(r.SectionId)).ToList();
-                                                                            var numOfAreaLV2 = LstAreaLV2.Count;
-                                                                            <li>
-                                                                                <a class="dropdown-item btn d-flex">
-                                                                                    <div class="flex-grow-1">@_area.Name</div>
-                                                                                    @if (numOfAreaLV2 > 0)
-                                                                                    {
-                                                                                        <span class="badge badge-pill badge-success">@numOfAreaLV2</span>
-                                                                                    }
-                                                                                </a>
-                                                                                @if (numOfAreaLV2 > 0)
-                                                                                {
-                                                                                    <ul class="submenu dropdown-menu">
-                                                                                        @foreach (var _device in LstAreaLV2)
-                                                                                        {
-                                                                                            <li>
-                                                                                                <a class="dropdown-item btn"
-                                                                                                   @onclick=@(()=>
-                                                                                                   {
-                                                                                                       crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, DeviceId = _device.Id, Comparison= MasterDataModel.CompareOperators.Equal });
-                                                                                                   })> @_device.Name </a>
-                                                                                            </li>
-                                                                                        }
-                                                                                    </ul>
-                                                                                }
-                                                                            </li>
-                                                                        }
-                                                                    }
-                                                                </ul>
-                                                            }
-
-                                                        </li>
-
-                                                        @* ZONE Level *@
-                                                        <li>
-                                                            <a class="dropdown-item btn d-flex">
-
-                                                                <div class="flex-grow-1">Zone</div>
-                                                                @if (numOfZoneLV1 > 0)
-                                                                {
-                                                                    <span class="badge badge-pill badge-success">@numOfZoneLV1</span>
-                                                                }
-                                                            </a>
-                                                            @if (numOfZoneLV1 > 0)
-                                                            {
-                                                                <ul class="submenu dropdown-menu">
-                                                                    @{
-                                                                        foreach (var _zone in LstZoneLV1)
-                                                                        {
-                                                                            var _LstSectionIdInZoneItem = LstSection.Where(r => r.Zone == _zone.Id).Select(x => x.Id).ToList();
-                                                                            var LstZoneLV2 = LstDevice.Where(r => _LstSectionIdInZoneItem.Contains(r.SectionId)).ToList();
-                                                                            var numOfZoneLV2 = LstZoneLV2.Count;
-                                                                            <li>
-                                                                                <a class="dropdown-item btn d-flex">
-                                                                                    <div class="flex-grow-1"> @_zone.Name </div>
-                                                                                    @if (numOfZoneLV2 > 0)
-                                                                                    {
-                                                                                        <span class="badge badge-pill badge-success">@numOfZoneLV2</span>
-                                                                                    }
-                                                                                </a>
-                                                                                @if (numOfZoneLV2 > 0)
-                                                                                {
-                                                                                    <ul class="submenu dropdown-menu">
-
-                                                                                        @foreach (var _device in LstZoneLV2)
-                                                                                        {
-                                                                                            <li>
-                                                                                                <a class="dropdown-item btn"
-                                                                                                   @onclick=@(()=>
-                                                                                                   {
-                                                                                                       crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, DeviceId = _device.Id, Comparison= MasterDataModel.CompareOperators.Equal });
-                                                                                                   })> @_device.Name </a>
-                                                                                            </li>
-                                                                                        }
-                                                                                    </ul>
-                                                                                }
-                                                                            </li>
-                                                                        }
-                                                                    }
-                                                                </ul>
-                                                            }
-
-                                                        </li>
-
-                                                        @* ROOM Level *@
-                                                        <li>
-                                                            <a class="dropdown-item btn d-flex">
-                                                                <div class="flex-grow-1">Room</div>
-                                                                @if (numOfSectionLV1 > 0)
-                                                                {
-                                                                    <span class="badge badge-pill badge-success">@numOfSectionLV1</span>
-                                                                }
-
-                                                            </a>
-                                                            @if (numOfSectionLV1 > 0)
-                                                            {
-                                                                <ul class="submenu dropdown-menu">
-                                                                    @{
-                                                                        foreach (var _section in LstSectionLV1)
-                                                                        {
-                                                                            var LstSectionLV2 = LstDevice.Where(r => r.SectionId == _section.Id).ToList();
-                                                                            var numOfSectionLV2 = LstSectionLV2.Count;
-                                                                            <li>
-                                                                                <a class="dropdown-item btn d-flex">
-                                                                                    <div class="flex-grow-1">@_section.Name</div>
-                                                                                    @if (numOfSectionLV2 > 0)
-                                                                                    {
-                                                                                        <span class="badge badge-pill badge-success">@numOfSectionLV2</span>
-                                                                                    }
-                                                                                </a>
-                                                                                @if (numOfSectionLV2 > 0)
-                                                                                {
-                                                                                    <ul class="submenu dropdown-menu">
-                                                                                        @foreach (var _device in LstSectionLV2)
-                                                                                        {
-                                                                                            <li>
-                                                                                                <a class="dropdown-item btn"
-                                                                                                   @onclick=@(()=>
-                                                                                                   {
-                                                                                                       crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, DeviceId = _device.Id, Comparison= MasterDataModel.CompareOperators.Equal });
-                                                                                                   })> @_device.Name </a>
-                                                                                            </li>
-                                                                                        }
-                                                                                    </ul>
-                                                                                }
-                                                                            </li>
-                                                                        }
-                                                                    }
-                                                                </ul>
-                                                            }
-
-                                                        </li>
-                                                    </ul>
-                                                </li>
-                                            </ul>
+                                            <button type="button"
+                                                    class="btn btn-info"
+                                                    @onclick=@(()=>
+                                                                   {
+                                                                       crEditScene.Expressions.Add(new ScenesExpressionModel() { IsLogicExpression = false, Comparison= MasterDataModel.CompareOperators.Equal });
+                                                                   })>
+                                                <i class="fas fa-plus"></i>
+                                                Trigger Block
+                                            </button>
                                         </div>
                                     </div>
                                 </fieldset>
 
                                 <fieldset class="border p-2">
-                                    <legend class="w-auto">THEN</legend>
+                                    <legend class="w-auto">
+                                        <h2 class="font-weight-bolder font-italic">THEN</h2>
+                                    </legend>
 
                                     <div class="row">
                                         <button class="btn btn-success m-3 btn-block"
@@ -1463,7 +1055,8 @@
                                         // This is List Action create by user and ready to update to DB
                                         foreach (var _card in crEditScene.Actions)
                                         {
-                                            <div class="callout callout-warning">
+                                            <div class="callout callout-warning"
+                                                 id="cardEdit-@_card.DeviceList.ElementAtOrDefault(0)">
                                                 <div class="mb-4 d-flex">
                                                     <h4 class="mr-auto">
                                                         <span class="badge badge-pill badge-primary">EDIT</span> action
@@ -1481,9 +1074,14 @@
                                                 </div>
 
                                                 <div class="row">
+                                                    @{
+                                                        var _dvType = "AC";
+                                                        //_dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
+                                                    }
+
                                                     <div class="form-group col-5">
                                                         <label>
-                                                            Target Devices
+                                                            Target AC
                                                         </label>
                                                         <div class="input-group ">
                                                             <select class="selectpicker form-control"
@@ -1496,46 +1094,31 @@
                                                                             {
                                                                                 SelectAndBindMultiTargetDevice(_card);
                                                                             })>
-                                                                @*@foreach (var _dv in crFilterTargetDevice.Where(r => r.DeviceType == "AC"))*@
                                                                 @foreach (var _dv in LstDevice.Where(r => r.DeviceType == "AC"))
                                                                 {
-                                                                    <option value="@_dv.Id">[@_dv.Capabilitie] @_dv.Name</option>
+                                                                    var resultSubText = "";
+                                                                    var secOfDv = LstSection.Where(r => r.Id == _dv.SectionId).FirstOrDefault();
+                                                                    if (secOfDv != default)
+                                                                    {
+                                                                        var zoneOfDv = LstZone.Where(r => r.Id == secOfDv.Zone).FirstOrDefault();
+                                                                        if (zoneOfDv != default)
+                                                                        {
+                                                                            var areaOfDv = LstArea.Where(r => r.Id == zoneOfDv.Area).FirstOrDefault();
+                                                                            if (areaOfDv != default)
+                                                                            {
+                                                                                resultSubText = areaOfDv.Name + " > " + zoneOfDv.Name + " > " + secOfDv.Name;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    <option data-subtext="@resultSubText" value="@_dv.Id">[@_dv.Capabilitie] @_dv.Id - @_dv.Name</option>
                                                                 }
                                                             </select>
                                                         </div>
-                                                    </div>
 
-                                                    @{
-                                                        var _dvType = "AC";
-                                                        //_dvType = @LstDevice.Where(r => r.Id == _card?.LstDeviceId.FirstOrDefault()).FirstOrDefault()?.DeviceType;
-                                                    }
-                                                    <div class="col-7">
-                                                        <div class="callout callout-primary">
-                                                            <div class="d-flex">
-                                                                <div class=" flex-grow-1">
-                                                                    <ul>
-                                                                        @foreach (var dv in _card.DeviceList)
-                                                                        {
-                                                                            var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
-                                                                            <li>
-                                                                                <span class="badge badge-pill badge-primary">
-                                                                                    @objDv.Id
-                                                                                </span>
-                                                                                - [@objDv.Capabilitie] @objDv.Name
-                                                                            </li>
-                                                                        }
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-12">
-                                                        <hr class="dotted">
-                                                    </div>
-
-                                                    <div class="card col-12">
-                                                        <div class="card-header">
+                                                        <label>
+                                                            Attributes
+                                                        </label>
+                                                        <div class="input-group">
                                                             <select title="-- Select Attributes --"
                                                                     data-style="btn-primary"
                                                                     class="form-control selectpicker"
@@ -1558,7 +1141,31 @@
                                                                 }
                                                             </select>
                                                         </div>
-                                                        <div class="card-body">
+                                                    </div>
+
+                                                    <div class="col-7">
+                                                        <div class="callout callout-primary">
+                                                            <div class="d-flex">
+                                                                <div class=" flex-grow-1">
+                                                                    <ul>
+                                                                        @foreach (var dv in _card.DeviceList)
+                                                                        {
+                                                                            var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
+                                                                            <li>
+                                                                                <span class="badge badge-pill badge-primary">
+                                                                                    @objDv.Id
+                                                                                </span>
+                                                                                - [@objDv.Capabilitie] @objDv.Name
+                                                                            </li>
+                                                                        }
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-12">
+                                                                <hr class="dotted">
+                                                            </div>
+
                                                             <div class="row">
                                                                 @{
                                                                     foreach (var _attr in _card?.SetValues)
@@ -1625,98 +1232,96 @@
                                                 </div>
                                             </div>
                                         }
-
-
-}
+                                    }
                                 </fieldset>
 
                                 @if (CurrentUser.Roles.Contains(Role.System))
-            {
-                            <fieldset class="border p-2">
-                                <legend class="w-auto">
-
-                                    <div class="form-group">
-                                        <div class="custom-control custom-switch">
-                                            <input type="checkbox"
-                                                   id="swEditJsAction"
-                                                   @bind-value="crEditScene.IsJavaScriptType"
-                                                   checked="@(crEditScene.IsJavaScriptType?true:false)"
-                                                   class="custom-control-input">
-                                            <label class="custom-control-label"
-                                                   for="swEditJsAction">
-                                                Custom JavaScript Actions
-                                            </label>
-                                        </div>
-                                    </div>
-                                </legend>
-
-                                @if (crEditScene.IsJavaScriptType)
                                 {
-                                    <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">
-                                            <i class="fas fa-user-edit"></i>
-                                            Custom JavaScript
-                                        </label>
-                                        <div class="col-sm-10">
-                                            <textarea class="summernote"
-                                                      required=@(crEditScene.IsJavaScriptType ? true : false)
-                                                      id="tbEditJsAction"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label"></label>
-                                        <div class="col-sm-10">
-                                            <div class="d-flex justify-content-center">
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <button type="button" class="btn btn-primary">
-                                                        Run
-                                                    </button>
+                                    <fieldset class="border p-2">
+                                        <legend class="w-auto">
 
-                                                    <button type="button" class="btn btn-danger">
-                                                        Stop
-                                                    </button>
-
-                                                    <button type="button" class="btn btn-primary">
-                                                        Reload Data
-                                                    </button>
-
-                                                    <button type="button" class="btn btn-primary">
-                                                        Save
-                                                    </button>
-
-                                                    <button type="button" class="btn btn-primary">
-                                                        Close
-                                                    </button>
-
+                                            <div class="form-group">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox"
+                                                           id="swEditJsAction"
+                                                           @bind-value="crEditScene.IsJavaScriptType"
+                                                           checked="@(crEditScene.IsJavaScriptType?true:false)"
+                                                           class="custom-control-input">
+                                                    <label class="custom-control-label"
+                                                           for="swEditJsAction">
+                                                        Custom JavaScript Actions
+                                                    </label>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label"></label>
-                                        <div class="col-sm-10">
-                                            <textarea class="summernote"
-                                                      required=@(crEditScene.IsJavaScriptType ? true : false)
-                                                      id="tbEditJsDebug">
+                                        </legend>
+
+                                        @if (crEditScene.IsJavaScriptType)
+                                        {
+                                            <div class="form-group row">
+                                                <label class="col-sm-2 col-form-label">
+                                                    <i class="fas fa-user-edit"></i>
+                                                    Custom JavaScript
+                                                </label>
+                                                <div class="col-sm-10">
+                                                    <textarea class="summernote"
+                                                              required=@(crEditScene.IsJavaScriptType ? true : false)
+                                                              id="tbEditJsAction"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label class="col-sm-2 col-form-label"></label>
+                                                <div class="col-sm-10">
+                                                    <div class="d-flex justify-content-center">
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <button type="button" class="btn btn-primary">
+                                                                Run
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-danger">
+                                                                Stop
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-primary">
+                                                                Reload Data
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-primary">
+                                                                Save
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-primary">
+                                                                Close
+                                                            </button>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label class="col-sm-2 col-form-label"></label>
+                                                <div class="col-sm-10">
+                                                    <textarea class="summernote"
+                                                              required=@(crEditScene.IsJavaScriptType ? true : false)
+                                                              id="tbEditJsDebug">
                                         </textarea>
-                                        </div>
-                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="alert alert-warning" role="alert">
+                                                Javascript Action is not in used
+                                            </div>
+                                        }
+                                    </fieldset>
                                 }
-                                else
-                                {
-                                    <div class="alert alert-warning" role="alert">
-                                        Javascript Action is not in used
-                                    </div>
-                                }
-                            </fieldset>
-            } 
-                                
+
 
                             </form>
                         </div>
 
                         <div class="modal-footer d-flex justify-content-center">
-                            <button type="button" class="btn btn-secondary"
+                            <button type="button" class="btn btn-outline-secondary"
                                     data-dismiss="modal"
                                     @onclick=@(() => { FormEditClose(); })>
                                 CANCLE
@@ -1788,20 +1393,23 @@
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
 
         RefreshListItem();
-        RefetchData(true);
+        await RefetchData(true);
 
         // In case navigate from query string
-        //string queryScheduleId, queryDeviceId;
-        //if (NavigationHelper.TryGetQueryString<string>(NavHelper, "scheduleId", out queryScheduleId) && queryScheduleId != null && NavigationHelper.TryGetQueryString<string>(NavHelper, "deviceId", out queryDeviceId) && queryDeviceId != null)
-        //{
-        //    var _objSchedule = await svShedule.GetScheduleAsync(Convert.ToInt32(queryScheduleId), AccessToken);
+        string querySceneId, queryDeviceId;
+        if (NavigationHelper.TryGetQueryString<string>(NavHelper, "sceneId", out querySceneId) && querySceneId != null && NavigationHelper.TryGetQueryString<string>(NavHelper, "deviceId", out queryDeviceId) && queryDeviceId != null)
+        {
+            var  _objScene = LstScene.Where(r => r.Id == Convert.ToInt32(querySceneId)).FirstOrDefault();
 
-        //    await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSchedule", "show");
-        //    await JSHelper.InvokeVoidAsync("Interop_GotoUrlAsync", "cardEdit-" + queryDeviceId, 2000);
+            await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditScene", "show");
 
-        //    InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
-        //    PreEdit(_objSchedule);
-        //}
+            // because cardEdit-* id danh dau theo id cua element dau tien nen phai tim ra listDevice roi lay el dau >> jumptourl
+            var _firtDvId = _objScene.Actions.Where(r => r.DeviceList.Contains(Convert.ToInt32(queryDeviceId))).FirstOrDefault()?.DeviceList.ElementAtOrDefault(0);
+            await JSHelper.InvokeVoidAsync("Interop_GotoUrlAsync", "cardEdit-" + _firtDvId, 2000);
+
+            InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
+            PreEdit(_objScene);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -1830,7 +1438,8 @@
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
     }
 
-    async Task RefilterDvList(GlobalSceneModel _refScene) {
+    async Task RefilterDvList(GlobalSceneModel _refScene)
+    {
         var lstResult = new List<DeviceModel>();
         var lstChosenDv = _refScene.Actions.SelectMany(r => r.DeviceList).ToList();
         crFilterTargetDevice = LstDevice.Where(r => lstChosenDv.Contains(r.Id) == false).ToList();
@@ -1968,7 +1577,7 @@
 
         // Parse some value to correct format
         JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsAction", crEditScene.JavaScriptCode, 350);
-        // TODO: fix here 
+        // TODO: fix here
         //var txtDebug = svShedule.GetDebugAsync(crEditScene.Id, AccessToken);
         //JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsDebug", txtDebug, 200);
 
@@ -2082,7 +1691,7 @@
         }
         JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Scene Cloned", true);
 
-        RefreshListItem();
+        RefetchData(false);
     }
 
     async Task FormEditSubmitScene()

@@ -7,38 +7,34 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @using BlazorDateRangePicker
 @using Helper
+@using System.Threading.Tasks;
+@using Newtonsoft.Json; 
+
 
 <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
                     <h1 style="font-size:50px;">History Logs</h1>
                 </div>
-            </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
+            </div>
+        </div>
     </section>
-    <!-- /.content-header -->
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
 
-
+        <button class="btn btn-success"
+                @onclick="@(()=> 
+                            {
+                                InvokeAsync(StateHasChanged);
+                            })">
+               Refesh Data
+        </button>
             <div class="card card-info card-outline card-outline-tabs">
                 <div class="card-header p-0 border-bottom-0">
 
                     <div class="row">
-                        @*<div class="input-group m-3 col-12 col-lg-6">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        Device
-                                    </span>
-                                </div>
-                                <DateRangePicker class="form-control"
-                                                 OnRangeSelect="DateRangeSubmitHandle" />
-                            </div>*@
-
                         <div class="input-group m-3 col-12">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">
@@ -50,67 +46,26 @@
                                              OnRangeSelect="DateRangeSubmitHandle" />
                         </div>
                     </div>
-
                 </div>
 
                 <div class="card-body">
-
-                    <table class="bootstrap-table"
-                           data-search="true"
-                           data-show-export="true"
-                           data-search-align="right"
-                           data-buttons-align="right"
-                           data-pagination="true"
-                           data-toggle="table">
-                        <thead>
-                            <tr>
-                                <th class="text-center">No.</th>
-                                <th class="text-center">DEVICE</th>
-                                <th class="text-center">ATTRIBUTE</th>
-                                <th class="text-center">LOG TIME</th>
-                                <th class="text-center">OLD VALUE</th>
-                                <th class="text-center">NEW VALUE</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int idx = 0;
-                                @foreach (var _log in LstDataLog)
-                                {
-                                    <tr class="text-center">
-                                        <th>@(++idx)</th>
-                                        <td>
-                                            @_log.DeviceId - @LstDevice.Where(r => r.Id == _log.DeviceId).FirstOrDefault()?.Name;
-                                        </td>
-                                        <td>
-                                            @_log.Attribute
-                                        </td>
-                                        <td>
-                                            @(UnixTime.UnixMillisToLocalTimeFormat(Convert.ToInt64(_log.Time)))
-                                        </td>
-                                        <td>
-                                            @_log.OldValue
-                                        </td>
-                                        <td>
-                                            @_log.Value
-                                        </td>
-                                    </tr>
-                                }
-                            }
-
-                        </tbody>
-                    </table>
-
+                    <div class="table-responsive">
+                        <HxGrid @ref="HxTable" TItem="DataLogModel" DataProvider="ClientSideProcessingDataProvider" PageSize="10">
+                            <Columns>
+                                <HxGridColumn TItem="DataLogModel" HeaderText="DEVICE" ItemTextSelector="@(item => item.DeviceId.ToString() + item.DeviceName)" SortKeySelector="@(item => item.DeviceId)" IsDefaultSortColumn="true" />
+                                <HxGridColumn TItem="DataLogModel" HeaderText="ATTRIBUTE" ItemTextSelector="@(item => item.Attribute)" SortKeySelector="@(item => item.Attribute)" />
+                                <HxGridColumn TItem="DataLogModel" HeaderText="LOG TIME" ItemTextSelector="@(item => (UnixTime.UnixMillisToLocalTimeFormat(Convert.ToInt64(item.Time))))" SortKeySelector="@(item => item.Time)" />
+                                <HxGridColumn TItem="DataLogModel" HeaderText="OLD VALUE" ItemTextSelector="@(item => item.OldValue)" SortKeySelector="@(item => item.OldValue)" />
+                                <HxGridColumn TItem="DataLogModel" HeaderText="NEW VALUE" ItemTextSelector="@(item => item.Value)" SortKeySelector="@(item => item.Value)" />
+                            </Columns>
+                        </HxGrid>
+                    </div>
+                    
                 </div>
-
             </div>
-
-
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
-    <!-- /.content -->
 </div>
-
 
 @code {
     string AccessToken = "";
@@ -119,6 +74,7 @@
     List<DataLogModel> LstDataLog = new List<DataLogModel>();
     List<DeviceModel> LstDevice = new List<DeviceModel>();
     //Dictionary<int, string> DicDeviceName;
+    private HxGrid<DataLogModel> HxTable;
 
     protected override async Task OnInitializedAsync()
     {
@@ -130,7 +86,10 @@
         }
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initialize Data\nPlease wait ...");
         LstDataLog = await svDataLog.GetAllDataAsync(AccessToken, UnixTime.LocalTimeToUnixSecond(DateTime.Now.Date), UnixTime.LocalTimeToUnixSecond(DateTime.Now.Date.AddDays(-7)));
-        if (LstDataLog.Count == 0) {
+        HxTable.RefreshDataAsync();
+
+        if (LstDataLog.Count == 0)
+        {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "No logs data This Week", false);
         }
         LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
@@ -146,6 +105,11 @@
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
     }
 
+    private Task<GridDataProviderResult<DataLogModel>> ClientSideProcessingDataProvider(GridDataProviderRequest<DataLogModel> request)
+    {
+        return Task.FromResult(request.ApplyTo(LstDataLog));
+    }
+
     async Task DateRangeSubmitHandle(DateRange range)
     {
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Loading Data Logs\nPlease wait ...");
@@ -158,7 +122,7 @@
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "No logs data", false);
         }
 
+        HxTable.RefreshDataAsync();
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-
     }
 }

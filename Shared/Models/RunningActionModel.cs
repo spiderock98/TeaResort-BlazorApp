@@ -25,13 +25,12 @@ namespace SmartRetail.Share.Models
         public List<int> DeviceList { get; set; } = new List<int>();
         public string ScheduleScenesId { get; set; }
 
+        // ! misc function and attr
         [JsonIgnore]
         public int DeviceId { get; set; }
         [JsonIgnore]
         public string ScheduleId { get; set; }
 
-
-        // ! misc function and attr
         [JsonIgnore]
         public string ActionId { get; set; } = Guid.NewGuid().ToString("N");
         [JsonIgnore]
