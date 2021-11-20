@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace SmartRetail.Share.Models
 {
-
     [JsonObject(MemberSerialization.OptIn)]
     public class AreaModel
     {

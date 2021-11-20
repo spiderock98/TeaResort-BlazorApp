@@ -27,7 +27,7 @@
     <section class="content">
         <div class="container-fluid">
 
-            <table class="bootstrap-table"
+            @*<table class="bootstrap-table"
                    data-search="true"
                    data-show-export="true"
                    data-search-align="right"
@@ -64,10 +64,48 @@
             }
                    
                 </tbody>
-            </table>
+            </table>*@
 
 
-            <!-- Modal Setting -->
+            <div class="table-responsive">
+                <HxGrid @ref="HxTable" TItem="DataSourceModel" DataProvider="ClientSideProcessingDataProvider" PageSize="10">
+                    <Columns>
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="No."
+                                      ItemTextSelector="@(item => item.ID)"
+                                      SortKeySelector="@(item => item.ID)"
+                                      IsDefaultSortColumn="true" />
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="NAME"
+                                      ItemTextSelector="@(item => item.Name)"
+                                      SortKeySelector="@(item => item.Name)" />
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="Source Type"
+                                      ItemTextSelector="@(item => item.SourceType)"
+                                      SortKeySelector="@(item => item.SourceType)" />
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="IsRequestServer"
+                                      SortKeySelector="@(item => item.IsRequestServer)"
+                                      ItemTextSelector="@(item => item.IsRequestServer.ToString())" />
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="IsUpdateOutsideDevice"
+                                      ItemTextSelector="@(item => item.IsUpdateOutsideDevice.ToString())"
+                                      SortKeySelector="@(item => item.IsUpdateOutsideDevice)" />
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="IsUpdateOutsideDevice"
+                                      ItemTextSelector="@(item => item.IsUpdateOutsideDevice.ToString())"
+                                      SortKeySelector="@(item => item.IsUpdateOutsideDevice)" />
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="Interval"
+                                      ItemTextSelector="@(item => item.Interval.ToString())"
+                                      SortKeySelector="@(item => item.Interval)" />
+                        <HxGridColumn TItem="DataSourceModel"
+                                      HeaderText="LastUpdateDeviceTime"
+                                      ItemTextSelector="@(item => item.LastUpdateDeviceTime.ToString())"
+                                      SortKeySelector="@(item => item.LastUpdateDeviceTime)" />
+                    </Columns>
+                </HxGrid>
+            </div>
 
 
             @{
@@ -87,7 +125,7 @@
     bool flagForceSelectInject = false;
     string AccessToken = "";
     ElementReference elModalEdit, elCrSingleSelectBox;
-
+    private HxGrid<DataSourceModel> HxTable;
 
     List<DataSourceModel> LstAllDataSource = new List<DataSourceModel>();
 
@@ -101,7 +139,8 @@
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
             NavHelper.NavigateTo("/login");
         }
-        RefetchData(true);
+        await RefetchData(true);
+        HxTable.RefreshDataAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -116,6 +155,11 @@
             return;
         }
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    private Task<GridDataProviderResult<DataSourceModel>> ClientSideProcessingDataProvider(GridDataProviderRequest<DataSourceModel> request)
+    {
+        return Task.FromResult(request.ApplyTo(LstAllDataSource));
     }
 
     async Task InjectSelectAfterModal(bool nextFlagState)

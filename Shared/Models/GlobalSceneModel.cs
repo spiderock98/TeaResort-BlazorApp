@@ -12,7 +12,6 @@ namespace SmartRetail.Share.Models
 
     public class GlobalSceneModel
     {
-
         public GlobalSceneModel()
         {
 

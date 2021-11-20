@@ -30,93 +30,181 @@
 
             <div class="card card-primary">
                 <div class="card-body">
-                    <button class="btn btn-success m-2"
-                            type="button"
-                            data-toggle="modal"
-                            data-target="#mdNewScene"
-                            @onclick=@(()=>
+
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.AddCircle"
+                               Color="Color.Success"
+                               data-toggle="modal"
+                               data-target="#mdNewScene"
+                               @onclick=@(()=>
                                        {
                                            NewSceneParams = new GlobalSceneModel();
                                            InvokeAsync(StateHasChanged);
                                        })>
-                        Add New Interlock
-                    </button>
+                        ADD INTERLOCK
+                    </MudButton>
 
-                    <table class="bootstrap-table"
-                           data-search="true"
-                           data-show-export="true"
-                           data-search-align="right"
-                           data-buttons-align="right"
-                           data-pagination="true"
-                           data-height="700">
-                        <thead>
-                            <tr class="text-center">
-                                <th>No.</th>
-                                <th>NAME</th>
-                                <th>ENABLE</th>
-                                <th>LAST RUN</th>
-                                <th>CONTROL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                foreach (var profile in LstScene.OrderByDescending(r=>r.Id))
+                    @*<table class="bootstrap-table"
+               data-search="true"
+               data-show-export="true"
+               data-search-align="right"
+               data-buttons-align="right"
+               data-pagination="true"
+               data-height="700">
+            <thead>
+                <tr class="text-center">
+                    <th>No.</th>
+                    <th>NAME</th>
+                    <th>ENABLE</th>
+                    <th>LAST RUN</th>
+                    <th>CONTROL</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (var profile in LstScene.OrderByDescending(r => r.Id))
+                    {
+                        <tr class="text-center">
+                            <th>@profile.Id</th>
+                            <td>@profile.Name</td>
+                            @{ if (profile.Enable)
                                 {
-                                    <tr class="text-center">
-                                        <th>@profile.Id</th>
-                                        <td>@profile.Name</td>
-                                        @{ if (profile.Enable)
-                                            {
-                                                <td>
-                                                    <span class="badge badge-pill badge-success">Enable</span>
+                                    <td>
+                                        <span class="badge badge-pill badge-success">Enable</span>
 
-                                                </td>
-                                            }
-                                            else
-                                            {
-                                                <td>
-                                                    <span class="badge badge-pill badge-danger">Disable</span>
-                                                </td>
-                                            }
-                                        }
-                                        <td>@UnixTime.UnixMillisToLocalTimeFormat(profile.LastRunTime)</td>
-                                        <td>
-                                            <div class="d-flex flex-wrap">
-                                                <button class="btn btn-xs btn-primary m-1"
-                                                        type="button"
-                                                        data-toggle="modal"
-                                                        data-target="#mdEditScene"
-                                                        @onclick=@(() => { PreEdit(profile); })>
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-
-                                                @{
-                                                    string attrBtnEnable = profile.Enable ? "light" : "success";
-                                                    var titleTooltip = profile.Enable ? "Disable Schedule" : "Enable Schedule";
-                                                }
-                                                <button data-toggle="tooltip"
-                                                        data-placement="top"
-                                                        title="@titleTooltip" class="btn btn-xs btn-@attrBtnEnable m-1"
-                                                        @onclick=@(() => { ChangeScheduleStateHandle(profile); })>
-                                                    <i class="fas fa-power-off"></i>
-                                                </button>
-
-                                                <button data-toggle="tooltip"
-                                                        data-placement="top"
-                                                        title="Clone" class="btn btn-xs btn-info m-1"
-                                                        @onclick=@(() =>
-                                                                       {
-                                                                           CloneProfileHanlde(profile);
-                                                                       })>
-                                                    <i class="far fa-clone"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>
+                                        <span class="badge badge-pill badge-danger">Disable</span>
+                                    </td>
                                 }
                             }
-                        </tbody>
-                    </table>
+                            <td>@UnixTime.UnixMillisToLocalTimeFormat(profile.LastRunTime)</td>
+                            <td>
+                                <div class="d-flex flex-wrap">
+                                    <button class="btn btn-xs btn-primary m-1"
+                                            type="button"
+                                            data-toggle="modal"
+                                            data-target="#mdEditScene"
+                                            @onclick=@(() => { PreEdit(profile); })>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    @{
+                                        string attrBtnEnable = profile.Enable ? "light" : "success";
+                                        var titleTooltip = profile.Enable ? "Disable Schedule" : "Enable Schedule";
+                                    }
+                                    <button data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="@titleTooltip" class="btn btn-xs btn-@attrBtnEnable m-1"
+                                            @onclick=@(() => { ChangeScheduleStateHandle(profile); })>
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+
+                                    <button data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="Clone" class="btn btn-xs btn-info m-1"
+                                            @onclick=@(() =>
+                                                           {
+                                                               CloneProfileHanlde(profile);
+                                                           })>
+                                        <i class="far fa-clone"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>*@
+
+
+                   
+
+                    <MudTable Hover=true Striped=true
+                              @ref="table"
+                               ServerData="@(new Func<TableState, Task<TableData<GlobalSceneModel>>>(ServerReload))">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">List All Interlock</MudText>
+                            <MudSpacer />
+                            <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>No.</MudTh>
+                            <MudTh>NAME</MudTh>
+                            <MudTh>ENABLE</MudTh>
+                            <MudTh>LAST RUN</MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+
+                        <RowTemplate>
+                            <MudTd DataLabel="No.">@context.Id</MudTd>
+                            <MudTd DataLabel="NAME">@context.Name</MudTd>
+                            <MudTd>
+                                @if (context.Enable)
+                                {
+                                    <span class="badge badge-pill badge-success">Enable</span>
+                                    @*<MudBadge Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Overlap="true" Bordered="true" Class="mx-6 my-4">
+                                        <MudButton Color="Color.Success" Variant="Variant.Filled" DisableElevation="true">Enable</MudButton>
+                                    </MudBadge>*@
+                                }
+                                else
+                                {
+                                    <span class="badge badge-pill badge-danger">Disable</span>
+                                    @*<MudBadge Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Overlap="true" Bordered="true" Class="mx-6 my-4">
+                                        <MudButton Color="Color.Error" Variant="Variant.Filled" DisableElevation="true">Disable</MudButton>
+                                    </MudBadge>*@
+                                }
+                            </MudTd>
+                            <MudTd>
+                                @UnixTime.UnixMillisToLocalTimeFormat(context.LastRunTime)
+                            </MudTd>
+
+                            <MudTd>
+                                <MudButtonGroup Size="Size.Small" 
+                                                Color="Color.Default" 
+                                                Variant="Variant.Text">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   data-toggle="modal"
+                                                   data-target="#mdEditScene"
+                                                   @onclick=@(() => { PreEdit(context); })></MudIconButton>
+
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                   @onclick=@(() =>
+                               {
+                                   CloneProfileHanlde(context);
+                               })>
+
+                                    </MudIconButton>
+
+                                    <MudToggleIconButton Icon="@Icons.Material.Filled.PowerOff"
+                                                         Color="@Color.Secondary"
+                                                         ToggledIcon="@Icons.Material.Filled.Power"
+                                                         ToggledColor="@Color.Success"
+                                                         Toggled="!context.Enable"
+                                                         ToggledChanged=@(() => { ChangeScheduleStateHandle(context); }) />
+
+                                </MudButtonGroup>
+                            </MudTd>
+                        </RowTemplate>
+
+                        <NoRecordsContent>
+                            <MudText>No matching records found</MudText>
+                        </NoRecordsContent>
+                        <LoadingContent>
+                            <MudText>Loading...</MudText>
+                        </LoadingContent>
+
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+
+
+
                 </div>
             </div>
 
@@ -172,7 +260,11 @@
                                                 <div class="col-auto">
                                                     <button class="btn btn-outline-danger btn-xs"
                                                             type="button"
-                                                            @onclick=@(() => { NewSceneParams.Expressions.Remove(_express); InvokeAsync(StateHasChanged); })>
+                                                            @onclick=@(() =>
+                                                                       {
+                                                                           NewSceneParams.Expressions.Remove(_express);
+                                                                           InvokeAsync(StateHasChanged);
+                                                                       })>
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
                                                 </div>
@@ -210,25 +302,21 @@
                                                         </div>
                                                     }
 
-                                                    <div class="col-3">
-                                                        <select title="-- Select Expression --"
-                                                                id="slNewCondLogicExpress-@idx"
-                                                                data-style="btn-light btn-sm"
-                                                                class="form-control selectpicker"
-                                                                required
-                                                                @onchange=@(async()=>
-                                                                                    {
-                                                                                       var _tmpKey =  await SelectAndBindSingle();
-                                                                                        NewSceneParams.Expressions.ElementAtOrDefault(idx).Logic = (LogicExpression)_tmpKey;
-                                                                                    })>
-                                                            @foreach (var obj in Enum.GetValues(typeof(LogicExpression)))
-                                                            {
-                                                                var value = Enum.GetName(typeof(LogicExpression), obj);
-                                                                var key = (int)obj;
-                                                                <option value="@key">@value</option>
-                                                            }
-                                                        </select>
-                                                    </div>
+                                            <div class="col-3">
+                                                <select title="-- Select Expression --"
+                                                        id="slNewCondLogicExpress-@_express.RandExpId"
+                                                        data-style="btn-light btn-sm"
+                                                        class="form-control selectpicker"
+                                                        @bind="NewSceneParams.Expressions.ElementAtOrDefault(idx).Logic"
+                                                        >
+                                                    @foreach (var obj in Enum.GetValues(typeof(LogicExpression)))
+                                                    {
+                                                        var value = Enum.GetName(typeof(LogicExpression), obj);
+                                                        var key = (int)obj;
+                                                        <option value="@key">@value</option>
+                                                    }
+                                                </select>
+</div>
                                                 }
                                                 else if (_express.IsLogicExpression == false)
                                                 {
@@ -242,11 +330,7 @@
                                                                         data-style="btn-light btn-sm"
                                                                         class="form-control selectpicker"
                                                                         data-live-search="true"
-                                                                        @onchange=@(async()=>
-                                                                                    {
-                                                                                       var _tmpKey =  await SelectAndBindSingle();
-                                                                                        NewSceneParams.Expressions.ElementAtOrDefault(idx).DeviceId = _tmpKey;
-                                                                                    })>
+                                                                        @bind="NewSceneParams.Expressions.ElementAtOrDefault(idx).DeviceId">
                                                                     @foreach (var _dv in LstDevice)
                                                                     {
                                                                         var resultSubText = "";
@@ -279,20 +363,17 @@
                                                                 <select title="-- Change --"
                                                                         id="slNewCondOperator-@idx"
                                                                         data-style="btn-light btn-sm"
+                                                                        data-live-search="true"
                                                                         class="form-control selectpicker"
-                                                                        @onchange=@(async()=>
-                                                                                    {
-                                                                                       var _tmpKey =  await SelectAndBindSingle();
-                                                                        NewSceneParams.Expressions.ElementAtOrDefault(idx).Comparison = (MasterDataModel.CompareOperators)_tmpKey;
-                                                                    })>
-                                                                    @foreach (var obj in Enum.GetValues(typeof(MasterDataModel.CompareOperators)))
-                                                                    {
-                                                                        var value = Enum.GetName(typeof(MasterDataModel.CompareOperators), obj);
-                                                                        var key = (int)obj;
-                                                                        <option value="@key">@value</option>
-                                                                    }
-                                                                </select>
-                                                            </div>
+                                                                        @bind="NewSceneParams.Expressions.ElementAtOrDefault(idx).Comparison">
+                                                                        @foreach (var obj in Enum.GetValues(typeof(MasterDataModel.CompareOperators)))
+                                                                        {
+                                                                            var value = Enum.GetName(typeof(MasterDataModel.CompareOperators), obj);
+                                                                            var key = (int)obj;
+                                                                            <option value="@key">@value</option>
+                                                                        }
+                                                                    </select>
+</div>
                                                         </div>
                                                     </div>
 
@@ -305,11 +386,7 @@
                                                                         class="form-control selectpicker mb-2"
                                                                         data-live-search="true"
                                                                         required
-                                                                        @onchange=@(async()=>
-                                                                                    {
-                                                                                        var _tmpKey = await SelectAndBindSingleTextReturn();
-                                                                                        NewSceneParams.Expressions.ElementAtOrDefault(idx).Attribute = _tmpKey;
-                                                                                    })>
+                                                                        @bind="NewSceneParams.Expressions.ElementAtOrDefault(idx).Attribute">
                                                                     @{
                                                                         var _dictDvAttr = LstDevice.Where(r => r.Id == _express.DeviceId).FirstOrDefault()?.Status;
                                                                         if (_dictDvAttr != default)
@@ -331,11 +408,7 @@
                                                                             <select class="form-control"
                                                                                     required
                                                                                     id=@("slNewCondDeviceAttr" + _DetailOfAttr.Name + "-" + _express.RandExpId)
-                                                                                    @onchange=@(async () =>
-                                                                                                {
-                                                                                                    var _tmpKey = await jQuerySelectAndBindSingleTextReturn();
-                                                                                                    NewSceneParams.Expressions.ElementAtOrDefault(idx).CompareValue = _tmpKey;
-                                                                                                })>
+                                                                                    @bind="NewSceneParams.Expressions.ElementAtOrDefault(idx).CompareValue">
 
                                                                                 <option value="">-- Select --</option>
                                                                                 @foreach (var _valRange in _DetailOfAttr.ValueRange)
@@ -819,11 +892,8 @@
                                                                 id="slEditCondLogicExpress-@idx"
                                                                 data-style="btn-light btn-sm"
                                                                 class="form-control selectpicker"
-                                                                @onchange=@(async()=>
-                                                                                    {
-                                                                                       var _tmpKey =  await SelectAndBindSingle();
-                                                                                        crEditScene.Expressions.ElementAtOrDefault(idx).Logic = (LogicExpression)_tmpKey;
-                                                                                    })>
+                                                                @bind="crEditScene.Expressions.ElementAtOrDefault(idx).Logic"
+                                                                >
                                                             @foreach (var obj in Enum.GetValues(typeof(LogicExpression)))
                                                             {
                                                                 var value = Enum.GetName(typeof(LogicExpression), obj);
@@ -845,11 +915,8 @@
                                                                         data-style="btn-light btn-sm"
                                                                         class="form-control selectpicker"
                                                                         data-live-search="true"
-                                                                        @onchange=@(async()=>
-                                                                                    {
-                                                                                       var _tmpKey =  await SelectAndBindSingle();
-                                                                                        crEditScene.Expressions.ElementAtOrDefault(idx).DeviceId = _tmpKey;
-                                                                                    })>
+                                                                        @bind="crEditScene.Expressions.ElementAtOrDefault(idx).DeviceId"
+                                                                        >
                                                                     @foreach (var _dv in LstDevice)
                                                                     {
                                                                         var resultSubText = "";
@@ -883,11 +950,8 @@
                                                                         id="slEditCondOperator-@idx"
                                                                         data-style="btn-light btn-sm"
                                                                         class="form-control selectpicker"
-                                                                        @onchange=@(async()=>
-                                                                                    {
-                                                                                       var _tmpKey =  await SelectAndBindSingle();
-                                                                        crEditScene.Expressions.ElementAtOrDefault(idx).Comparison = (MasterDataModel.CompareOperators)_tmpKey;
-                                                                    })>
+                                                                        @bind="crEditScene.Expressions.ElementAtOrDefault(idx).Comparison"
+                                                                        >
                                                                     @foreach (var obj in Enum.GetValues(typeof(MasterDataModel.CompareOperators)))
                                                                     {
                                                                         var value = Enum.GetName(typeof(MasterDataModel.CompareOperators), obj);
@@ -908,11 +972,8 @@
                                                                         data-style="btn-light btn-sm"
                                                                         class="form-control selectpicker mb-2"
                                                                         data-live-search="true"
-                                                                        @onchange=@(async()=>
-                                                                                    {
-                                                                                        var _tmpKey = await SelectAndBindSingleTextReturn();
-                                                                                        crEditScene.Expressions.ElementAtOrDefault(idx).Attribute = _tmpKey;
-                                                                                    })>
+                                                                        @bind="crEditScene.Expressions.ElementAtOrDefault(idx).Attribute"
+                                                                        >
                                                                     @{
                                                                         var _dictDvAttr = LstDevice.Where(r => r.Id == _express.DeviceId).FirstOrDefault()?.Status;
                                                                         if (_dictDvAttr != default)
@@ -932,12 +993,8 @@
                                                                         if (_DetailOfAttr.ValueType == SERVER_TYPES.Enum || _DetailOfAttr.ValueType == SERVER_TYPES.Array)
                                                                         {
                                                                             <select class="form-control"
-                                                                                    id=@("slEditCondDeviceAttr" + _DetailOfAttr.Name + "-" + idx)
-                                                                                    @onchange=@(async () =>
-                                                                                            {
-                                                                                                var _tmpKey = await jQuerySelectAndBindSingleTextReturn();
-                                                                                               crEditScene.Expressions.ElementAtOrDefault(idx).CompareValue = _tmpKey;
-                                                                                            })>
+                                                                                    @bind="crEditScene.Expressions.ElementAtOrDefault(idx).CompareValue"
+                                                                                    >
 
                                                                                 @foreach (var _valRange in _DetailOfAttr.ValueRange)
                                                                                 {
@@ -1086,7 +1143,7 @@
                                                         <div class="input-group ">
                                                             <select class="selectpicker form-control"
                                                                     title="-- Change --"
-                                                                    id="slNewTriggerDv-@_card.ActionId"
+                                                                    id="slEditTriggerDv-@_card.ActionId"
                                                                     data-style="btn-primary"
                                                                     data-live-search="true"
                                                                     multiple
@@ -1123,6 +1180,7 @@
                                                                     data-style="btn-primary"
                                                                     class="form-control selectpicker"
                                                                     multiple
+                                                                    id="slEditAttr-@_card.ActionId"
                                                                     data-actions-box="true"
                                                                     data-live-search="true"
                                                                     @onchange=@(async()=>
@@ -1356,6 +1414,7 @@
 
 @code {
     bool flagForceSelectInject = false;
+    string mudFilterMain = "";
 
     CloudUser CurrentUser = new CloudUser() { Infor = new UserInfor(), Roles = new List<Role>() };
     List<DeviceModel> crFilterTargetDevice = new List<DeviceModel>();
@@ -1393,7 +1452,7 @@
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
 
         RefreshListItem();
-        await RefetchData(true);
+        RefetchData(true);
 
         // In case navigate from query string
         string querySceneId, queryDeviceId;
@@ -1438,6 +1497,70 @@
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
     }
 
+
+
+    private MudTable<GlobalSceneModel> table;
+    private int totalItems;
+    private List<GlobalSceneModel> pagedData;
+    private async Task<TableData<GlobalSceneModel>> ServerReload(TableState state)
+    {
+        //var data = await svScene.GetScenesListAsync(await LocalStorage.GetItemAsync<string>("token"));
+
+        var data = LstScene;
+
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(mudFilterMain))
+                return true;
+            if (element.Id.ToString().Contains(mudFilterMain))
+                return true;
+            if (element.Name.Contains(mudFilterMain))
+                return true;
+            return false;
+        }).ToList();
+        totalItems = data.Count();
+        //switch (state.SortLabel)
+        //{
+        //    case "nr_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Number);
+        //        break;
+        //    case "sign_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Sign);
+        //        break;
+        //    case "name_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Name);
+        //        break;
+        //    case "position_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Position);
+        //        break;
+        //    case "mass_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Molar);
+        //        break;
+        //}
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+        return new TableData<GlobalSceneModel>() { TotalItems = totalItems, Items = pagedData };
+    }
+    private void OnSearch(string text)
+    {
+        mudFilterMain = text;
+        table.ReloadServerData();
+    }
+
+
+
+
+    private bool FilterFunc(GlobalSceneModel element)
+    {
+        if (string.IsNullOrWhiteSpace(mudFilterMain))
+            return true;
+        if (element.Id.ToString().Contains(mudFilterMain))
+            return true;
+        if (element.Name.Contains(mudFilterMain))
+            return true;
+        return false;
+    }
+
     async Task RefilterDvList(GlobalSceneModel _refScene)
     {
         var lstResult = new List<DeviceModel>();
@@ -1450,26 +1573,56 @@
     {
         if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
 
-        var taskLstScene = svScene.GetScenesListAsync(AccessToken);
         var taskLstDevice = svDevice.GetOwnerDevicesListAsync(AccessToken);
+        var taskLstScene = svScene.GetScenesListAsync(AccessToken);
+
+        var  svSchedule = new ScheduleService();
+        var taskLstSchedule = svSchedule.GetItemsAsync(AccessToken);
+
         var taskLstArea = svAreaLayout.GetAreaListAsync(AccessToken);
         var taskLstZone = svAreaLayout.GetZoneListAsync(AccessToken);
         var taskLstSection = svAreaLayout.GetSectionListAsync(AccessToken);
         var taskLstDeviceType = svMasterData.GetDeviceTypeListAsync(AccessToken);
         var taskLstAttribute = svMasterData.GetAttributeListAsync(AccessToken);
 
-        await Task.WhenAll(taskLstScene, taskLstDevice, taskLstArea, taskLstZone, taskLstSection, taskLstDeviceType, taskLstAttribute);
+        await Task.WhenAll( taskLstDevice, taskLstScene, taskLstArea, taskLstZone, taskLstSection, taskLstDeviceType, taskLstAttribute, taskLstSchedule);
+
+
+        LstDevice = await taskLstDevice;
+        Console.WriteLine("LstDevice");
+        Console.WriteLine(LstDevice.Count);
 
         LstScene = await taskLstScene;
-        LstDevice = await taskLstDevice;
+        Console.WriteLine("LstScene");
+        Console.WriteLine(LstScene.Count);
+
+        Console.WriteLine("LstSchedule");
+        var LstSchedule = await taskLstSchedule;
+        Console.WriteLine(LstSchedule.Count);
+
         LstArea = await taskLstArea;
+        Console.WriteLine("LstArea");
+        Console.WriteLine(LstArea.Count);
+
         LstZone = await taskLstZone;
+        Console.WriteLine("LstZone");
+        Console.WriteLine(LstZone.Count);
+
         LstSection = await taskLstSection;
+        Console.WriteLine("LstSection");
+        Console.WriteLine(LstSection.Count);
+
         LstDeviceType = await taskLstDeviceType;
+        Console.WriteLine("LstDeviceType");
+        Console.WriteLine(LstDeviceType.Count);
+
         LstAttribute = await taskLstAttribute;
+        Console.WriteLine("LstAttribute");
+        Console.WriteLine(LstAttribute.Count);
 
         if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
 
+        table.ReloadServerData();
         InvokeAsync(StateHasChanged);
     }
 
@@ -1521,6 +1674,10 @@
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something Went Wrong", true);
         }
+
+        await RefetchData(false);
+        table.ReloadServerData();
+        InvokeAsync(StateHasChanged);
     }
 
     async Task DeleteItemHandle(GlobalSceneModel _item)
@@ -1561,6 +1718,24 @@
 
     async Task InjectSelectAfterModal(bool nextFlagState)
     {
+        // IF STATEMENT field
+        foreach (var _express in crEditScene.Expressions)
+        {
+            int idx = crEditScene.Expressions.IndexOf(_express);
+            if (_express.IsLogicExpression == false)
+            {
+                JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditCondDevice-" + idx.ToString(), _express.DeviceId);
+                JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditCondOperator-" + idx.ToString(), _express.Comparison);
+                JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditCondDeviceAttr-" + idx.ToString(), _express.Attribute);
+            }
+        }
+        // THEN field
+        foreach(var _action in crEditScene.Actions)
+        {
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditTriggerDv-" + _action.ActionId, _action.DeviceList);
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditAttr-" + _action.ActionId, _action.SetValues.Keys);
+        }
+
         flagForceSelectInject = nextFlagState;
     }
 
@@ -1580,6 +1755,8 @@
         // TODO: fix here
         //var txtDebug = svShedule.GetDebugAsync(crEditScene.Id, AccessToken);
         //JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsDebug", txtDebug, 200);
+
+
 
         await JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
         JSHelper.InvokeVoidAsync("Interop_PurgeValidBtCache");

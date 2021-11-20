@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MudBlazor.Services;
 
 namespace SmartRetail.Client
 {
@@ -23,6 +24,7 @@ namespace SmartRetail.Client
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddBlazoredLocalStorage();
             builder.Services.AddHxServices();
+            builder.Services.AddMudServices();
 
             await builder.Build().RunAsync();
         }

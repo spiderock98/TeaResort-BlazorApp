@@ -31,6 +31,19 @@
 
             <div class="card card-primary">
                 <div class="card-body">
+                    <button class="btn btn-info"
+                            @onclick=@(()=> { InvokeAsync(StateHasChanged); })>
+                        Refresh
+                    </button>
+
+                    <button class="btn btn-info"
+                            @onclick=@(async()=> 
+                                       {
+                                           await RefetchData(true);
+                                       })>
+                        ReFetch DATA
+                    </button>
+
                     <button class="btn btn-success m-2"
                             type="button"
                             data-toggle="modal"
@@ -42,13 +55,14 @@
                                        })>
                         Add New Schedule
                     </button>
-                    <table class="bootstrap-table"
-                           data-search="true"
-                           data-show-export="true"
-                           data-search-align="right"
-                           data-buttons-align="right"
-                           data-pagination="true"
-                           data-height="700">
+                    @*<table class="bootstrap-table"
+        data-search="true"
+        data-show-export="true"
+        data-search-align="right"
+        data-buttons-align="right"
+        data-pagination="true"
+        data-height="700">*@
+                    <table class="table table-hover">
                         <thead>
                             <tr class="text-center">
                                 <th>No.</th>
@@ -62,9 +76,9 @@
                         </thead>
                         <tbody>
                             @{
+                                Console.WriteLine(LstSchedule.Count);
                                 foreach (var profile in LstSchedule.OrderByDescending(r => r.Id))
                                 {
-
                                     <tr class="text-center">
                                         <th>@profile.Id</th>
                                         <td>@profile.Name</td>
@@ -116,15 +130,15 @@
                                                 </button>
 
                                                 @*<div class="form-group">
-                                                        <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                            <input type="checkbox"
-                                                                   class="custom-control-input"
-                                                                   checked="@(isAnyDvACPowerOFF ? false : true)"
-                                                                   id="swACPowerZone-@_zone.Id"
-                                                                   @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInZone, "swACPowerZone-" + _zone.Id); })>
-                                                            <label class="custom-control-label" for="swACPowerZone-@_zone.Id"></label>
-                                                        </div>
-                                                    </div>*@
+                                        <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                            <input type="checkbox"
+                                                   class="custom-control-input"
+                                                   checked="@(isAnyDvACPowerOFF ? false : true)"
+                                                   id="swACPowerZone-@_zone.Id"
+                                                   @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInZone, "swACPowerZone-" + _zone.Id); })>
+                                            <label class="custom-control-label" for="swACPowerZone-@_zone.Id"></label>
+                                        </div>
+                                    </div>*@
 
                                             </div>
                                         </td>
@@ -282,12 +296,16 @@
                                             </div>
 
                                             <div class="row">
+                                                @{
+                                                    var _dvType = "AC";
+                                                    //_dvType = @LstDevice.Where(r => r.Id == cardNew.ActionObj.DeviceId).FirstOrDefault()?.DeviceType;
+                                                }
 
                                                 <div class="form-group col-5">
                                                     <label>
-                                                        Target Devices
+                                                        Target AC
                                                     </label>
-                                                    <div class="input-group ">
+                                                    <div class="input-group">
                                                         <select class="selectpicker form-control"
                                                                 title="-- Select --"
                                                                 id="slNewTargetDv-@cardNew.ActionId"
@@ -305,40 +323,11 @@
                                                             }
                                                         </select>
                                                     </div>
-                                                </div>
 
-                                                @{
-                                                    var _dvType = "AC";
-                                                    //_dvType = @LstDevice.Where(r => r.Id == cardNew.ActionObj.DeviceId).FirstOrDefault()?.DeviceType;
-                                                }
-                                                <div class="col-7">
-                                                    <div class="callout callout-primary">
-                                                        <div class="d-flex">
-                                                            <div class=" flex-grow-1">
-                                                                <ul style="list-style-type: none;">
-                                                                    @foreach (var dv in cardNew.DeviceList)
-                                                                    {
-                                                                        var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
-                                                                        <li>
-                                                                            <span class="badge badge-pill badge-primary">
-                                                                                @objDv.Id
-                                                                            </span>
-                                                                            - [@objDv.Capabilitie] @objDv.Name
-                                                                        </li>
-                                                                    }
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12">
-                                                    <hr class="dotted">
-                                                </div>
-
-
-                                                <div class="card col-12">
-                                                    <div class="card-header">
+                                                    <label>
+                                                        Attributes
+                                                    </label>
+                                                    <div class="input-group">
                                                         <select title="-- Select Attributes --"
                                                                 data-style="btn-primary"
                                                                 class="form-control selectpicker"
@@ -359,9 +348,32 @@
                                                             }
                                                         </select>
                                                     </div>
-                                                    <div class="card-body">
-                                                        <div class="row">
+                                                </div>
 
+                                                <div class="col-7">
+                                                    <div class="callout callout-primary">
+                                                        <div class="d-flex">
+                                                            <div class=" flex-grow-1">
+                                                                <ul style="list-style-type: none;">
+                                                                    @foreach (var dv in cardNew.DeviceList)
+                                                                    {
+                                                                        var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
+                                                                        <li>
+                                                                            <span class="badge badge-pill badge-primary">
+                                                                                @objDv.Id
+                                                                            </span>
+                                                                            - [@objDv.Capabilitie] @objDv.Name
+                                                                        </li>
+                                                                    }
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-12">
+                                                            <hr class="dotted">
+                                                        </div>
+
+                                                        <div class="row">
                                                             @{
                                                                 foreach (var _attr in cardNew.SetValues)
                                                                 {
@@ -422,11 +434,8 @@
                                                     </div>
                                                 </div>
                                             </div>
-
                                         </div>
-
                                     }
-
                                 </fieldset>
 
                                 @if (CurrentUser.Roles.Contains(Role.System))
@@ -683,10 +692,14 @@
                                                 </div>
 
                                                 <div class="row">
+                                                    @{
+                                                        var _dvType = "AC";
+                                                        //_dvType = @LstDevice.Where(r => r.Id == cardNew.ActionObj.DeviceId).FirstOrDefault()?.DeviceType;
+                                                    }
 
                                                     <div class="form-group col-4">
                                                         <label>
-                                                            Target Devices
+                                                            Target AC
                                                         </label>
                                                         <div class="input-group ">
                                                             <select class="selectpicker form-control"
@@ -702,39 +715,11 @@
                                                                 }
                                                             </select>
                                                         </div>
-                                                    </div>
 
-                                                    @{
-                                                        var _dvType = "AC";
-                                                        //_dvType = @LstDevice.Where(r => r.Id == cardNew.ActionObj.DeviceId).FirstOrDefault()?.DeviceType;
-                                                    }
-                                                    <div class="col-8">
-                                                        <div class="callout callout-warning">
-                                                            <div class="d-flex">
-                                                                <div class=" flex-grow-1">
-                                                                    <ul style="list-style-type: none;">
-                                                                        @foreach (var dv in _action.DeviceList)
-                                                                        {
-                                                                            var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
-                                                                            <li>
-                                                                                <span class="badge badge-pill badge-primary">
-                                                                                    @objDv.Id
-                                                                                </span>
-                                                                                - [@objDv.Capabilitie] @objDv.Name
-                                                                            </li>
-                                                                        }
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-12">
-                                                        <hr class="dotted">
-                                                    </div>
-
-                                                    <div class="card col-12">
-                                                        <div class="card-header">
+                                                        <label>
+                                                            Attributes
+                                                        </label>
+                                                        <div class="input-group">
                                                             <select title="-- Select Attributes --"
                                                                     data-style="btn-warning"
                                                                     class="form-control selectpicker"
@@ -756,7 +741,32 @@
                                                                 }
                                                             </select>
                                                         </div>
-                                                        <div class="card-body">
+                                                    </div>
+
+
+                                                    <div class="col-8">
+                                                        <div class="callout callout-warning">
+                                                            <div class="d-flex">
+                                                                <div class=" flex-grow-1">
+                                                                    <ul style="list-style-type: none;">
+                                                                        @foreach (var dv in _action.DeviceList)
+                                                                        {
+                                                                            var objDv = LstDevice.Where(r => r.Id == dv).FirstOrDefault();
+                                                                            <li>
+                                                                                <span class="badge badge-pill badge-primary">
+                                                                                    @objDv.Id
+                                                                                </span>
+                                                                                - [@objDv.Capabilitie] @objDv.Name
+                                                                            </li>
+                                                                        }
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-12">
+                                                                <hr class="dotted">
+                                                            </div>
+
                                                             <div class="row">
 
                                                                 @{
@@ -819,7 +829,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             </div>
                                         }
                                     }
@@ -1037,6 +1046,15 @@
         await Task.WhenAll(taskLstSchedule, taskLstDevice, taskLstZone, taskLstSection, taskLstMasterData, taskLstDeviceType, taskLstAttribute);
 
         LstSchedule = await taskLstSchedule;
+        //Console.WriteLine("DONE");
+        //Console.WriteLine(LstSchedule.Count);
+        //Console.WriteLine("Raw");
+        //Console.WriteLine(JsonConvert.SerializeObject(LstSchedule));
+        //Console.WriteLine("Foreach");
+        //foreach (var it in LstSchedule)
+        //{
+        //    Console.WriteLine(it.Name);
+        //}
         LstDevice = await taskLstDevice;
         LstZone = await taskLstZone;
         LstSection = await taskLstSection;
@@ -1046,6 +1064,8 @@
 
         if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
 
+        Console.WriteLine("DONE");
+        Console.WriteLine(JsonConvert.SerializeObject(LstSchedule));
         InvokeAsync(StateHasChanged);
     }
 

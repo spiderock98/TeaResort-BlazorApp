@@ -140,7 +140,6 @@
                                            data-height="700">
                                         <thead>
                                             <tr class="text-center">
-                                                <th></th>
                                                 <th>Id</th>
                                                 <th>Name</th>
                                                 <th>Gateway</th>
@@ -162,13 +161,6 @@
                                             @foreach (var dv in (isFilterDvType_ALL ?  crLstDvInAllSection.OrderByDescending(r => r.Id).Where(r => r.DeviceType == "AC") : crLstDvInAllSection.Where(r=>r.DeviceType == crDvTypeFilterType).OrderByDescending(r => r.Id).Where(r => r.DeviceType == "AC")))
                                             {
                                             <tr class="text-center">
-                                                <td>
-                                                    <div class="custom-control custom-checkbox">
-                                                        <input class="custom-control-input custom-control-input-success" type="checkbox"
-                                                               id="cbSelectDevice0">
-                                                        <label for="cbSelectDevice0" class="custom-control-label"></label>
-                                                    </div>
-                                                </td>
                                                 <th>@dv.Id</th>
                                                 <td>@dv.Name</td>
                                                 <td>@LstAllDataSource.Where(r => r.ID == dv.DataSourceId).FirstOrDefault()?.Name</td>
@@ -221,7 +213,7 @@
                                                                     data-target="#mdEditDevice"
                                                                     @onclick=@(() => { PreEditDeviceAll(dv); })>
                                                                 <i class="fas fa-cog"></i>
-                                                                Assign Room
+                                                                Settings
                                                             </button>
 
                                                             <button class="dropdown-item"
@@ -230,7 +222,7 @@
                                                                     data-target="#mdEditAssignment"
                                                                     @onclick=@(() => { PreEditScheduleRoom2(dv); })>
                                                                 <i class="fas fa-calendar-alt"></i>
-                                                                Settings
+                                                                Assign Room
                                                             </button>
                                                         </div>
                                                     </div>
@@ -972,11 +964,8 @@
                                                 <i class="fas fa-paper-plane"></i>
                                             </span>
                                         </div>
-                                        <select @onchange=@(async() =>
-                                                {
-                                                    var slKey = await SelectAndBindSingle();
-                                                    crEditDeviceAll.SectionId = slKey;
-                                                })
+                                        <select 
+                                                @bind="crEditDeviceAll.SectionId"
                                                 id="slEditAssigned"
                                                 data-style="btn-light"
                                                 data-live-search="true"
@@ -1134,12 +1123,26 @@
         await Task.WhenAll(taskLstSchedule, taskLstScene, taskLstAllZone, taskLstDevice, taskLstAllSection, taskLstAllArea, taskLstAllDataSource);
 
         LstSchedule = await taskLstSchedule;
+        Console.WriteLine(LstSchedule.Count);
+
         LstScene = await taskLstScene;
+        Console.WriteLine(LstScene.Count);
+
         LstAllZone = await taskLstAllZone;
+        Console.WriteLine(LstAllZone.Count);
+
         LstDevice = await taskLstDevice;
+        Console.WriteLine(LstDevice.Count);
+
         LstAllSection = await taskLstAllSection;
+        Console.WriteLine(LstAllSection.Count);
+
         LstAllArea = await taskLstAllArea;
+        Console.WriteLine(LstAllArea.Count);
+
         LstAllDataSource = await taskLstAllDataSource;
+        Console.WriteLine(LstAllDataSource.Count);
+
 
         if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
 
@@ -1197,6 +1200,7 @@
 
         //LstScheduleOfCrDevice = LstSchedule.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(_item.Id)).ToList();
         //LstSceneOfCrDevice = LstScene.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(_item.Id)).ToList();
+        crEditDeviceAll = _item.DeepCopy();
 
         InvokeAsync(StateHasChanged);
     }
@@ -1510,7 +1514,7 @@
         return await Task.FromResult(slKeyItem.ToString());
     }
 
-    public void DisplayResult(DateRange range)
+    public void DisplayResult(BlazorDateRangePicker.DateRange range)
     {
         //JSHelper.InvokeVoidAsync("console.log", range.Start, range.End);
         var lstRangeDate = DateTimeHelper.DateTime2StringRange(range.Start.DateTime, range.End.DateTime);

@@ -24,18 +24,11 @@
     <section class="content">
         <div class="container-fluid">
 
-        <button class="btn btn-success"
-                @onclick="@(()=> 
-                            {
-                                InvokeAsync(StateHasChanged);
-                            })">
-               Refesh Data
-        </button>
             <div class="card card-info card-outline card-outline-tabs">
                 <div class="card-header p-0 border-bottom-0">
 
                     <div class="row">
-                        <div class="input-group m-3 col-12">
+                        <div class="input-group col-12">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">
                                     Date Range Filter
@@ -43,6 +36,7 @@
                             </div>
                             <DateRangePicker class="form-control"
                                              DateFormat="dddd dd/MM/yyyy"
+                                             TimePicker="true"
                                              OnRangeSelect="DateRangeSubmitHandle" />
                         </div>
                     </div>
@@ -53,10 +47,29 @@
                         <HxGrid @ref="HxTable" TItem="DataLogModel" DataProvider="ClientSideProcessingDataProvider" PageSize="10">
                             <Columns>
                                 <HxGridColumn TItem="DataLogModel" HeaderText="DEVICE" ItemTextSelector="@(item => item.DeviceId.ToString() + item.DeviceName)" SortKeySelector="@(item => item.DeviceId)" IsDefaultSortColumn="true" />
-                                <HxGridColumn TItem="DataLogModel" HeaderText="ATTRIBUTE" ItemTextSelector="@(item => item.Attribute)" SortKeySelector="@(item => item.Attribute)" />
-                                <HxGridColumn TItem="DataLogModel" HeaderText="LOG TIME" ItemTextSelector="@(item => (UnixTime.UnixMillisToLocalTimeFormat(Convert.ToInt64(item.Time))))" SortKeySelector="@(item => item.Time)" />
-                                <HxGridColumn TItem="DataLogModel" HeaderText="OLD VALUE" ItemTextSelector="@(item => item.OldValue)" SortKeySelector="@(item => item.OldValue)" />
-                                <HxGridColumn TItem="DataLogModel" HeaderText="NEW VALUE" ItemTextSelector="@(item => item.Value)" SortKeySelector="@(item => item.Value)" />
+                                <HxGridColumn TItem="DataLogModel"
+                                              HeaderText="ATTRIBUTE"
+                                              ItemTextSelector="@(item => item.Attribute)"
+                                              SortKeySelector="@(item => item.Attribute)" />
+                                <HxGridColumn TItem="DataLogModel"
+                                              HeaderText="LOG TIME"
+                                              ItemTextSelector="@(item => (UnixTime.UnixSecondToLocalTimeFormat(item.Time)))"
+                                              SortKeySelector="@(item => item.Time)" />
+                                <HxGridColumn TItem="DataLogModel"
+                                              HeaderText="OLD VALUE"
+                                              SortKeySelector="@(item => item.OldValue)"
+                                              ItemTextSelector="@(item => item.OldValue)" />
+                                <HxGridColumn TItem="DataLogModel"
+                                              HeaderText="NEW VALUE"
+                                              ItemTextSelector="@(item => item.Value)"
+                                              SortKeySelector="@(item => item.Value)" />
+                                @*<HxGridColumn TItem="DataLogModel"
+                                              HeaderText="image">
+                                    <ItemTemplate Context="data">
+                                        <HxIcon Icon="@BootstrapIcon.Bootstrap"
+                                                CssClass="h-3 text-" />
+                                    </ItemTemplate>
+                                </HxGridColumn>*@
                             </Columns>
                         </HxGrid>
                     </div>
@@ -110,7 +123,7 @@
         return Task.FromResult(request.ApplyTo(LstDataLog));
     }
 
-    async Task DateRangeSubmitHandle(DateRange range)
+    async Task DateRangeSubmitHandle(BlazorDateRangePicker.DateRange range)
     {
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Loading Data Logs\nPlease wait ...");
         var _tmpStart = range.Start.ToUnixTimeSeconds();

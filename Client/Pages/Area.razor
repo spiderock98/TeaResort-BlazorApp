@@ -25,60 +25,103 @@
     <section class="content">
         <div class="container-fluid">
 
-            <button class="btn btn-success m-2"
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#mdNewArea"
-                    @onclick="PreNew">
-                <i class="fas fa-plus-circle"></i>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle" Color="Color.Success" data-toggle="modal"
+                       data-target="#mdNewArea" @onclick="PreNew">
                 NEW AREA
-            </button>
+            </MudButton>
 
-            <table class="bootstrap-table"
-                   data-search="false"
-                   data-show-export="true"
-                   data-click-to-select="true"
-                   data-search-align="right"
-                   data-buttons-align="right">
-                <thead>
-                    <tr class="text-center">
-                        <th>ID</th>
-                        <th>NAME</th>
-                        <th>ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        foreach (var _area in LstAllArea.OrderByDescending(r => r.Id))
-                        {
-                            <tr class="text-center">
-                                <th>@_area.Id</th>
-                                <td>@_area.Name</td>
-                                <td>
-                                    <div class="d-flex justify-content-center flex-wrap">
-                                        <button type="button"
-                                                data-target="#mdEditArea"
-                                                data-toggle="modal"
-                                                class="btn btn-xs btn-warning m-1"
-                                                @onclick=@(() => { PreEdit(_area); })>
-                                            <i class="fas fa-pen"></i>
-                                        </button>
+            @*<table class="bootstrap-table"
+               data-search="false"
+               data-show-export="true"
+               data-click-to-select="true"
+               data-search-align="right"
+               data-buttons-align="right">
+            <thead>
+                <tr class="text-center">
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (var _area in LstAllArea.OrderByDescending(r => r.Id))
+                    {
+                        <tr class="text-center">
+                            <th>@_area.Id</th>
+                            <td>@_area.Name</td>
+                            <td>
+                                <div class="d-flex justify-content-center flex-wrap">
+                                    <button type="button"
+                                            data-target="#mdEditArea"
+                                            data-toggle="modal"
+                                            class="btn btn-xs btn-warning m-1"
+                                            @onclick=@(() => { PreEdit(_area); })>
+                                        <i class="fas fa-pen"></i>
+                                    </button>
 
-                                        <button data-toggle="tooltip"
-                                                data-placement="top"
-                                                title="Delete"
-                                                class="btn btn-xs btn-danger m-1"
-                                                @onclick=@(() => { ModalInfoHandle(_area, ModalType.Delete); })>
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                    <button data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="Delete"
+                                            class="btn btn-xs btn-danger m-1"
+                                            @onclick=@(() => { ModalInfoHandle(_area, ModalType.Delete); })>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
 
-                                    </div>
-                                </td>
-                            </tr>
-                        }
+                                </div>
+                            </td>
+                        </tr>
                     }
-                </tbody>
-            </table>
+                }
+            </tbody>
+        </table>*@
+
+
+            @*<MudTable Items="@LstAllArea.OrderByDescending(r=>r.Id)" Hover=true Striped=true
+        Filter="new Func<AreaModel, bool>(FilterFunc)">*@
+        <MudTable Hover=true Striped=true
+                  @ref="table"
+                  ServerData="@(new Func<TableState, Task<TableData<AreaModel>>>(ServerReload))">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">List All Area</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>NAME</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="ID">@context.Id</MudTd>
+                <MudTd DataLabel="NAME">@context.Name</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                               OnClick=@(() => { PreEdit(context); })
+                               data-target="#mdEditArea"
+                               data-toggle="modal">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
+                               OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
+
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No matching records found</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>Loading...</MudText>
+            </LoadingContent>
+
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+
 
         </div>
     </section>
@@ -200,11 +243,11 @@
 </div>
 
 
-
 @code {
     enum ModalType { Create, Edit, Delete }
     ElementReference elFormNew, elFormEdit;
     string AccessToken = "";
+    string mudFilterMain = "";
 
     AreaModel NewAreaParam = new AreaModel();
     AreaModel CrEditArea = new AreaModel();
@@ -234,7 +277,7 @@
         string queryAreaId;
         if (NavigationHelper.TryGetQueryString<string>(NavHelper, "AreaId", out queryAreaId) && queryAreaId != null)
         {
-            var _objArea = LstAllArea.Where(r=>r.Id == Convert.ToInt32(queryAreaId)).FirstOrDefault();
+            var _objArea = LstAllArea.Where(r => r.Id == Convert.ToInt32(queryAreaId)).FirstOrDefault();
             if (_objArea == default) return;
 
             await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditArea", "show");
@@ -255,6 +298,69 @@
         //JSHelper.InvokeVoidAsync("OneTimeEventHandle");
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+
+
+
+    private MudTable<AreaModel> table;
+    private int totalItems;
+    private List<AreaModel> pagedData;
+    private async Task<TableData<AreaModel>> ServerReload(TableState state)
+    {
+        var data = await svLayout.GetAreaListAsync(AccessToken);
+        await Task.Delay(300);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(mudFilterMain))
+                return true;
+            if (element.Id.ToString().Contains(mudFilterMain))
+                return true;
+            if (element.Name.Contains(mudFilterMain))
+                return true;
+            return false;
+        }).ToList();
+        totalItems = data.Count();
+        //switch (state.SortLabel)
+        //{
+        //    case "nr_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Number);
+        //        break;
+        //    case "sign_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Sign);
+        //        break;
+        //    case "name_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Name);
+        //        break;
+        //    case "position_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Position);
+        //        break;
+        //    case "mass_field":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Molar);
+        //        break;
+        //}
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+        return new TableData<AreaModel>() { TotalItems = totalItems, Items = pagedData };
+    }
+    private void OnSearch(string text)
+    {
+        mudFilterMain = text;
+        table.ReloadServerData();
+    }
+
+
+
+
+    private bool FilterFunc(AreaModel element)
+    {
+        if (string.IsNullOrWhiteSpace(mudFilterMain))
+            return true;
+        if (element.Id.ToString().Contains(mudFilterMain))
+            return true;
+        if (element.Name.Contains(mudFilterMain))
+            return true;
+        return false;
     }
 
     async Task<int> SelectAndBindSingleInt()
@@ -339,6 +445,9 @@
         JSHelper.InvokeVoidAsync("Interop_ShowHideModal", submitType == ModalType.Create ? "mdNewArea" : "mdEditArea", "hide");
         // Re fetch all List
         LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+
+        table.ReloadServerData();
+
         InvokeAsync(StateHasChanged);
     }
 

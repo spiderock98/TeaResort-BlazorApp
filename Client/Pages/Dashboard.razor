@@ -216,7 +216,7 @@
 DateTime.Now.AddDays(6)));
     }
 
-    public void DisplayResult(DateRange range)
+    public void DisplayResult(BlazorDateRangePicker.DateRange range)
     {
         //JSHelper.InvokeVoidAsync("console.log", range.Start, range.End);
         var lstRangeDate = DateTimeHelper.DateTime2StringRange(range.Start.DateTime, range.End.DateTime);

@@ -480,7 +480,6 @@ function InjectBootstrapSlider() {
 }
 
 function Interop_InjectBootstrapSelect() {
-  console.log($(".selectpicker").val());
   $(".selectpicker").selectpicker();
   $(".btn-light").css("color", "#1f2d3d");
   $(".btn-light").css("border-color", "#d8d8d8");

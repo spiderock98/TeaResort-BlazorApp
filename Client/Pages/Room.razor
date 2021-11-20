@@ -24,63 +24,100 @@
     <section class="content">
         <div class="container-fluid">
 
-            <button class="btn btn-success m-2"
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#mdNewSection"
-                    @onclick="PreNew">
-                <i class="fas fa-plus-circle"></i>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle" Color="Color.Success" data-toggle="modal"
+                    data-target="#mdNewSection" @onclick="PreNew">
                 NEW ROOM
-            </button>
+            </MudButton>
 
-            <table class="bootstrap-table"
-                   data-search="false"
-                   data-show-export="true"
-                   data-click-to-select="true"
-                   data-search-align="right"
-                   data-buttons-align="right">
-                <thead>
-                    <tr class="text-center">
-                        <th>ID</th>
-                        <th>NAME</th>
-                        <th>ZONE</th>
-                        <th>ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        foreach (var _section in LstAllSection.OrderByDescending(r => r.Id))
-                        {
-                            <tr class="text-center">
-                                <th>@_section.Id</th>
-                                <td>@_section.Name</td>
-                                <td>@LstAllZone.Where(r => r.Id == _section.Zone).FirstOrDefault()?.Name</td>
-                                <td>
-                                    <div class="d-flex justify-content-center flex-wrap">
 
-                                        <button type="button"
-                                                data-target="#mdEditSection"
-                                                data-toggle="modal"
-                                                class="btn btn-xs btn-warning m-1"
-                                                @onclick=@(() => { PreEdit(_section); })>
-                                            <i class="fas fa-pen"></i>
-                                        </button>
+            @*<table class="bootstrap-table"
+               data-search="false"
+               data-show-export="true"
+               data-click-to-select="true"
+               data-search-align="right"
+               data-buttons-align="right">
+            <thead>
+                <tr class="text-center">
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>ZONE</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (var _section in LstAllSection.OrderByDescending(r => r.Id))
+                    {
+                        <tr class="text-center">
+                            <th>@_section.Id</th>
+                            <td>@_section.Name</td>
+                            <td>@LstAllZone.Where(r => r.Id == _section.Zone).FirstOrDefault()?.Name</td>
+                            <td>
+                                <div class="d-flex justify-content-center flex-wrap">
 
-                                        <button data-toggle="tooltip"
-                                                data-placement="top"
-                                                title="Delete"
-                                                class="btn btn-xs btn-danger m-1"
-                                                @onclick=@(() => { ModalInfoHandle(_section, ModalType.Delete); })>
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                    <button type="button"
+                                            data-target="#mdEditSection"
+                                            data-toggle="modal"
+                                            class="btn btn-xs btn-warning m-1"
+                                            @onclick=@(() => { PreEdit(_section); })>
+                                        <i class="fas fa-pen"></i>
+                                    </button>
 
-                                    </div>
-                                </td>
-                            </tr>
-                        }
+                                    <button data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="Delete"
+                                            class="btn btn-xs btn-danger m-1"
+                                            @onclick=@(() => { ModalInfoHandle(_section, ModalType.Delete); })>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+
+                                </div>
+                            </td>
+                        </tr>
                     }
-                </tbody>
-            </table>
+                }
+            </tbody>
+        </table>*@
+
+
+            <MudTable Items="@LstAllSection.OrderByDescending(r => r.Id)" Hover=true Striped=true
+                      Filter="new Func<SectionModel, bool>(FilterFunc)">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">List All Section</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="mudFilterMain" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+
+                <HeaderContent>
+                    <MudTh>ID</MudTh>
+                    <MudTh>NAME</MudTh>
+                    <MudTh>ZONE</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd DataLabel="ID">@context.Id</MudTd>
+                    <MudTd DataLabel="NAME">@context.Name</MudTd>
+                    <MudTd DataLabel="ZONE">
+                        @LstAllZone.Where(r => r.Id == context.Zone).FirstOrDefault()?.Name
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                                   OnClick=@(() => { PreEdit(context); })
+                                   data-target="#mdEditSection"
+                                   data-toggle="modal">
+                            Edit
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
+                                   OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+
 
         </div>
     </section>
@@ -256,6 +293,7 @@
     enum ModalType { Create, Edit, Delete }
     ElementReference elFormNew, elFormEdit;
     string AccessToken = "";
+    string mudFilterMain = "";
 
     SectionModel NewSectionParam = new SectionModel();
     SectionModel CrEditSection = new SectionModel();
@@ -310,6 +348,17 @@
         //JSHelper.InvokeVoidAsync("OneTimeEventHandle");
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    private bool FilterFunc(SectionModel _section)
+    {
+        if (string.IsNullOrWhiteSpace(mudFilterMain))
+            return true;
+        if (_section.Id.ToString().Contains(mudFilterMain))
+            return true;
+        if (_section.Name.Contains(mudFilterMain))
+            return true;
+        return false;
     }
 
     async Task<int> SelectAndBindSingleInt()

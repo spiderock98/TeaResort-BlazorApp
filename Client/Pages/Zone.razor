@@ -25,63 +25,99 @@
     <section class="content">
         <div class="container-fluid">
 
-            <button class="btn btn-success m-2"
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#mdNewZone"
-                    @onclick="PreNew">
-                <i class="fas fa-plus-circle"></i>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle" Color="Color.Success" data-toggle="modal"
+                       data-target="#mdNewZone" @onclick="PreNew">
                 NEW ZONE
-            </button>
+            </MudButton>
 
-            <table class="bootstrap-table"
-                   data-search="false"
-                   data-show-export="true"
-                   data-click-to-select="true"
-                   data-search-align="right"
-                   data-buttons-align="right">
-                <thead>
-                    <tr class="text-center">
-                        <th>ID</th>
-                        <th>NAME</th>
-                        <th>AREA</th>
-                        <th>ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        foreach (var _zone in LstAllZone.OrderByDescending(r => r.Id))
-                        {
-                            <tr class="text-center">
-                                <th>@_zone.Id</th>
-                                <td>@_zone.Name</td>
-                                <td>@LstAllArea.Where(r => r.Id == _zone.Area).FirstOrDefault()?.Name</td>
-                                <td>
-                                    <div class="d-flex justify-content-center flex-wrap">
+            @*<table class="bootstrap-table"
+               data-search="false"
+               data-show-export="true"
+               data-click-to-select="true"
+               data-search-align="right"
+               data-buttons-align="right">
+            <thead>
+                <tr class="text-center">
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>AREA</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (var _zone in LstAllZone.OrderByDescending(r => r.Id))
+                    {
+                        <tr class="text-center">
+                            <th>@_zone.Id</th>
+                            <td>@_zone.Name</td>
+                            <td>@LstAllArea.Where(r => r.Id == _zone.Area).FirstOrDefault()?.Name</td>
+                            <td>
+                                <div class="d-flex justify-content-center flex-wrap">
 
-                                        <button type="button"
-                                                data-target="#mdEditZone"
-                                                data-toggle="modal"
-                                                class="btn btn-xs btn-warning m-1"
-                                                @onclick=@(() => { PreEdit(_zone); })>
-                                            <i class="fas fa-pen"></i>
-                                        </button>
+                                    <button type="button"
+                                            data-target="#mdEditZone"
+                                            data-toggle="modal"
+                                            class="btn btn-xs btn-warning m-1"
+                                            @onclick=@(() => { PreEdit(_zone); })>
+                                        <i class="fas fa-pen"></i>
+                                    </button>
 
-                                        <button data-toggle="tooltip"
-                                                data-placement="top"
-                                                title="Delete"
-                                                class="btn btn-xs btn-danger m-1"
-                                                @onclick=@(() => { ModalInfoHandle(_zone, ModalType.Delete); })>
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                    <button data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="Delete"
+                                            class="btn btn-xs btn-danger m-1"
+                                            @onclick=@(() => { ModalInfoHandle(_zone, ModalType.Delete); })>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
 
-                                    </div>
-                                </td>
-                            </tr>
-                        }
+                                </div>
+                            </td>
+                        </tr>
                     }
-                </tbody>
-            </table>
+                }
+            </tbody>
+        </table>*@
+
+
+            <MudTable Items="@LstAllZone.OrderByDescending(r=>r.Id)" Hover=true Striped=true
+                      Filter="new Func<ZoneModel, bool>(FilterFunc)">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">List All Zone</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="mudFilterMain" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+
+                <HeaderContent>
+                    <MudTh>ID</MudTh>
+                    <MudTh>NAME</MudTh>
+                    <MudTh>AREA</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd DataLabel="ID">@context.Id</MudTd>
+                    <MudTd DataLabel="NAME">@context.Name</MudTd>
+                    <MudTd DataLabel="AREA">
+                        @LstAllArea.Where(r => r.Id == context.Area).FirstOrDefault()?.Name
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                                   OnClick=@(() => { PreEdit(context); })
+                                   data-target="#mdEditZone"
+                                   data-toggle="modal">
+                            Edit
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
+                                   OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+
 
         </div>
     </section>
@@ -257,7 +293,7 @@
 @code {
     enum ModalType { Create, Edit, Delete }
     //enum ModalInputSelectAction { Multi }
-
+    string mudFilterMain = "";
     ElementReference elFormNew, elFormEdit;
 
     string AccessToken = "";
@@ -318,6 +354,17 @@
         //JSHelper.InvokeVoidAsync("OneTimeEventHandle");
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    private bool FilterFunc(ZoneModel _zone)
+    {
+        if (string.IsNullOrWhiteSpace(mudFilterMain))
+            return true;
+        if (_zone.Id.ToString().Contains(mudFilterMain))
+            return true;
+        if (_zone.Name.Contains(mudFilterMain))
+            return true;
+        return false;
     }
 
     async Task<int> SelectAndBindSingleInt()

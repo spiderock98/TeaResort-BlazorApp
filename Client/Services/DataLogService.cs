@@ -12,9 +12,7 @@ namespace SmartRetail.Client.Services
     {
         HttpClient _client = new HttpClient();
         public DataLogService()
-        {
-
-        }
+        { }
 
         public async Task<List<DataLogModel>> GetAllDataAsync(string token, int fromTime, int toTime)
         {
