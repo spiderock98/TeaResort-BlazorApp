@@ -77,9 +77,7 @@
         </table>*@
 
 
-            @*<MudTable Items="@LstAllArea.OrderByDescending(r=>r.Id)" Hover=true Striped=true
-        Filter="new Func<AreaModel, bool>(FilterFunc)">*@
-        <MudTable Hover=true Striped=true
+        <MudTable Hover=true
                   @ref="table"
                   ServerData="@(new Func<TableState, Task<TableData<AreaModel>>>(ServerReload))">
             <ToolBarContent>
@@ -90,23 +88,42 @@
             </ToolBarContent>
 
             <HeaderContent>
-                <MudTh>ID</MudTh>
-                <MudTh>NAME</MudTh>
-                <MudTh></MudTh>
+                <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="id_field" T="AreaModel">No.</MudTableSortLabel></MudTh>
+                <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="name_field" T="AreaModel">NAME</MudTableSortLabel></MudTh>
+                <MudTh Style="text-align:center;"></MudTh>
             </HeaderContent>
 
             <RowTemplate>
-                <MudTd DataLabel="ID">@context.Id</MudTd>
-                <MudTd DataLabel="NAME">@context.Name</MudTd>
-                <MudTd>
-                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
-                               OnClick=@(() => { PreEdit(context); })
-                               data-target="#mdEditArea"
-                               data-toggle="modal">
-                        Edit
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
-                               OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
+                <MudTd Style="text-align:center;" DataLabel="ID">@context.Id</MudTd>
+                <MudTd Style="text-align:center;" DataLabel="NAME">@context.Name</MudTd>
+                <MudTd Style="text-align:center;">
+
+
+                    <MudButtonGroup Size="Size.Small"
+                                    Color="Color.Default"
+                                    Variant="Variant.Text">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       data-toggle="modal"
+                                       data-target="#mdEditArea"
+                                       OnClick=@(() => { PreEdit(context); })></MudIconButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
+                                       Color="Color.Error"
+                                       OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>
+                        </MudIconButton>
+                    </MudButtonGroup>
+
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                             ActivationEvent="MouseEvent.MouseOver">
+                        <MudMenuItem>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           data-toggle="modal"
+                                           data-target="#mdEditArea"
+                                           OnClick=@(() => { PreEdit(context); })></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
+                                           Color="Color.Error"
+                                           OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })></MudIconButton>
+                        </MudMenuItem>
+                    </MudMenu>
 
                 </MudTd>
             </RowTemplate>
@@ -321,24 +338,15 @@
             return false;
         }).ToList();
         totalItems = data.Count();
-        //switch (state.SortLabel)
-        //{
-        //    case "nr_field":
-        //        data = data.OrderByDirection(state.SortDirection, o => o.Number);
-        //        break;
-        //    case "sign_field":
-        //        data = data.OrderByDirection(state.SortDirection, o => o.Sign);
-        //        break;
-        //    case "name_field":
-        //        data = data.OrderByDirection(state.SortDirection, o => o.Name);
-        //        break;
-        //    case "position_field":
-        //        data = data.OrderByDirection(state.SortDirection, o => o.Position);
-        //        break;
-        //    case "mass_field":
-        //        data = data.OrderByDirection(state.SortDirection, o => o.Molar);
-        //        break;
-        //}
+        switch (state.SortLabel)
+        {
+            case "id_field":
+                data = data.OrderByDirection(state.SortDirection, o => o.Id).ToList();
+                break;
+            case "name_field":
+                data = data.OrderByDirection(state.SortDirection, o => o.Name).ToList();
+                break;
+        }
 
         pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
         return new TableData<AreaModel>() { TotalItems = totalItems, Items = pagedData };
@@ -495,6 +503,8 @@
 
         // Re fetch all List
         LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+
+        table.ReloadServerData();
         InvokeAsync(StateHasChanged);
     }
 
