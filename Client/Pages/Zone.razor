@@ -80,7 +80,9 @@
         </table>*@
 
 
-            <MudTable Items="@LstAllZone.OrderByDescending(r=>r.Id)" Hover=true Striped=true
+            <MudTable @ref="table"
+                      Items="@LstAllZone.OrderByDescending(r=>r.Id)" 
+                      Hover=true
                       Filter="new Func<ZoneModel, bool>(FilterFunc)">
                 <ToolBarContent>
                     <MudText Typo="Typo.h6">List All Zone</MudText>
@@ -89,16 +91,16 @@
                 </ToolBarContent>
 
                 <HeaderContent>
-                    <MudTh>ID</MudTh>
-                    <MudTh>NAME</MudTh>
-                    <MudTh>AREA</MudTh>
-                    <MudTh></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending" T="ZoneModel" SortBy="new Func<ZoneModel, object>(o=>o.Id)">No.</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel T="ZoneModel" SortBy="new Func<ZoneModel, object>(o=>o.Name)">NAME</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel T="ZoneModel" SortBy="new Func<ZoneModel, object>(o=>o.Area)">AREA</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"></MudTh>
                 </HeaderContent>
 
                 <RowTemplate>
-                    <MudTd DataLabel="ID">@context.Id</MudTd>
-                    <MudTd DataLabel="NAME">@context.Name</MudTd>
-                    <MudTd DataLabel="AREA">
+                    <MudTd Style="text-align:center;">@context.Id</MudTd>
+                    <MudTd Style="text-align:center;">@context.Name</MudTd>
+                    <MudTd Style="text-align:center;">
                         @LstAllArea.Where(r => r.Id == context.Area).FirstOrDefault()?.Name
                     </MudTd>
                     <MudTd>
@@ -293,7 +295,6 @@
 @code {
     enum ModalType { Create, Edit, Delete }
     //enum ModalInputSelectAction { Multi }
-    string mudFilterMain = "";
     ElementReference elFormNew, elFormEdit;
 
     string AccessToken = "";
@@ -356,6 +357,9 @@
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
     }
 
+
+    private MudTable<ZoneModel> table;
+    string mudFilterMain = "";
     private bool FilterFunc(ZoneModel _zone)
     {
         if (string.IsNullOrWhiteSpace(mudFilterMain))
@@ -366,6 +370,8 @@
             return true;
         return false;
     }
+
+
 
     async Task<int> SelectAndBindSingleInt()
     {
@@ -506,6 +512,7 @@
         JSHelper.InvokeVoidAsync("Interop_ShowHideModal", submitType == ModalType.Create ? "mdNewZone" : "mdEditZone", "hide");
         // Re fetch all List
         LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        table.ReloadServerData();
         InvokeAsync(StateHasChanged);
     }
 
@@ -553,6 +560,7 @@
 
         // Re fetch all List
         LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        table.ReloadServerData();
         InvokeAsync(StateHasChanged);
     }
 

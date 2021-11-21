@@ -78,18 +78,18 @@
 
 
         <MudTable Hover=true
+                  Items="@LstAllArea" 
                   @ref="table"
-                  ServerData="@(new Func<TableState, Task<TableData<AreaModel>>>(ServerReload))">
+                  Filter="new Func<AreaModel, bool>(FilterFunc)">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">List All Area</MudText>
                 <MudSpacer />
-                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                <MudTextField @bind-Value="mudFilterMain" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             </ToolBarContent>
 
             <HeaderContent>
-                <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending" SortLabel="id_field" T="AreaModel">No.</MudTableSortLabel></MudTh>
-                <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="name_field" T="AreaModel">NAME</MudTableSortLabel></MudTh>
+                <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending"  T="AreaModel" SortBy="new Func<AreaModel, object>(o=>o.Id)">No.</MudTableSortLabel></MudTh>
+                <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<AreaModel, object>(o=>o.Name)" T="AreaModel">NAME</MudTableSortLabel></MudTh>
                 <MudTh Style="text-align:center;"></MudTh>
             </HeaderContent>
 
@@ -97,34 +97,14 @@
                 <MudTd Style="text-align:center;" DataLabel="ID">@context.Id</MudTd>
                 <MudTd Style="text-align:center;" DataLabel="NAME">@context.Name</MudTd>
                 <MudTd Style="text-align:center;">
-
-
-                    <MudButtonGroup Size="Size.Small"
-                                    Color="Color.Default"
-                                    Variant="Variant.Text">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       data-toggle="modal"
-                                       data-target="#mdEditArea"
-                                       OnClick=@(() => { PreEdit(context); })></MudIconButton>
-                        <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
-                                       Color="Color.Error"
-                                       OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>
-                        </MudIconButton>
-                    </MudButtonGroup>
-
-                    <MudMenu Icon="@Icons.Material.Filled.MoreVert"
-                             ActivationEvent="MouseEvent.MouseOver">
-                        <MudMenuItem>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                           data-toggle="modal"
-                                           data-target="#mdEditArea"
-                                           OnClick=@(() => { PreEdit(context); })></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
-                                           Color="Color.Error"
-                                           OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })></MudIconButton>
-                        </MudMenuItem>
-                    </MudMenu>
-
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                                   OnClick=@(() => { PreEdit(context); })
+                                   data-target="#mdEditArea"
+                                   data-toggle="modal">
+                            Edit
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
+                                   OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
                 </MudTd>
             </RowTemplate>
             <NoRecordsContent>
@@ -317,49 +297,7 @@
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
     }
 
-
-
-
     private MudTable<AreaModel> table;
-    private int totalItems;
-    private List<AreaModel> pagedData;
-    private async Task<TableData<AreaModel>> ServerReload(TableState state)
-    {
-        var data = await svLayout.GetAreaListAsync(AccessToken);
-        await Task.Delay(300);
-        data = data.Where(element =>
-        {
-            if (string.IsNullOrWhiteSpace(mudFilterMain))
-                return true;
-            if (element.Id.ToString().Contains(mudFilterMain))
-                return true;
-            if (element.Name.Contains(mudFilterMain))
-                return true;
-            return false;
-        }).ToList();
-        totalItems = data.Count();
-        switch (state.SortLabel)
-        {
-            case "id_field":
-                data = data.OrderByDirection(state.SortDirection, o => o.Id).ToList();
-                break;
-            case "name_field":
-                data = data.OrderByDirection(state.SortDirection, o => o.Name).ToList();
-                break;
-        }
-
-        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
-        return new TableData<AreaModel>() { TotalItems = totalItems, Items = pagedData };
-    }
-    private void OnSearch(string text)
-    {
-        mudFilterMain = text;
-        table.ReloadServerData();
-    }
-
-
-
-
     private bool FilterFunc(AreaModel element)
     {
         if (string.IsNullOrWhiteSpace(mudFilterMain))
@@ -503,7 +441,6 @@
 
         // Re fetch all List
         LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
-
         table.ReloadServerData();
         InvokeAsync(StateHasChanged);
     }

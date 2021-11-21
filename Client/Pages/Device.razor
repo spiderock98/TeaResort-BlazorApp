@@ -122,7 +122,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="form-group col-12">
                                             <button class="btn btn-block btn-outline-info"
                                                     @onclick=@(() => { ShowAllDevice(true); })>
@@ -131,108 +131,146 @@
                                         </div>
                                     </div>
 
-                                    <table class="bootstrap-table"
-                                           data-search="true"
-                                           data-show-export="true"
-                                           data-search-align="right"
-                                           data-buttons-align="right"
-                                           data-pagination="true"
-                                           data-height="700">
-                                        <thead>
-                                            <tr class="text-center">
-                                                <th>Id</th>
-                                                <th>Name</th>
-                                                <th>Gateway</th>
-                                                <th>Model</th>
-                                                <th>Set Temp.</th>
-                                                <th>Sensor Temp.</th>
-                                                <th>Mode</th>
-                                                <th>Fan</th>
-                                                <th>Angle</th>
-                                                <th>Status</th>
-                                                @*<th>Assignment</th>
-                                                <th>Setting</th>*@
-                                                <th>ON/OFF</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @*@foreach (var dv in LstDevice.OrderByDescending(r => r.Id).Where(r => r.DeviceType == "AC"))*@
-                                            @foreach (var dv in (isFilterDvType_ALL ?  crLstDvInAllSection.OrderByDescending(r => r.Id).Where(r => r.DeviceType == "AC") : crLstDvInAllSection.Where(r=>r.DeviceType == crDvTypeFilterType).OrderByDescending(r => r.Id).Where(r => r.DeviceType == "AC")))
-                                            {
-                                            <tr class="text-center">
-                                                <th>@dv.Id</th>
-                                                <td>@dv.Name</td>
-                                                <td>@LstAllDataSource.Where(r => r.ID == dv.DataSourceId).FirstOrDefault()?.Name</td>
-                                                <td>[@dv.Capabilitie] @dv.DeviceType</td>
-                                                <td>@dv.Status["SetTemp"]</td>
-                                                <td>@dv.Status["RoomTemp"]</td>
-                                                <td>@dv.Status["itmACMode"]</td>
-                                                <td>@dv.Status["FanSpeed"]</td>
-                                                <td>@dv.Status["FanDirect"]</td>
-                                                <td>@dv.Status["ACStatus"]</td>
-                                                <td>
-                                                    <div class="form-group">
-                                                        <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                            <input type="checkbox"
-                                                                   class="custom-control-input"
-                                                                   checked="@(dv.Status["ACPower"]=="On" ? true : false)"
-                                                                   id="swACPower-@dv.Id"
-                                                                   @onchange=@((e)=> { toggleACPowerHandle(bool.Parse(e.Value.ToString()), dv); })>
-                                                            <label class="custom-control-label" for="swACPower-@dv.Id"></label>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                @*<td>
-            <button class="btn"
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#mdEditAssignment"
-                    @onclick=@(() => { PreEditScheduleRoom2(dv); })>
-                <i class="fas fa-calendar-alt"></i>
-            </button>
-        </td>
-        <td>
-            <button class="btn"
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#mdEditDevice"
-                    @onclick=@(() => { PreEditDeviceAll(dv); })>
-                <i class="fas fa-cog"></i>
-            </button>
-        </td>*@
-                                                <td>
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-light dropdown-toggle" role="button" data-toggle="dropdown">
-                                                            <i class="fas fa-ellipsis-v"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <button class="dropdown-item"
-                                                                    type="button"
-                                                                    data-toggle="modal"
-                                                                    data-target="#mdEditDevice"
-                                                                    @onclick=@(() => { PreEditDeviceAll(dv); })>
-                                                                <i class="fas fa-cog"></i>
-                                                                Settings
-                                                            </button>
 
-                                                            <button class="dropdown-item"
-                                                                    type="button"
-                                                                    data-toggle="modal"
-                                                                    data-target="#mdEditAssignment"
-                                                                    @onclick=@(() => { PreEditScheduleRoom2(dv); })>
-                                                                <i class="fas fa-calendar-alt"></i>
-                                                                Assign Room
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </td>
 
-                                            </tr>
-                                            }
-                                        </tbody>
-                                    </table>
+                                    <MudTable Items=@((isFilterDvType_ALL ?  crLstDvInAllSection.Where(r => r.DeviceType == "AC") : crLstDvInAllSection.Where(r=>r.DeviceType == crDvTypeFilterType).Where(r => r.DeviceType == "AC")))
+                                              @ref="table"
+                                              Hover=true
+                                              Filter="new Func<DeviceModel, bool>(FilterFunc)">
+                                        <ToolBarContent>
+                                            <MudText Typo="Typo.h6">List All Devices</MudText>
+                                            <MudSpacer />
+                                            <MudTextField @bind-Value="mudFilterMain" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                        </ToolBarContent>
+
+                                        <HeaderContent>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending" T="DeviceModel" SortBy="new Func<DeviceModel, object>(o=>o.Id)">No.</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<DeviceModel, object>(o=>o.Name)" T="DeviceModel">NAME</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel T="DeviceModel">GATEWAY</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel T="DeviceModel">MODEL</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy=@(new Func<DeviceModel, object>(o=>o.Status["SetTemp"])) T="DeviceModel">SET TEMP.</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy=@(new Func<DeviceModel, object>(o=>o.Status["RoomTemp"])) T="DeviceModel">ROOM TEMP.</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy=@(new Func<DeviceModel, object>(o=>o.Status["itmACMode"])) T="DeviceModel">MODE</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy=@(new Func<DeviceModel, object>(o=>o.Status["FanSpeed"])) T="DeviceModel">FAN</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy=@(new Func<DeviceModel, object>(o=>o.Status["FanDirect"])) T="DeviceModel">ANGLE</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy=@(new Func<DeviceModel, object>(o=>o.Status["ACStatus"])) T="DeviceModel">STATUS</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;">ON/OFF</MudTh>
+                                            <MudTh Style="text-align:center;"></MudTh>
+                                        </HeaderContent>
+
+                                        <RowTemplate>
+                                            <MudTd Style="text-align:center;">@context.Id</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Name</MudTd>
+                                            <MudTd Style="text-align:center;">@LstAllDataSource.Where(r => r.ID == context.DataSourceId).FirstOrDefault()?.Name</MudTd>
+                                            <MudTd Style="text-align:center;">[@context.Capabilitie] @context.DeviceType</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status["SetTemp"]</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status["RoomTemp"]</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status["itmACMode"]</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status["FanSpeed"]</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status["FanDirect"]</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status["ACStatus"]</MudTd>
+                                            <MudTd>
+                                                <MudSwitch Checked=@(@context.Status["ACPower"] == "On" ? true : false)
+                                                           Color="Color.Info"
+                                                           ThumbIcon="@((context.Status["ACPower"])=="On" ? Icons.Material.Filled.Done : Icons.Material.Filled.Close)"
+                                                           ThumbIconColor="@((context.Status["ACPower"])=="On" ? Color.Success : Color.Error)"></MudSwitch>
+                                            </MudTd>
+                                            <MudTd Style="text-align:center;">
+                                                
+                                            </MudTd>
+                                        </RowTemplate>
+
+                                        <PagerContent>
+                                            <MudTablePager />
+                                        </PagerContent>
+                                    </MudTable>
+
+
+
+                                    @*<table class="bootstrap-table"
+               data-search="true"
+               data-show-export="true"
+               data-search-align="right"
+               data-buttons-align="right"
+               data-pagination="true"
+               data-height="700">
+            <thead>
+                <tr class="text-center">
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Gateway</th>
+                    <th>Model</th>
+                    <th>Set Temp.</th>
+                    <th>Sensor Temp.</th>
+                    <th>Mode</th>
+                    <th>Fan</th>
+                    <th>Angle</th>
+                    <th>Status</th>
+                    <th>ON/OFF</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var dv in (isFilterDvType_ALL ?  crLstDvInAllSection.OrderByDescending(r => r.Id).Where(r => r.DeviceType == "AC") : crLstDvInAllSection.Where(r=>r.DeviceType == crDvTypeFilterType).OrderByDescending(r => r.Id).Where(r => r.DeviceType == "AC")))
+                {
+                <tr class="text-center">
+                    <th>@dv.Id</th>
+                    <td>@dv.Name</td>
+                    <td>@LstAllDataSource.Where(r => r.ID == dv.DataSourceId).FirstOrDefault()?.Name</td>
+                    <td>[@dv.Capabilitie] @dv.DeviceType</td>
+                    <td>@dv.Status["SetTemp"]</td>
+                    <td>@dv.Status["RoomTemp"]</td>
+                    <td>@dv.Status["itmACMode"]</td>
+                    <td>@dv.Status["FanSpeed"]</td>
+                    <td>@dv.Status["FanDirect"]</td>
+                    <td>@dv.Status["ACStatus"]</td>
+                    <td>
+                        <div class="form-group">
+                            <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       checked="@(dv.Status["ACPower"]=="On" ? true : false)"
+                                       id="swACPower-@dv.Id"
+                                       @onchange=@((e)=> { toggleACPowerHandle(bool.Parse(e.Value.ToString()), dv); })>
+                                <label class="custom-control-label" for="swACPower-@dv.Id"></label>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-light dropdown-toggle" role="button" data-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item"
+                                        type="button"
+                                        data-toggle="modal"
+                                        data-target="#mdEditDevice"
+                                        @onclick=@(() => { PreEditDeviceAll(dv); })>
+                                    <i class="fas fa-cog"></i>
+                                    Settings
+                                </button>
+
+                                <button class="dropdown-item"
+                                        type="button"
+                                        data-toggle="modal"
+                                        data-target="#mdEditAssignment"
+                                        @onclick=@(() => { PreEditScheduleRoom2(dv); })>
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Assign Room
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+
+                </tr>
+                }
+            </tbody>
+        </table>*@
                                 </div>
+
+
 
                                 @* Area Pane *@
                                 <div class="tab-pane fade" id="vert-tabs-right-area" role="tabpanel">
@@ -1103,9 +1141,17 @@
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
     }
 
-    private Task<GridDataProviderResult<AreaModel>> ClientSideProcessingDataProviderArea(GridDataProviderRequest<AreaModel> request)
+    private MudTable<DeviceModel> table;
+    string mudFilterMain = "";
+    private bool FilterFunc(DeviceModel _section)
     {
-        return Task.FromResult(request.ApplyTo(LstAllArea));
+        if (string.IsNullOrWhiteSpace(mudFilterMain))
+            return true;
+        if (_section.Id.ToString().Contains(mudFilterMain))
+            return true;
+        if (_section.Name.Contains(mudFilterMain))
+            return true;
+        return false;
     }
 
     async Task RefetchData(bool isNoti)

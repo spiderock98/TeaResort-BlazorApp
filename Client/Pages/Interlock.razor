@@ -183,9 +183,11 @@
 
                                     <MudToggleIconButton Icon="@Icons.Material.Filled.PowerOff"
                                                          Color="@Color.Error"
+                                                         Title="Off"
                                                          ToggledIcon="@Icons.Material.Filled.Power"
                                                          ToggledColor="@Color.Success"
                                                          Toggled="!context.Enable"
+                                                         ToggledTitle="On"
                                                          ToggledChanged=@(() => { ChangeScheduleStateHandle(context); }) />
 
                                 </MudButtonGroup>
