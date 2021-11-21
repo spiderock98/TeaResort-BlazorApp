@@ -176,7 +176,43 @@
                                                            ThumbIconColor="@((context.Status["ACPower"])=="On" ? Color.Success : Color.Error)"></MudSwitch>
                                             </MudTd>
                                             <MudTd Style="text-align:center;">
-                                                
+                                                <MudButtonGroup Size="Size.Small"
+                                                                Variant="Variant.Text"
+                                                                Color="Color.Default">
+                                                    <MudIconButton Icon="@Icons.Filled.Edit"
+                                                                   data-toggle="modal"
+                                                                   data-target="#mdEditAssignment"
+                                                                   Title="Assign Room"
+                                                                   OnClick=@(() => { PreEditScheduleRoom2(context); }) />
+                                                    <MudIconButton Icon="@Icons.Filled.EditCalendar"
+                                                                   data-toggle="modal"
+                                                                   data-target="#mdEditDevice"
+                                                                   Title="Settings"
+                                                                   OnClick=@(() => { PreEditDeviceAll(context); }) />
+
+
+
+                                                    @*<button class="dropdown-item"
+                type="button"
+                data-toggle="modal"
+                data-target="#mdEditDevice"
+                @onclick=@(() => { PreEditDeviceAll(dv); })>
+            <i class="fas fa-cog"></i>
+            Settings
+        </button>
+
+        <button class="dropdown-item"
+                type="button"
+                data-toggle="modal"
+                data-target="#mdEditAssignment"
+                @onclick=@(() => { PreEditScheduleRoom2(dv); })>
+            <i class="fas fa-calendar-alt"></i>
+            Assign Room
+        </button>*@
+
+
+
+                                                </MudButtonGroup>
                                             </MudTd>
                                         </RowTemplate>
 
