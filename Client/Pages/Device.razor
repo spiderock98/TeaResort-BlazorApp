@@ -17,7 +17,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
-                    <h1 style="font-size:50px;">AC Air Cool Listing</h1>
+                    <h1 style="font-size:50px;">Air Cool Listing</h1>
                 </div>
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -135,6 +135,7 @@
 
                                     <MudTable Items=@((isFilterDvType_ALL ?  crLstDvInAllSection.Where(r => r.DeviceType == "AC") : crLstDvInAllSection.Where(r=>r.DeviceType == crDvTypeFilterType).Where(r => r.DeviceType == "AC")))
                                               @ref="table"
+                                              Dense=true
                                               Hover=true
                                               Filter="new Func<DeviceModel, bool>(FilterFunc)">
                                         <ToolBarContent>
@@ -804,7 +805,7 @@
                                 </fieldset>
                             </form>
                         </div>
-                        <div class="modal-footer">
+                        <div class="modal-footer d-flex justify-content-center">
                             <button type="button" class="btn btn-secondary"
                                     data-dismiss="modal"
                                     @onclick="PreCloseDeviceModal">
@@ -1134,15 +1135,16 @@
     UserService svUser = new UserService();
     DataSourceService svDataSource = new DataSourceService();
 
-    string AccessToken = "";
+    string AccessToken = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         AccessToken = await LocalStorage.GetItemAsync<string>("token");
-        if (AccessToken == "")
+        if (AccessToken == null)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
             NavHelper.NavigateTo("/login");
+            return;
         }
         await RefetchData(true);
 

@@ -260,10 +260,10 @@
     protected override async Task OnInitializedAsync()
     {
         AccessToken = await LocalStorage.GetItemAsync<string>("token");
-        if (AccessToken == "")
+        if (AccessToken == null)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
-            NavHelper.NavigateTo("/login");
+            NavHelper.NavigateTo("/login"); return;
         }
 
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
