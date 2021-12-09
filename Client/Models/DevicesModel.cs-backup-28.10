@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections;
 
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
     public class DeviceParaListTransfer
     {

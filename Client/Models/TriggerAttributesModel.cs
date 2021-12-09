@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
     public class TriggerAttributesModel
     {

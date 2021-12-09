@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.BACnet;
 using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
     public class MasterDataModel
     {
@@ -23,9 +20,7 @@ namespace SmartRetail.Share.Models
             public SourceTypeModel()
             { }
 
-            [BsonId]
-            [BsonRepresentation(BsonType.ObjectId)]
-            public string ObjectId { get; set; }
+
             //[PrimaryKey]
             [JsonProperty]
             public string Name { get; set; }
@@ -51,9 +46,6 @@ namespace SmartRetail.Share.Models
         [JsonObject(MemberSerialization.OptIn, ItemNullValueHandling = NullValueHandling.Ignore)]
         public class AttributeModel
         {
-            [BsonId]
-            [BsonRepresentation(BsonType.ObjectId)]
-            public string ObjectId { get; set; }
             //[PrimaryKey]
             [JsonProperty]
             public string Name { get; set; }
@@ -76,9 +68,6 @@ namespace SmartRetail.Share.Models
         [JsonObject(MemberSerialization.OptIn, ItemNullValueHandling = NullValueHandling.Ignore)]
         public class CapabilitieModel
         {
-            [BsonId]
-            [BsonRepresentation(BsonType.ObjectId)]
-            public string ObjectId { get; set; }
             //[PrimaryKey]
             [JsonProperty]
             public string Name { get; set; }
@@ -109,9 +98,6 @@ namespace SmartRetail.Share.Models
         [JsonObject(MemberSerialization.OptIn, ItemNullValueHandling = NullValueHandling.Ignore)]
         public class DeviceTypeModel
         {
-            [BsonId]
-            [BsonRepresentation(BsonType.ObjectId)]
-            public string ObjectId { get; set; }
             //[PrimaryKey]
             [JsonProperty]
             public string Name { get; set; }

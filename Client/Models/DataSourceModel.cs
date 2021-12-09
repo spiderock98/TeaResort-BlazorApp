@@ -1,13 +1,10 @@
-﻿using CloneExtensions;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
     [JsonObject(MemberSerialization.OptIn, ItemNullValueHandling = NullValueHandling.Ignore)]
     public class DataSourceModel
@@ -15,20 +12,6 @@ namespace SmartRetail.Share.Models
         public DataSourceModel()
         { }
 
-        public DataSourceModel SelfClone()
-        {
-            var sour = this.GetClone();
-            sour.Para.Clear();
-            foreach (var it in this.Para)
-            {
-                sour.Para.Add(it.Key, it.Value);
-            }
-            return sour;
-        }
-
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string ObjectId { get; set; }
         //[PrimaryKey]
         [JsonProperty]
         public string ID { get; set; } = Guid.NewGuid().ToString();

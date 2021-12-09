@@ -1,4 +1,4 @@
-using SmartRetail.Share.Models;
+using SmartRetail.Client.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

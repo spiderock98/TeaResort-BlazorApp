@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
     public enum MemberType { Device, Scenes, Schedule };
     public class RunningActionModel

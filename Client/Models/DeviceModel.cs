@@ -4,51 +4,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections;
 using System.Linq;
-using SmartRetail.Share.Helper;
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
 
     [JsonObject(MemberSerialization.OptIn, ItemNullValueHandling = NullValueHandling.Ignore)]
     public class DeviceModel
     {
-        // public DeviceModel SelfClone()
-        // {
-        //     DeviceModel md = this.GetClone();
-
-        //     if (Status == null) Status = new Dictionary<string, string>();
-        //     md.Status.Clear();
-        //     foreach (var st in this.Status)
-        //     {
-        //         md.Status.Add(st.Key, st.Value);
-        //     }
-
-        //     if (DataSourcePara == null) DataSourcePara = new Dictionary<string, string>();
-        //     md.DataSourcePara.Clear();
-        //     foreach (var dt in this.DataSourcePara)
-        //     {
-        //         md.DataSourcePara.Add(dt.Key, dt.Value);
-        //     }
-
-        //     md.DataSaveList.Clear();
-        //     foreach (var dt in this.DataSaveList)
-        //     {
-        //         md.DataSaveList.Add(dt);
-        //     }
-        //     md.MeterSaveList.Clear();
-        //     foreach (var dt in this.MeterSaveList)
-        //     {
-        //         md.MeterSaveList.Add(dt);
-        //     }
-        //     md.Paras.Clear();
-        //     foreach (var dt in this.Paras)
-        //     {
-        //         md.Paras.Add(dt.Key, dt.Value);
-        //     }
-        //     return md;
-        // }
-
-        public string ObjectId { get; set; }
         //[PrimaryKey]
         [JsonProperty]
         public int Id { get; set; }
@@ -110,9 +72,9 @@ namespace SmartRetail.Share.Models
                                 var logTime = LastStatusChange.Where(x => x.Key == item.Key);
                                 if (logTime == null)
                                 {
-                                    LastStatusChange.Add(item.Key, Helper.UnixTime.GetCurrentMilliSecond());
+                                    LastStatusChange.Add(item.Key, Client.Helper.UnixTime.GetCurrentMilliSecond());
                                 }
-                                else LastStatusChange[item.Key] = Helper.UnixTime.GetCurrentMilliSecond();
+                                else LastStatusChange[item.Key] = Client.Helper.UnixTime.GetCurrentMilliSecond();
                             }
                         }
                         break;
@@ -137,9 +99,9 @@ namespace SmartRetail.Share.Models
                         var logTime = LastStatusChange.Where(x => x.Key == key);
                         if (logTime == null)
                         {
-                            LastStatusChange.Add(key, Helper.UnixTime.GetCurrentMilliSecond());
+                            LastStatusChange.Add(key, Client.Helper.UnixTime.GetCurrentMilliSecond());
                         }
-                        else LastStatusChange[key] = Helper.UnixTime.GetCurrentMilliSecond();
+                        else LastStatusChange[key] = Client.Helper.UnixTime.GetCurrentMilliSecond();
                     }
                     break;
                 }
@@ -226,7 +188,7 @@ namespace SmartRetail.Share.Models
                 var lsChangeTime = LastStatusChange[key];
                 if (lsChangeTime > 0)
                 {
-                    return Helper.UnixTime.GetCurrentMilliSecond() - lsChangeTime;
+                    return Client.Helper.UnixTime.GetCurrentMilliSecond() - lsChangeTime;
                 }
                 return -1;
             }
