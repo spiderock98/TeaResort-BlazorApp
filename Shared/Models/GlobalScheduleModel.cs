@@ -8,15 +8,10 @@ using System.Threading.Tasks;
 
 namespace SmartRetail.Share.Models
 {
-    [JsonObject(MemberSerialization.OptIn, ItemNullValueHandling = NullValueHandling.Ignore)]
     public class GlobalScheduleModel
     {
         public enum ScheduleTypeEnum { OneTime, Yearly, Monthly, Daily, IntervalTime }
 
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string ObjectId { get; set; }
-        //[PrimaryKey]
         [JsonProperty]
         public int Id { get; set; }
         [JsonProperty]
@@ -55,10 +50,61 @@ namespace SmartRetail.Share.Models
         public string Description { get; set; }
         public bool IsRunning { get; set; } = false;
 
+        public GlobalScheduleModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<GlobalScheduleModel>(_tmpSerializeString);
+        }
+
         public GlobalScheduleModel ShallowCopy()
         {
             return (GlobalScheduleModel)this.MemberwiseClone();
         }
+
+        public string FormatScheduleTypeStringCulture()
+        {
+            switch (ScheduleType)
+            {
+                case ScheduleTypeEnum.OneTime:
+                    return Helper.UnixTime.UnixSecondToLocalTime(Time).ToString("f");
+
+                case ScheduleTypeEnum.IntervalTime:
+                    return string.Format("Every {0} ms", Time);
+
+                case ScheduleTypeEnum.Daily:
+                    var dataDaily = DateTimeOffset.Now;
+                    dataDaily = new DateTime(dataDaily.Year, dataDaily.Month, dataDaily.Day, 0, 0, 0);
+                    dataDaily = dataDaily.AddSeconds(Time);
+
+                    var lstStrRepeatDate = new List<string>();
+                    int idxDate = 0;
+                    foreach (var it in RepeatDayOfWeek)
+                    {
+                        if (it == 1)
+                        {
+                            lstStrRepeatDate.Add(((DayOfWeek)idxDate).ToString());
+                        }
+                        ++idxDate;
+                    }
+                    return string.Format("At {0} on {1}", dataDaily.ToString("HH:mm"), string.Join(',', lstStrRepeatDate));
+
+                case ScheduleTypeEnum.Monthly:
+                    var dataMonthly = DateTimeOffset.Now;
+                    dataMonthly = new DateTime(dataMonthly.Year, dataMonthly.Month, 1, 0, 0, 0);
+                    dataMonthly = dataMonthly.AddSeconds(Time);
+
+                    return string.Format("On {0} every month at {1}", dataMonthly.ToString("dd"), dataMonthly.ToString("HH:mm"));
+
+                case ScheduleTypeEnum.Yearly:
+                    var dataYearly = DateTimeOffset.Now;
+                    dataYearly = new DateTime(dataYearly.Year, 1, 1, 0, 0, 0);
+                    dataYearly = dataYearly.AddSeconds(Time);
+                    return string.Format("");
+            }
+            return string.Empty;
+
+        }
+
         public void UpdateValue(GlobalScheduleModel _schedule)
         {
             this.Name = _schedule.Name;

@@ -3,7 +3,7 @@
 @inject NavigationManager NavHelper
 @* @inject IdentityAuthenticationStateProvider authStateProvider *@
 @inject IJSRuntime JSHelper
-@using SmartRetail.Services
+@using SmartRetail.Client.Services
 @using Share.Models
 
 
@@ -14,9 +14,9 @@
       novalidate>
 
     <div class="input-group mb-3">
-        <input type="text" 
-               class="form-control" 
-               placeholder="Username" 
+        <input type="text"
+               class="form-control"
+               placeholder="Username"
                @bind-value="NewUserParam.UserName"
                autocomplete="nope" />
         <div class="input-group-append">
@@ -27,9 +27,9 @@
     </div>
 
     <div class="input-group mb-3">
-        <input type="password" 
-               @bind-value="NewUserParam.Password" 
-               class="form-control" 
+        <input type="password"
+               @bind-value="NewUserParam.Password"
+               class="form-control"
                placeholder="Password"
                autocomplete="new-password" />
         <div class="input-group-append">
@@ -40,8 +40,8 @@
     </div>
 
     <div class="input-group mb-3">
-        <input type="password" 
-               class="form-control" 
+        <input type="password"
+               class="form-control"
                placeholder="Retype password"
         <div class="input-group-append">
             <div class="input-group-text">
@@ -51,9 +51,9 @@
     </div>
 
     <div class="input-group mb-3">
-        <input @bind-value="NewUserParam.Email" 
-               type="email" 
-               class="form-control" 
+        <input @bind-value="NewUserParam.Email"
+               type="email"
+               class="form-control"
                placeholder="Email" />
         <div class="input-group-append">
             <div class="input-group-text">
@@ -63,8 +63,8 @@
     </div>
 
     <div class="input-group mb-3">
-        <input @bind-value="NewUserParam.PhoneNumber" 
-               type="text" 
+        <input @bind-value="NewUserParam.PhoneNumber"
+               type="text"
                class="form-control"
                placeholder="Phone Number" />
         <div class="input-group-append">
@@ -75,9 +75,9 @@
     </div>
 
     <div class="input-group mb-3">
-        <input @bind-value="NewUserParam.Company" 
-               type="text" 
-               class="form-control" 
+        <input @bind-value="NewUserParam.Company"
+               type="text"
+               class="form-control"
                placeholder="Company" />
         <div class="input-group-append">
             <div class="input-group-text">
@@ -87,8 +87,8 @@
     </div>
 
     <div class="input-group mb-3">
-        <input @bind-value="NewUserParam.Location" 
-               type="text" 
+        <input @bind-value="NewUserParam.Location"
+               type="text"
                class="form-control"
                placeholder="Department" />
         <div class="input-group-append">
@@ -100,9 +100,9 @@
 
     <div class="row">
         <div class="col-12">
-            <button type="button" 
+            <button type="button"
                     class="btn btn-primary btn-block"
-                    @onclick="OnSubmitRegisterHandle" >
+                    @onclick="OnSubmitRegisterHandle">
                 Create account
             </button>
         </div>
@@ -138,11 +138,22 @@
         error = null;
         try
         {
-            await svUser.CreateNewUser(NewUserParam);
+            var isOk = true;
+            var result = await svUser.CreateNewUser(NewUserParam);
+            if (result.Contains("Exists")) isOk = false;
+            else if (result.Contains("Wrong")) isOk = false;
 
             JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-            JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "success" });
-            NavHelper.NavigateTo("/login");
+
+            if (isOk)
+            {
+                JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "success" });
+                NavHelper.NavigateTo("/login");
+            }
+            else
+            {
+                JSHelper.InvokeVoidAsync("Swal.fire", new { icon = "error", title = result });
+            }
         }
         catch (Exception ex)
         {

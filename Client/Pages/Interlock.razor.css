@@ -2,6 +2,11 @@ fieldset {
   border: 2px solid orange !important;
 }
 
+a.disabled {
+  pointer-events: none;
+  color: #ccc;
+}
+
 .btn-light {
   color: #1f2d3d;
   border-color: #d8d8d8;
@@ -9,7 +14,50 @@ fieldset {
 
 /* Dotted Seperator line */
 hr.dotted {
-    border-top: 3px dotted #bbb;
+  border-top: 3px dotted #bbb;
 }
 
-/* Dotted Seperator line (vertical) */
+/* Bootstrap Menu Multilevel */
+/* ============ desktop view ============ */
+@media all and (min-width: 992px) {
+  .dropdown-menu li {
+    position: relative;
+  }
+
+  .dropdown-menu .submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -7px;
+  }
+
+  .dropdown-menu .submenu-left {
+    right: 100%;
+    left: auto;
+  }
+
+  .dropdown-menu > li:hover {
+    background-color: #f1f1f1;
+  }
+
+  .dropdown-menu > li:hover > .submenu {
+    display: block;
+  }
+}
+
+/* ============ desktop view .end// ============ */
+
+/* ============ small devices ============ */
+@media (max-width: 991px) {
+  .dropdown-menu .dropdown-menu {
+    margin-left: 0.7rem;
+    margin-right: 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+}
+/* ============ small devices .end// ============ */
+
+/* backgound modal */
+.modal {
+  background: linear-gradient(#c1e2f1, #f7e8f6) !important;
+}

@@ -1,17 +1,78 @@
 ﻿
+using System.Collections.Generic;
+
 namespace SmartRetail.Resources
 {
     public static class GetLink
     {
         //public static string  SERVER_IP = "http://103.1.239.33:5000";
         //Local Server
-        //public static string  SERVER_IP = "http://10.0.2.2:5000";
-        //public static string  SERVER_IP = "http://localhost:5000";
-        //public static string  SERVER_IP = "http://viot.ddns.net:5000";
-        // public static string SERVER_IP = "192.168.1.11:5000";
-        public static string SERVER_IP = "45.251.112.69:1001";
+        //public static string SERVER_IP = "http://10.0.2.2:5000";
+        //public static string SERVER_IP = "localhost:5000";
+        //public static string SERVER_IP = "http://viot.ddns.net:5000";
+        //public static string SERVER_IP = "kst-fibaro.ddns.net:5000";
+        //public static string SERVER_IP = "45.251.112.69:1001";
+        //public static string SERVER_IP = "192.168.99.198:5000";
+        //public static string SERVER_POWERTAG = "http://45.251.112.69:5004/192.168.99.116";
+
+        //public static string SERVER_IP = "45.251.112.69:9004";
+        public static string SERVER_IP = "192.168.1.115:5000";
+        //public static string SERVER_IP = "112.213.87.154:1001";
         public static string CLIENT_SERVER = "";
 
+        // todo: hardcode here
+        //public static Dictionary<string, string> DictDS4IP = new Dictionary<string, string>()
+        //{
+        //    {"DS4-54CBE7AB6224", "45.251.112.69:5002/10.97.17.247"},
+        //    {"DS4-EC448312CFA4", "45.251.112.69:5002/10.97.17.246"},
+        //    {"DS4-38468312CFA4", "45.251.112.69:5002/10.97.17.248"},
+        //    {"DS4-0C7EE9AB6224_office", "45.251.112.69:5004/192.168.99.210"},
+        //    {"DS4-0C7EE9AB6224", "45.251.112.69:5004/192.168.99.210"},
+        //    {"DS4-B4CCE7AB6224", "45.251.112.69:5003/10.10.8.3"},
+        //    {"DS4-38D420C4F5FC", "45.251.112.69:5003/10.10.8.10"},
+        //    {"DS4-507EE9AB6224", "45.251.112.69:5012/192.168.10.200"},
+        //    {"DS4-C8089EC40A24", "172.27.18.234:8080/172.27.18.248"},
+        //    {"DS4-F0448312CFA4", "172.27.18.234:8080/172.27.18.249"},
+        //    {"DS4-38458312CFA4", "172.27.18.234:8080/172.27.18.250"},
+        //    {"DS4-F0458312CFA4", "172.27.18.234:8080/172.27.18.252"},
+        //    {"DS4-D4448312CFA4", "172.27.18.234:8080/172.27.18.253"},
+        //    {"DS4-34458312CFA4", "172.27.18.234:8080/172.27.18.222"},
+        //    {"DS4-300A9EC40A24", "172.27.18.234:8080/172.27.18.223"},
+        //    {"DS4-240A9EC40A24", "172.27.18.234:8080/172.27.18.235"},
+        //    {"DS4-6C458312CFA4", "172.27.18.234:8080/172.27.18.238"},
+        //    {"DS4-98458312CFA4", "172.27.18.234:8080/172.27.18.247"},
+        //    {"DS4-B4CE12A4AE30", "172.27.18.234:8080/172.27.18.236"},
+        //    {"DS4-A80A9EC40A24", "172.27.18.234:8080/172.27.18.242"},
+        //    {"DS4-C8448312CFA4", "172.27.18.234:8080/172.27.18.245"},
+        //};
+
+        public static string GET_LOG(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/datalog?token=" + token + "&fromTime=1&toTime=15976097926&deviceId=1";
+            return url;
+        }
+        public static string GET_LOG_BY_TIME(string token, int fromUnix, int toUnix)
+        {
+            var url = "http://" + SERVER_IP + "/api/datalog?token=" + token + "&fromTime=" + fromUnix.ToString() + "&toTime=" + toUnix.ToString() + "&deviceId=1";
+            return url;
+        }
+        public static string POST_ADD_LOG(string token, string deviceId, string attribute, string oldValue, string newValue)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/datalog/add?token=" + token + "&deviceId=" + deviceId + "&attribute=" + attribute + "&oldValue=" + oldValue + "&newValue=" + newValue;
+            return RequestUrl;
+        }
+
+        public static string GET_DATA_BY_KEY_FILTER(string token, string classify, string filter)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/data/filter?token=" + token + "&Classify=" + classify + "&values=" + filter;
+            return RequestUrl;
+        }
+        public static string GET_DATA_BY_CLASSIFY_TIME(string token, string classify, int fromUnix, int toUnix)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/data?token=" + token + "&Classify=" + classify +
+                                "&fromUnix=" + fromUnix.ToString() + "&toUnix=" + toUnix.ToString();
+            return RequestUrl;
+        }
         public static string GET_DEVICES_MASTER_DATA(string token)
         {
             var url = "http://" + SERVER_IP + "/api/Masterdata/Masterdata?Token=" + token;
@@ -208,6 +269,14 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+        public static string DELETE_DEVICE(int deviceId, string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/IotDevice/" + deviceId.ToString() + "?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
 
         public static string POST_CREATE_NEW_DEVICE(string dataSource, string deviceName, string capabilitie, int? roomId, string token)
         {
@@ -219,9 +288,55 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
+        public static string POST_UPDATE_DEVICE(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/IotDevice/UpdateAll?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+
+        public static string GET_DS4_INTERLOCK(string DS4_IP)
+        {
+            return "http://" + DS4_IP + "/interlock";
+        }
+        public static string POST_DS4_INTERLOCK(string DS4_IP)
+        {
+            return "http://" + DS4_IP + "/interlock";
+        }
+
+        public static string POST_DS4_TEMP_LIMIT(string DS4_IP)
+        {
+            return "http://" + DS4_IP + "/templimit";
+        }
+        public static string GET_DS4_TEMP_LIMIT(string DS4_IP)
+        {
+            return "http://" + DS4_IP + "/templimit";
+        }
+        public static string GET_DS4_INPUT(string DS4_IP)
+        {
+            return "http://" + DS4_IP + "/input";
+        }
+
+        //public static string GET_POWERTAG_METERINSTANCE()
+        //{
+        //    return SERVER_POWERTAG + "/rsa1/MeterInstantData";
+        //}
+
         public static string GET_USER_SCENES(string token)
         {
             var url = "http://" + SERVER_IP + "/api/User/Scenes?Token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+
+        public static string GET_USER_SCENES_2(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/GlobalScenes?Token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 url += "&ClientServer=" + CLIENT_SERVER;
@@ -277,6 +392,23 @@ namespace SmartRetail.Resources
         public static string POST_UPDATE_SCHEDULE(string token)
         {
             var url = "http://" + SERVER_IP + "/api/GlobalSchedule/Update?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+
+        public static string POST_INSERT_SCENES(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/GlobalScenes/Insert?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                url += "&ClientServer=" + CLIENT_SERVER;
+            return url;
+        }
+        public static string POST_UPDATE_SCENES(string token)
+        {
+            var url = "http://" + SERVER_IP + "/api/GlobalScenes/Update?token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 url += "&ClientServer=" + CLIENT_SERVER;
@@ -346,18 +478,9 @@ namespace SmartRetail.Resources
             return RequestUrl;
         }
 
-        public static string POST_UPDATE_SCENES(string token)
+        public static string DELETE_SCENES(int id, string token)
         {
-            string RequestUrl = "http://" + SERVER_IP + "/api/User/UpdateScenes?token=" + token;
-
-            if (CLIENT_SERVER.Trim() != "")
-                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
-            return RequestUrl;
-        }
-
-        public static string DELETE_SCENES(string id, string token)
-        {
-            string RequestUrl = "http://" + SERVER_IP + "/api/User/Scenes?id=" + id + "&token=" + token;
+            string RequestUrl = "http://" + SERVER_IP + "/api/GlobalScenes/" + id.ToString() + "?token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
@@ -400,7 +523,7 @@ namespace SmartRetail.Resources
         }
         public static string GET_DATA_LOG(string token, int fromTime, int deviceId, int toTime)
         {
-            string RequestUrl = "http://" + SERVER_IP + "/api/datalog?fromTime=" + fromTime.ToString() + "&deviceId" + deviceId.ToString() + "&toTime=" + toTime.ToString() + "&" + token;
+            string RequestUrl = "http://" + SERVER_IP + "/api/datalog?fromTime=" + fromTime.ToString() + "&deviceId=" + deviceId.ToString() + "&toTime=" + toTime.ToString() + "&Token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
@@ -471,7 +594,38 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+        public static string GET_AREA_LIST(string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/All?token=" + token;
 
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
+        public static string DELETE_AREA(int Id, string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/" + Id.ToString() + "?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
+        public static string POST_INSERT_AREA(string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/Add?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
+        public static string PUT_UPDATE_AREA(string token)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/area/Update?token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
         public static string GET_ALL_SOURCE(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datasource?token=" + token;
@@ -538,6 +692,14 @@ namespace SmartRetail.Resources
             return RequestUrl;
         }
 
+        public static string GET_DATA_BY_KEY_VALUE(string token, string classify, string key)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/data/value?token=" + token + "&Classify=" + classify + "&Key=" + key;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
         public static string GET_DATA_BY_ID(string token, string id)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data/" + id + "?token=" + token;

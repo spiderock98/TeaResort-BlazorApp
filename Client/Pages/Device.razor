@@ -1,29 +1,31 @@
-﻿@page "/device"
-@inject NavigationManager uriHelper
+﻿@page "/ac"
+@inject NavigationManager NavHelper
 @using BlazorDateRangePicker
 @using Helper
 @inject IJSRuntime JSHelper
 @using SmartRetail.Shared
-@using SmartRetail.Services
+@using SmartRetail.Client.Services
 @using Share.Models
 @using System.Collections
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavHelper
 @using Newtonsoft.Json
+@inject ISnackbar Snackbar
+@using System.Timers
+@implements IDisposable
+
 
 <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
-                    <h1 style="font-size:50px;">AC Device Listing</h1>
+                    <h1 style="font-size:50px;">Air Cool Listing</h1>
                 </div>
-            </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
+            </div>
+        </div>
     </section>
-    <!-- /.content-header -->
-    <!-- Main content -->
+
     <section class="content">
         <div class="container-fluid">
 
@@ -33,10 +35,8 @@
                         <div class="col-10">
                             <div class="tab-content">
 
-                                @* ALL DEVICES *@
-                                <div class="tab-pane fade" id="vert-tabs-right-all" role="tabpanel">
-
-
+                                @* ALL AIRCOOLs *@
+                                <div class="tab-pane fade show active" id="vert-tabs-right-all" role="tabpanel">
                                     <div class="row">
                                         <div class="form-group col-4">
                                             <label>
@@ -46,18 +46,14 @@
                                             <div class="input-group ">
                                                 <select title="-- Select --"
                                                         data-style="btn-light"
-                                                        class="form-control selectpicker">
-                                                    <option>TP. Hồ Chí Minh</option>
-                                                    <option>Hà Nội</option>
-                                                    <option>Hải Phòng</option>
-                                                    <option>Đà Nẵng</option>
-                                                    <option>Hội An</option>
-                                                    <option>Nha Trang</option>
+                                                        id="slFilterArea"
+                                                        class="form-control selectpicker"
+                                                        @onchange=@(() => { LayoutFilterSelection(LayoutAreaEnum.Area); })>
+                                                    @foreach (var _area in LstAllArea)
+                                                    {
+                                                        <option value="@_area.Id">@_area.Name</option>
+                                                    }
                                                 </select>
-
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-info" type="button">Show Tab</button>
-                                                </div>
                                             </div>
                                         </div>
 
@@ -67,22 +63,18 @@
                                                 Zone
                                             </label>
                                             <div class="input-group ">
-                                                <select @ref="elCurrentSingleSelectBox"
-                                                        @onchange=@(() => { LayoutFilterSelection(LayoutAreaEnum.Zone); })
+                                                <select @onchange=@(() => { LayoutFilterSelection(LayoutAreaEnum.Zone); })
                                                         title="-- Select --"
+                                                        id="slFilterZone"
                                                         data-style="btn-light"
                                                         class="form-control selectpicker">
                                                     @{
-                                                        foreach (var it in LstZone)
+                                                        foreach (var it in LstFilterZone)
                                                         {
                                                             <option value="@it.Id">@it.Name</option>
                                                         }
                                                     }
                                                 </select>
-
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-info" type="button">Show Tab</button>
-                                                </div>
                                             </div>
                                         </div>
 
@@ -92,143 +84,292 @@
                                                 Room
                                             </label>
                                             <div class="input-group ">
-                                                <select @ref="elCurrentSingleSelectBox"
-                                                        @onchange=@(() => { LayoutFilterSelection(LayoutAreaEnum.Room); })
+                                                <select @onchange=@(() => { LayoutFilterSelection(LayoutAreaEnum.Room); })
                                                         title="-- Select --"
+                                                        id="slFilterRoom"
                                                         data-style="btn-light"
                                                         class="form-control selectpicker">
                                                     @{
-                                                        foreach (var it in LstSection)
+                                                        foreach (var it in LstFilterSection)
                                                         {
-                                                            <option value="@it.Id">@it.Name</option>
+
+                                                            var numOfDv = LstDevice.Where(r => r.SectionId == it.Id).Count();
+                                                            <option data-subtext="@numOfDv" value="@it.Id">
+                                                                @it.Name
+                                                            </option>
                                                         }
                                                     }
                                                 </select>
-
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-info" type="button">Show Tab</button>
-                                                </div>
                                             </div>
+                                        </div>
+
+                                        <div class="form-group col-6">
+                                            <label>
+                                                <i class="fas fa-store"></i>
+                                                Device Type
+                                            </label>
+                                            <div class="input-group">
+                                                <select @onchange=@(() => { LayoutFilterSelection(LayoutAreaEnum.DeviceType); })
+                                                        title="-- Select --"
+                                                        id="slFilterDvType"
+                                                        data-style="btn-light"
+                                                        class="form-control selectpicker">
+                                                    <option selected="selected" value="default">All (Default)</option>
+                                                    @{
+                                                        foreach (var it in LstAllDeviceType)
+                                                        {
+                                                            <option value="@it.Name">@it.Name</option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group col-6">
+                                            <label>
+                                                <i class="fas fa-store"></i>
+                                                Gateway
+                                            </label>
+                                            <div class="input-group">
+                                                <select @onchange=@(() => { LayoutFilterSelection(LayoutAreaEnum.Gateway); })
+                                                        title="-- Select --"
+                                                        id="slFilterDvType"
+                                                        data-style="btn-light"
+                                                        class="form-control selectpicker">
+                                                    <option selected="selected" value="default">All (Default)</option>
+                                                    @{
+                                                        foreach (var it in LstAllDataSource.Where(r => r.SourceType == "SVMDS4"))
+                                                        {
+                                                            @*var gatewayName = it.Para.GetValueOrDefault("Gateway");
+                                                    if (string.IsNullOrEmpty(gatewayName)) gatewayName = it.Para.GetValueOrDefault("IP");
+                                                    <option value="@it.ID">@gatewayName</option>*@
+                                                            <option value="@it.ID">@string.Format("[{0}] {1}", it.Para.GetValueOrDefault("Gateway"), it.Name)</option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <button class="btn btn-block btn-outline-info"
+                                                    @onclick=@(() => { ShowAllDevice(true); })>
+                                                Show All Devices
+                                            </button>
                                         </div>
                                     </div>
 
 
+                                    @*<MudTable Items=@((isFilterDvType_ALL ?  crLstDvInAllSection.Where(r => r.DeviceType == "AC") : crLstDvInAllSection.Where(r=>r.DeviceType == crDvTypeFilterType).Where(r => r.DeviceType == "AC")))
+                                    @ref="MainTable"
+                                    Dense="true"
+                                    Hover="true"
+                                    Filter="new Func<DeviceModel, bool>(FilterFunc)" >*@
 
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr class="text-center">
-                                                    <th></th>
-                                                    <th>Name</th>
-                                                    <th>Model</th>
-                                                    <th>Set Temp.</th>
-                                                    <th>Sensor Temp.</th>
-                                                    <th>Mode</th>
-                                                    <th>Fan</th>
-                                                    <th>Angle</th>
-                                                    <th>Status</th>
-                                                    <th>Schedule</th>
-                                                    <th>Setting</th>
-                                                    <th>ON/OFF</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
+                                    <MudTable Hover=true
+                                              Elevation="0"
+                                              ServerData="@(new Func<TableState, Task<TableData<DeviceModel>>>(ServerReload))"
+                                              @ref="MainTable">
+                                        <ToolBarContent>
+                                            @*<MudText Typo="Typo.h5">List All Devices</MudText>*@
+                                            @*<MudButton Variant="Variant.Outlined"
+                                            Color="Color.Info"
+                                            Size="Size.Small"
+                                            id="btnRefreshDataTable"
+                                            Class="ml-2"
+                                            OnClick="RefreshDataTable"
+                                            EndIcon="@Icons.Material.Filled.Refresh">
+                                            Refresh
+                                            </MudButton>*@
 
-                                                @foreach (var dv in LstDevice)
-                                                {
-                                                    if (dv.DeviceType == "AC")
-                                                    {
-                                                        <tr class="text-center">
-                                                            <td>
-                                                                <div class="custom-control custom-checkbox">
-                                                                    <input class="custom-control-input custom-control-input-success" type="checkbox"
-                                                                           id="cbSelectDevice0">
-                                                                    <label for="cbSelectDevice0" class="custom-control-label"></label>
-                                                                </div>
-                                                            </td>
-                                                            <td>@dv.Id - @dv.Name</td>
-                                                            <td>@dv.Capabilitie - @dv.DeviceType</td>
-                                                            <td>@dv.Status["SetTemp"]</td>
-                                                            <td>@dv.Status["RoomTemp"]</td>
-                                                            <td>@dv.Status["itmACMode"]</td>
-                                                            <td>@dv.Status["FanSpeed"]</td>
-                                                            <td>@dv.Status["FanDirect"]</td>
-                                                            <td>@dv.Status["ACStatus"]</td>
-                                                            <td>
-                                                                <button class="btn"
-                                                                        type="button"
-                                                                        data-toggle="modal"
-                                                                        data-target="#mdEditSchedule"
-                                                                        @onclick=@(() => { PreEditScheduleRoom(dv); })>
-                                                                    <i class="fas fa-calendar-alt"></i>
-                                                                </button>
-                                                            </td>
-                                                            <td>
-                                                                <button class="btn"
-                                                                        type="button"
-                                                                        data-toggle="modal"
-                                                                        data-target="#mdEditDevice"
-                                                                        @onclick=@(() => { PreEditDeviceAll(dv); })>
-                                                                    <i class="fas fa-cog"></i>
-                                                                </button>
-                                                            </td>
-                                                            <td>
-                                                                <div class="form-group">
-                                                                    <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                                        <input type="checkbox"
-                                                                               class="custom-control-input"
-                                                                               checked="@(dv.Status["ACPower"]=="On" ? true : false)"
-                                                                               id="swACPower-@dv.Id"
-                                                                               @onchange=@((e)=> { toggleACPowerHandle(bool.Parse(e.Value.ToString()), dv); })>
-                                                                        <label class="custom-control-label" for="swACPower-@dv.Id"></label>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
+                                            <MudSpacer />
+                                            @*<MudTextField @bind-Value="mudFilterString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>*@
+                                            @*<MudTextField T="string"
+                                            ValueChanged="@(s=>OnTableSearch(s))"
+                                            Placeholder="Search"
+                                            Adornment="Adornment.Start"
+                                            AdornmentIcon="@Icons.Material.Filled.Search"
+                                            IconSize="Size.Medium"
+                                            Class="mt-0">
+                                            </MudTextField>*@
+                                        </ToolBarContent>
 
-                                                        </tr>
-                                                    }
-                                                }
+                                        <HeaderContent>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel T="DeviceModel" SortLabel="No">No.</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="Name" T="DeviceModel">NAME</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel T="DeviceModel">GATEWAY</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel T="DeviceModel">MODEL</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="SetTemp" T="DeviceModel">SET TEMP.</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="RoomTemp" T="DeviceModel">ROOM TEMP.</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="ACMode" T="DeviceModel">MODE</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="FanSpeed" T="DeviceModel">FAN</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="FanDirect" T="DeviceModel">ANGLE</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="ACStatus" T="DeviceModel">STATUS</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="ErrorCode" T="DeviceModel">ERROR CODE</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="ACPower" T="DeviceModel">ON/OFF</MudTableSortLabel></MudTh>
+                                            <MudTh Style="text-align:center;"></MudTh>
+                                        </HeaderContent>
 
-                                            </tbody>
-                                        </table>
-                                    </div>
+
+                                        <RowTemplate>
+                                            <MudTd Style="text-align:center;">@context.Id</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Name</MudTd>
+                                            <MudTd Style="text-align:center;">@LstAllDataSource.Where(r => r.ID == context.DataSourceId).FirstOrDefault()?.Name</MudTd>
+                                            <MudTd Style="text-align:center;">[@context.Capabilitie] @context.DeviceType</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("SetTemp")℃</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("RoomTemp")℃</MudTd>
+                                            @*<MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("ACMode")</MudTd>*@
+                                            <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault(context.Capabilitie == "itmVRV" ? "itmACMode" : "ACMode")</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("FanSpeed")</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("FanDirect")</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("ACStatus")</MudTd>
+                                            <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("ErrorCode")</MudTd>
+                                            <MudTd>
+                                                @*<MudSwitch Checked=@(@context.Status["ACPower"] == "On" ? true : false)
+                                                Color="Color.Info"
+                                                ThumbIcon="@((context.Status["ACPower"])=="On" ? Icons.Material.Filled.Done : Icons.Material.Filled.Close)"
+                                                ThumbIconColor="@((context.Status["ACPower"])=="On" ? Color.Success : Color.Error)"></MudSwitch>*@
+
+                                                <MudToggleIconButton Icon="@Icons.Material.Filled.PowerOff"
+                                                                     Color="@Color.Error"
+                                                                     Title="On"
+                                                                     ToggledIcon="@Icons.Material.Filled.Power"
+                                                                     ToggledColor="@Color.Success"
+                                                                     Toggled=@(@context.Status["ACPower"] == "On" ? true : false)
+                                                                     ToggledTitle="Off"
+                                                                     ToggledChanged=@(() => { toggleACPowerHandle(@context.Status["ACPower"] == "On" ? false : true ,context); }) />
+                                            </MudTd>
+                                            <MudTd Style="text-align:center;">
+
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                               Color="Color.Info"
+                                                               Size="Size.Small"
+                                                               data-toggle="modal"
+                                                               data-target="#mdEditDevice"
+                                                               OnClick=@(() => { PreEditDeviceAll(context); }) />
+
+                                                <MudIconButton Icon="@Icons.Material.Filled.History"
+                                                               Color="Color.Error"
+                                                               Size="Size.Small"
+                                                               Target="_blank"
+                                                               Link="@string.Format("logs?DeviceId={0}&tsStart={1}&tsEnd={2}", context.Id, DateTimeOffset.Now.AddDays(-1).ToUnixTimeSeconds(), DateTimeOffset.Now.ToUnixTimeSeconds())" />
+                                            </MudTd>
+                                        </RowTemplate>
+
+                                        <PagerContent>
+                                            <MudTablePager />
+                                        </PagerContent>
+                                    </MudTable>
+
                                 </div>
-
 
 
 
                                 @* Area Pane *@
-                                <div class="callout callout-danger tab-pane fade" id="vert-tabs-right-area" role="tabpanel">
-                                    <h5>I am a danger callout!</h5>
-                                    <p>
-                                        There is a problem that we need to fix. A wonderful serenity has taken possession of my entire
-                                        soul,
-                                        like these sweet mornings of spring which I enjoy with my whole heart.
-                                    </p>
-                                </div>
-
-                                @* Zone Pane *@
-                                <div class="tab-pane fade show active" id="vert-tabs-right-zone" role="tabpanel">
+                                <div class="tab-pane fade" id="vert-tabs-right-area" role="tabpanel">
                                     <div class="table-responsive">
+
                                         <table class="table table-hover">
                                             <thead>
                                                 <tr class="text-center">
-                                                    <th></th>
+                                                    <th>Id</th>
                                                     <th>Name</th>
                                                     <th>Status</th>
-                                                    <th>Setting</th>
-                                                    <th>ON/OFF ALL DEVICE IN ZONE</th>
+                                                    <th>ON/OFF ALL AIRCOOL IN AREA</th>
+                                                    <th></th>
                                                 </tr>
                                             </thead>
 
                                             <tbody>
-                                                @foreach (var _zone in LstZone)
+                                                @foreach (var _area in LstAllArea)
+                                                {
+                                                    var _lstZoneIdInArea = LstAllZone.Where(r => r.Area == _area.Id).Select(r => r.Id).ToList();
+                                                    var _lstSectionIdInZone = LstAllSection.Where(r => _lstZoneIdInArea.Contains(r.Zone)).Select(r => r.Id).ToList();
+                                                    var _lstDeviceInArea = LstDevice.Where(r => _lstSectionIdInZone.Contains(r.SectionId)).ToList();
+
+                                                    <tr class="text-center">
+                                                        <th>@_area.Id</th>
+                                                        <td>@_area.Name</td>
+                                                        <td>
+                                                            @{
+                                                                var isAnyDeviceDisconnect = _lstDeviceInArea.Select(r => r.IsConnect).Contains(false);
+
+                                                                if (isAnyDeviceDisconnect)
+                                                                {
+                                                                    <div class="text-danger">
+                                                                        <i class="fas fa-exclamation-circle"></i>
+                                                                    </div>
+                                                                }
+                                                                else
+                                                                {
+
+                                                                    <div class="text-success">
+                                                                        <i class="fas fa-check-circle"></i>
+                                                                    </div>
+                                                                }
+                                                            }
+                                                        </td>
+
+                                                        <td>
+                                                            @{
+                                                                var isAnyDvACPowerOFF = _lstDeviceInArea.Select(r => r.Status["ACPower"]).Contains("Off");
+                                                            }
+                                                            <div class="form-group">
+                                                                <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                    <input type="checkbox"
+                                                                       class="custom-control-input"
+                                                                       checked="@(isAnyDvACPowerOFF ? false : true)"
+                                                                       id="swACPowerArea-@_area.Id"
+                                                                       @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInArea, "swACPowerArea-" + _area.Id); })>
+                                                                    <label class="custom-control-label" for="swACPowerArea-@_area.Id"></label>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light dropdown-toggle" role="button" data-toggle="dropdown">
+                                                                    <i class="fas fa-ellipsis-v"></i>
+                                                                </button>
+                                                                <div class="dropdown-menu">
+                                                                    <a class="dropdown-item"
+                                                                   target="_blank"
+                                                                   href="/layout_area?AreaId=@_area.Id">
+                                                                        <i class="fas fa-external-link-alt"></i>
+                                                                        Reference
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+
+                                        </table>
+                                    </div>
+
+                                </div>
+
+                                @* Zone Pane *@
+                                <div class="tab-pane fade " id="vert-tabs-right-zone" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr class="text-center">
+                                                    <th>Id</th>
+                                                    <th>Name</th>
+                                                    <th>Status</th>
+                                                    <th>ON/OFF ALL AIRCOOL IN ZONE</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach (var _zone in LstAllZone)
                                                 {
                                                     var _lstSectionInZone = LstAllSection.Where(r => r.Zone == _zone.Id).ToList();
                                                     var _lstDeviceInZone = LstDevice.Where(r => _lstSectionInZone.Select(x => x.Id).Contains(r.SectionId)).ToList();
 
                                                     <tr class="text-center">
-                                                        <th></th>
+                                                        <th>@_zone.Id</th>
                                                         <td>@_zone.Name</td>
                                                         <td>
                                                             @{
@@ -251,50 +392,56 @@
                                                         </td>
 
                                                         <td>
-                                                            <button class="btn"
-                                                                    type="button"
-                                                                    data-toggle="modal"
-                                                                    data-target="#mdEditDevice"
-                                                                    @onclick=@(() => { PreEditDeviceZone(_zone); })>
-                                                                <i class="fas fa-cog"></i>
-                                                            </button>
-                                                        </td>
-
-                                                        <td>
                                                             @{
                                                                 var isAnyDvACPowerOFF = _lstDeviceInZone.Select(r => r.Status["ACPower"]).Contains("Off");
                                                             }
                                                             <div class="form-group">
                                                                 <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                                     <input type="checkbox"
-                                                                           class="custom-control-input"
-                                                                           checked="@(isAnyDvACPowerOFF ? false : true)"
-                                                                           id="swACPowerZone-@_zone.Id"
-                                                                           @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInZone, "swACPowerZone-" + _zone.Id); })>
+                                                                       class="custom-control-input"
+                                                                       checked="@(isAnyDvACPowerOFF ? false : true)"
+                                                                       id="swACPowerZone-@_zone.Id"
+                                                                       @onchange=@((e)=> { toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInZone, "swACPowerZone-" + _zone.Id); })>
                                                                     <label class="custom-control-label" for="swACPowerZone-@_zone.Id"></label>
                                                                 </div>
                                                             </div>
                                                         </td>
 
+                                                        <td>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light dropdown-toggle" role="button" data-toggle="dropdown">
+                                                                    <i class="fas fa-ellipsis-v"></i>
+                                                                </button>
+                                                                <div class="dropdown-menu">
+                                                                    <a class="dropdown-item"
+                                                                   target="_blank"
+                                                                   href="/layout_zone?ZoneId=@_zone.Id">
+                                                                        <i class="fas fa-external-link-alt"></i>
+                                                                        Reference
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </td>
                                                     </tr>
                                                 }
                                             </tbody>
-
                                         </table>
                                     </div>
                                 </div>
 
+
                                 @* Room Pane *@
                                 <div class="tab-pane fade" id="vert-tabs-right-room" role="tabpanel">
                                     <div class="table-responsive">
+
                                         <table class="table table-hover">
                                             <thead>
                                                 <tr class="text-center">
-                                                    <th></th>
+                                                    <th>Id</th>
                                                     <th>Name</th>
                                                     <th>Status</th>
-                                                    <th>Setting</th>
-                                                    <th>ON/OFF ALL DEVICE IN ROOM</th>
+                                                    <th>ON/OFF ALL AIRCOOL IN ROOM</th>
+                                                    <th></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -304,7 +451,7 @@
                                                     var _lstDeviceInSection = LstDevice.Where(r => r.SectionId == _section.Id).ToList();
 
                                                     <tr class="text-center">
-                                                        <th></th>
+                                                        <th>@_section.Id</th>
                                                         <td>@_section.Name</td>
                                                         <td>
                                                             @{
@@ -327,36 +474,39 @@
                                                         </td>
 
                                                         <td>
-                                                            <button class="btn"
-                                                                    type="button"
-                                                                    data-toggle="modal"
-                                                                    data-target="#mdEditDevice"
-                                                                    @onclick=@(() => { PreEditDeviceSection(_section); })>
-                                                                <i class="fas fa-cog"></i>
-                                                            </button>
-                                                        </td>
-
-                                                        <td>
                                                             @{
                                                                 var isAnyDvACPowerOFF = _lstDeviceInSection.Select(r => r.Status["ACPower"]).Contains("Off");
-                                                                Console.WriteLine(isAnyDvACPowerOFF);
                                                             }
                                                             <div class="form-group">
                                                                 <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                                     <input type="checkbox"
-
-                                                                           class="custom-control-input"
-                                                                           value="@(isAnyDvACPowerOFF ? false : true)"
-                                                                           id="swACPowerSection-@_section.Id"
-                                                                           @onchange=@((e)=> 
-                                                                                       { 
-                                                                                           toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInSection, "swACPowerSection-" + _section.Id); 
-                                                                                       })>
+                                                                       class="custom-control-input"
+                                                                       value="@(isAnyDvACPowerOFF ? false : true)"
+                                                                       id="swACPowerSection-@_section.Id"
+                                                                       @onchange=@((e)=>
+                                                                       {
+                                                                       toggleACPowerGroupHandle(bool.Parse(e.Value.ToString()), _lstDeviceInSection, "swACPowerSection-" + _section.Id);
+                                                                       })>
                                                                     <label class="custom-control-label" for="swACPowerSection-@_section.Id"></label>
                                                                 </div>
                                                             </div>
                                                         </td>
 
+                                                        <td>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light dropdown-toggle" role="button" data-toggle="dropdown">
+                                                                    <i class="fas fa-ellipsis-v"></i>
+                                                                </button>
+                                                                <div class="dropdown-menu">
+                                                                    <a class="dropdown-item"
+                                                                   target="_blank"
+                                                                   href="/layout_room?SectionId=@_section.Id">
+                                                                        <i class="fas fa-external-link-alt"></i>
+                                                                        Reference
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </td>
                                                     </tr>
                                                 }
 
@@ -364,51 +514,50 @@
                                         </table>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
+
                         <div class="col-2">
                             <div class="nav flex-column nav-tabs nav-tabs-right h-100" role="tablist">
-                                <a class="nav-link text-center h5 " data-toggle="pill"
+                                <a class="nav-link text-center h5 active" data-toggle="pill"
+                                   href="#vert-tabs-right-all" role="tab">
+                                    <i class="fas fa-microchip"></i>
+                                    All ACs
+                                </a>
+                                <a class="nav-link text-center h5" data-toggle="pill"
                                    href="#vert-tabs-right-area" role="tab">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    All Area
+                                    All Areas
                                 </a>
-                                <a class="nav-link text-center h5 active" data-toggle="pill"
+                                <a class="nav-link text-center h5 " data-toggle="pill"
                                    href="#vert-tabs-right-zone" role="tab">
                                     <i class="fas fa-city"></i>
-                                    All Zone
+                                    All Zones
                                 </a>
                                 <a class="nav-link text-center h5" data-toggle="pill"
                                    href="#vert-tabs-right-room" role="tab">
                                     <i class="fas fa-store"></i>
-                                    All Room
-                                </a>
-                                <a class="nav-link text-center h5" data-toggle="pill"
-                                   href="#vert-tabs-right-all" role="tab">
-                                    <i class="fas fa-microchip"></i>    
-                                    All Devices
+                                    All Rooms
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- /.card -->
             </div>
 
             <!-- Modal Device Setting -->
-            <div class="modal fade" data-backdrop="static" id="mdEditDevice" tabindex="-1">
+            <div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditDevice" tabindex="-1">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h2 class="modal-title">
-                                Configure Device
+                        <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                            <h1 class="modal-title w-100">
+                                <i class="fas fa-cogs"></i>
+                            </h1>
+                            <h2 class="modal-title w-100">
+                                Configure AC
                                 <span class="badge badge-pill badge-success">[@crEditDeviceAll.Id - @crEditDeviceAll.Name]</span>
+                                Attributes
                             </h2>
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close" @onclick="PreCloseDeviceModal">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
                         </div>
                         <div class="modal-body">
 
@@ -416,142 +565,258 @@
                                   class="needs-validation"
                                   id="formEditDevice"
                                   novalidate>
-                                <div class="row">
-                                    @{
-                                        //foreach (var _attr in LstACAttr)
-                                        foreach (var _dictAttr in crEditDeviceAll.Status)
-                                        {
-                                            var _DetailOfAttr = LstAllAttribute.Where(r => r.Name == _dictAttr.Key).FirstOrDefault();
-                                            if (_DetailOfAttr == null) continue;
-                                            <div class="form-group col-4">
-                                                <label>
-                                                    @_dictAttr.Key
-                                                </label>
-                                                <div class="input-group ">
 
-                                                    @if (_DetailOfAttr.ValueType == SERVER_TYPES.Enum || _DetailOfAttr.ValueType == SERVER_TYPES.Array)
-                                                    {
-                                                        <select title="-- Select --"
-                                                                class="form-control selectpicker"
-                                                                data-style="btn-light"
-                                                                data-live-search="true"
-                                                                required
-                                                                id="@("slEditDevice-" + _dictAttr.Key)"
-                                                                @onchange=@(async () =>
-                                                                            {
-                                                                                var _tmpKeys = await SelectAndBindSingleTextReturn();
-                                                                                if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
-                                                                                {
-                                                                                    crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
-                                                                                }
-                                                                                else
-                                                                                {
-                                                                                    crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
-                                                                                        );
-                                                                                }
-                                                                            })>
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">Room Assignment</legend>
 
-                                                            @foreach (var _valRange in _DetailOfAttr.ValueRange)
-                                                            {
-                                                                <option value="@_valRange">
-                                                                    @_valRange
-                                                                </option>
-                                                            }
-                                                        </select>
-                                                    }
-
-
-                                                    @if (_DetailOfAttr.ValueType == SERVER_TYPES.Double)
-                                                    {
-                                                        string _doubleVal = "";
-                                                        crEditDeviceAll.Status.TryGetValue(_dictAttr.Key, out _doubleVal);
-                                                        <input class="form-control"
-                                                               type="number"
-                                                               value="@_doubleVal"
-                                                               @onchange=@((e) =>
-                                                                           {
-                                                                               var _tmpKeys = e.Value.ToString();
-                                                                               if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
-                                                                                {
-                                                                                    crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
-                                                                                }
-                                                                                else
-                                                                                {
-                                                                                    crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
-                                                                                        );
-                                                                                }
-                                                                           })
-                                                               required
-                                                               step="0.01"
-                                                               min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
-                                                               max="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(1)" />
-                                                    }
-                                                    @if (_DetailOfAttr.ValueType == SERVER_TYPES.String)
-                                                    {
-                                                        string _stringVal = "";
-                                                        crEditDeviceAll.Status.TryGetValue(_dictAttr.Key, out _stringVal);
-                                                        <input class="form-control"
-                                                               type="text"
-                                                               value="@_stringVal"
-                                                               @onchange=@((e) =>
-                                                                           {
-                                                                               var _tmpKeys = e.Value.ToString();
-                                                                               if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
-                                                                                {
-                                                                                    crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
-                                                                                }
-                                                                                else
-                                                                                {
-                                                                                    crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
-                                                                                        );
-                                                                                }
-                                                                           }) />
-                                                    }
-                                                    else if (_DetailOfAttr.ValueType == SERVER_TYPES.Integer)
-                                                    {
-                                                        string _intergerVal = "";
-                                                        crEditDeviceAll.Status.TryGetValue(_dictAttr.Key, out _intergerVal);
-                                                        <input class="form-control"
-                                                               type="number"
-                                                               value="@_intergerVal"
-                                                               @onchange=@((e) =>
-                                                                           {
-                                                                               var _tmpKeys = e.Value.ToString();
-                                                                               if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
-                                                                                {
-                                                                                    crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
-                                                                                }
-                                                                                else
-                                                                                {
-                                                                                    crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
-                                                                                        );
-                                                                                }
-                                                                           })
-                                                               step="1"
-                                                               required
-                                                               min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
-                                                               max="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(1)" />
-                                                    }
-
-                                                </div>
+                                    <div class="row">
+                                        <div class="input-group mb-3 col-12">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-id-card"></i>
+                                                </span>
                                             </div>
+                                            <input class="form-control"
+                                                   type="text"
+                                                   @bind-value="@crEditDeviceAll.Name"
+                                                   placeholder="AC Name"
+                                                   required />
+                                        </div>
+
+                                        <div class="input-group mb-3 col-12">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-paper-plane"></i>
+                                                </span>
+                                            </div>
+                                            <select @bind="crEditDeviceAll.SectionId"
+                                                    id="slEditAssigned"
+                                                    data-style="btn-light"
+                                                    data-live-search="true"
+                                                    class="form-control selectpicker"
+                                                    required>
+                                                <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                                @foreach (var _sec in LstAllSection)
+                                                {
+                                                    <option value="@_sec.Id">@_sec.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">AC Attributes</legend>
+
+                                    <div class="row">
+                                        @{
+                                            foreach (var _dictAttr in crEditDeviceAll.Status)
+                                            {
+                                                // hard code for TeaResort
+                                                if (_dictAttr.Key == "EnableRomTemp" || _dictAttr.Key == "FanDirect") continue;
+                                                var _DetailOfAttr = LstAllAttribute.Where(r => r.Name == _dictAttr.Key && r.IsReadOnly == false).FirstOrDefault();
+                                                if (_DetailOfAttr == null) continue;
+                                                <div class="form-group col-4">
+                                                    <label>
+                                                        @_dictAttr.Key
+                                                    </label>
+                                                    <div class="input-group ">
+
+                                                        @if (_DetailOfAttr.ValueType == SERVER_TYPES.Enum || _DetailOfAttr.ValueType == SERVER_TYPES.Array)
+                                                        {
+                                                            <select title="-- Select --"
+                                                        class="form-control selectpicker"
+                                                        data-style="btn-light"
+                                                        data-live-search="true"
+                                                            required
+                                                        id="@("slEditDevice-" + _dictAttr.Key)"
+                                                            @onchange=@(async () =>
+                                                        {
+                                                        var _tmpKeys = await SelectAndBindSingleTextReturn();
+                                                        if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
+                                                        {
+                                                        crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
+                                                        }
+                                                        else
+                                                        {
+                                                        crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
+                                                        );
+                                                        }
+                                                        })>
+
+                                                                @foreach (var _valRange in _DetailOfAttr.ValueRange)
+                                                                {
+                                                                    <option value="@_valRange">
+                                                                        @_valRange
+                                                                    </option>
+                                                                }
+                                                            </select>
+                                                        }
+
+
+                                                        @if (_DetailOfAttr.ValueType == SERVER_TYPES.Double)
+                                                        {
+                                                            string _doubleVal = "";
+                                                            crEditDeviceAll.Status.TryGetValue(_dictAttr.Key, out _doubleVal);
+                                                            <input class="form-control"
+                                                       type="number"
+                                                       value="@_doubleVal"
+                                                           @onchange=@((e) =>
+                                                       {
+                                                       var _tmpKeys = e.Value.ToString();
+                                                       if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
+                                                       {
+                                                       crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
+                                                       }
+                                                       else
+                                                       {
+                                                       crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
+                                                       );
+                                                       }
+                                                       })
+                                                           required
+                                                       step="0.01"
+                                                       min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
+                                                       max="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(1)" />
+                                                        }
+                                                        @if (_DetailOfAttr.ValueType == SERVER_TYPES.String)
+                                                        {
+                                                            string _stringVal = "";
+                                                            crEditDeviceAll.Status.TryGetValue(_dictAttr.Key, out _stringVal);
+                                                            <input class="form-control"
+                                                       type="text"
+                                                       value="@_stringVal"
+                                                           @onchange=@((e) =>
+                                                       {
+                                                       var _tmpKeys = e.Value.ToString();
+                                                       if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
+                                                       {
+                                                       crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
+                                                       }
+                                                       else
+                                                       {
+                                                       crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
+                                                       );
+                                                       }
+                                                       }) />
+                                                        }
+                                                        else if (_DetailOfAttr.ValueType == SERVER_TYPES.Integer)
+                                                        {
+                                                            string _intergerVal = "";
+                                                            crEditDeviceAll.Status.TryGetValue(_dictAttr.Key, out _intergerVal);
+                                                            <input class="form-control"
+                                                       type="number"
+                                                       value="@_intergerVal"
+                                                           @onchange=@((e) =>
+                                                       {
+                                                       var _tmpKeys = e.Value.ToString();
+                                                       if (crDictDvAttrPUT.ContainsKey(_dictAttr.Key))
+                                                       {
+                                                       crDictDvAttrPUT[_dictAttr.Key] = _tmpKeys;
+                                                       }
+                                                       else
+                                                       {
+                                                       crDictDvAttrPUT.Add(_dictAttr.Key, _tmpKeys
+                                                       );
+                                                       }
+                                                       })
+                                                       step="1"
+                                                           required
+                                                       min="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(0)"
+                                                       max="@_DetailOfAttr.ValueRange.FirstOrDefault().Split(":").ToList().ElementAt(1)" />
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
                                         }
 
-                                    }
-                                </div>
-                            </form>
+                                    </div>
+                                </fieldset>
 
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">Schedule Settings</legend>
+
+                                    <div class="row">
+                                        <div class="form-group col-12">
+                                            @if (LstScheduleOfCrDevice.Count > 0)
+                                            {
+                                                @foreach (var _schedule in LstScheduleOfCrDevice)
+                                                {
+                                                    <div class="alert alert-light d-flex" role="alert">
+                                                        <div class="flex-grow-1">
+                                                            <span class="badge badge-success">
+                                                                <h5>@_schedule.Name</h5>
+                                                            </span>
+                                                        </div>
+                                                        <a class="btn btn-success ml-1"
+                                                   type="button"
+                                                   target="_blank"
+                                                   href="/schedule?scheduleId=@_schedule.Id&deviceId=@crEditDeviceAll.Id">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </a>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div class="alert alert-info h3" role="alert">
+                                                    Not assigned to any Schedule yet
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="border p-2">
+                                    <legend class="w-auto">Interlock Settings</legend>
+
+                                    <div class="row">
+                                        <div class="form-group col-12">
+                                            @if (LstSceneOfCrDevice.Count > 0)
+                                            {
+                                                @foreach (var _scene in LstSceneOfCrDevice)
+                                                {
+                                                    <div class="alert alert-light d-flex" role="alert">
+                                                        <div class="flex-grow-1">
+                                                            <span class="badge badge-success">
+                                                                <h5>@_scene.Name</h5>
+                                                            </span>
+                                                        </div>
+                                                        <a class="btn btn-success ml-1"
+                                                   type="button"
+                                                   target="_blank"
+                                                   href="/interlock?sceneId=@_scene.Id&deviceId=@crEditDeviceAll.Id">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </a>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div class="alert alert-info h3" role="alert">
+                                                    Not assigned to any Interlock yet
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </form>
                         </div>
-                        <div class="modal-footer">
+                        <div class="modal-footer d-flex justify-content-center">
                             <button type="button" class="btn btn-secondary"
                                     data-dismiss="modal"
                                     @onclick="PreCloseDeviceModal">
                                 Close
                             </button>
                             <button type="button"
+                                    class="btn btn-danger"
+                                    @onclick=@(() => { FormDeleteDeviceHandle(); })>
+                                Delete
+                            </button>
+                            <button type="button"
                                     class="btn btn-primary"
                                     @onclick=@(() => { FormEditDeviceHandle(); })>
-                                Save Change
+                                Update
                             </button>
                         </div>
                     </div>
@@ -559,164 +824,256 @@
             </div>
 
             <!-- Modal Edit Schedule -->
-            <div class="modal fade" data-backdrop="static" id="mdEditSchedule" tabindex="-1">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2 class="modal-title">
-                                Schedule Profile Of Device
-                                <span class="badge badge-pill badge-success">[@crEditDeviceAll.Id - @crEditDeviceAll.Name]</span>
-                            </h2>
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-
-                            <div id="accordion">
-
-                                <form @ref="elFormEditSchedule"
-                                      class="needs-validation"
-                                      id="formEditSchedule"
-                                      novalidate>
-
-                                    @foreach (var _profile in LstScheduleOfCrDeviceRoom)
-                                    {
-                                        <div class="card card-light">
-                                            <div class="card-header">
-                                                <h4 class="card-title w-100 d-flex">
-                                                    <a class="d-block w-100 flex-grow-1" data-toggle="collapse" href="#collapse-@_profile.Id">
-                                                        <span class="badge badge-pill badge-info ">
-                                                            <h4>
-                                                                @_profile.Name
-                                                            </h4>
-                                                        </span>
-                                                    </a>
-
-                                                    <a class="btn btn-primary mr-auto"
-                                                       href="/schedule?scheduleId=@_profile.Id&deviceId=@crEditDeviceAll.Id"
-                                                       target="_blank">
-                                                        <i class="fas fa-external-link-alt"></i>
-                                                    </a>
-                                                </h4>
-                                            </div>
-                                            <div id="collapse-@_profile.Id" class="collapse" data-parent="#accordion">
-                                                <div class="card-body">
-
-
-
-                                                    <fieldset class="border p-2">
-                                                        <legend class="w-auto">Time Settings</legend>
-
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fas fa-clock"></i>
-                                                                Time Range
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <DateRangePicker class="form-control"
-                                                                                 SingleDatePicker="true"
-                                                                                 TimePicker="true"
-                                                                                 TimePicker24Hour="true"
-                                                                                 DateFormat="dddd dd/MM/yyyy - hh:mm tt"
-                                                                                 @bind-StartDate="DictDatetimeBinding[_profile.Id.ToString()]"
-                                                                                 OnRangeSelect=@(() => { DateRangeBinding(FormAction.Edit, _profile); })
-                                                                                 required />
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fab fa-slack-hash"></i>
-                                                                Schedule Type
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <select @ref="elCurrentSingleSelectBox"
-                                                                        @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(); _profile.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
-                                                                        title="-- Select --"
-                                                                        data-style="btn-light"
-                                                                        class="form-control selectpicker"
-                                                                        id="slEditScheduleType-@_profile.Id"
-                                                                        required>
-                                                                    @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
-                                                                    {
-                                                                        var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
-                                                                        var key = (int)obj;
-                                                                        <option value="@key">@value</option>
-                                                                    }
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fas fa-redo"></i>
-                                                                Repeats
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <select title="-- Select --"
-                                                                        data-style="btn-light"
-                                                                        class="form-control selectpicker"
-                                                                        @ref="elCurrentMutipleSelectBox"
-                                                                        @onchange=@(()=> { SelectAndBindMulti(FormAction.Add, _profile); })
-                                                                        id="slEditRepeat-@_profile.Id"
-                                                                        multiple
-                                                                        required>
-                                                                    @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
-                                                                    {
-                                                                        var value = Enum.GetName(typeof(DayOfWeek), obj);
-                                                                        var key = (int)obj;
-                                                                        <option value="@key">@value</option>
-                                                                    }
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-                                                    </fieldset>
-
-                                                    <fieldset class="    p-2">
-                                                        <legend class="w-auto">Attribute Trigger</legend>
-
-                                                        @*@if (crEditSchedule.Actions == )*@
-
-                                                        <div class="form-group row">
-                                                            <label class="col-sm-2 col-form-label">
-                                                                <i class="fas fa-user-edit"></i>
-                                                                Custom JavaScript
-                                                            </label>
-                                                            <div class="col-sm-10">
-                                                                <textarea id="tbEditJsAction"
-                                                                          class="summernote"></textarea>
-                                                            </div>
-                                                        </div>
-
-
-                                                    </fieldset>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                </form>
-
-
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"
-                                    data-dismiss="modal">
-                                Close
-                            </button>
-                            <button type="button"
-                                    class="btn btn-primary"
-                                    @onclick=@(() => { FormEditScheduleHandle(); })>
-                                Save
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            @*<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditSchedule" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+            <div class="modal-header">
+            <h2 class="modal-title">
+            Schedule Profile Of Device
+            <span class="badge badge-pill badge-success">[@crEditDeviceAll.Id - @crEditDeviceAll.Name]</span>
+            </h2>
+            <button type="button" class="close" data-dismiss="modal"
+            aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
             </div>
+            <div class="modal-body">
+
+            @if (LstScheduleOfCrDevice.Count > 0)
+            {
+            foreach (var _schedule in LstScheduleOfCrDevice)
+            {
+            <div class="alert alert-light d-flex" role="alert">
+            <div class="flex-grow-1">
+            <span class="badge badge-success">
+            <h5>@_schedule.Name</h5>
+            </span>
+            </div>
+            <a class="btn btn-success ml-1"
+            type="button"
+            target="_blank"
+            href="/schedule?scheduleId=@_schedule.Id&deviceId=@crEditDeviceAll.Id">
+            <i class="fas fa-external-link-alt"></i>
+            </a>
+            </div>
+            }
+
+            }
+
+
+            <div id="accordion">
+            @if (LstScheduleOfCrDevice.Count > 0)
+            {
+            <form @ref="elFormEditSchedule"
+            class="needs-validation"
+            id="formEditSchedule"
+            novalidate>
+
+            @foreach (var _profile in LstScheduleOfCrDevice)
+            {
+            <div class="card card-light">
+            <div class="card-header">
+            <h4 class="card-title w-100 d-flex">
+            <a class="d-block w-100 flex-grow-1" data-toggle="collapse" href="#collapse-@_profile.Id">
+            <span class="badge badge-pill badge-info ">
+            <h4>
+            @_profile.Name
+            </h4>
+            </span>
+            </a>
+
+            <a class="btn btn-primary mr-auto"
+            href="/schedule?scheduleId=@_profile.Id&deviceId=@crEditDeviceAll.Id"
+            target="_blank">
+            <i class="fas fa-external-link-alt"></i>
+            </a>
+            </h4>
+            </div>
+            <div id="collapse-@_profile.Id" class="collapse" data-parent="#accordion">
+            <div class="card-body">
+
+
+            <fieldset class="border p-2">
+            <legend class="w-auto">Time Settings</legend>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fas fa-clock"></i>
+            Time Range
+            </label>
+            <div class="col-sm-10">
+            <DateRangePicker class="form-control"
+            SingleDatePicker="true"
+            TimePicker="true"
+            TimePicker24Hour="true"
+            DateFormat="dddd dd/MM/yyyy - hh:mm tt"
+            @bind-StartDate="DictDatetimeBinding[_profile.Id.ToString()]"
+            OnRangeSelect=@(() => { DateRangeBinding(FormAction.Edit, _profile); })
+            required />
+            </div>
+            </div>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fab fa-slack-hash"></i>
+            Schedule Type
+            </label>
+            <div class="col-sm-10">
+            <select @ref="elCurrentSingleSelectBox"
+            @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(); _profile.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
+            title="-- Select --"
+            data-style="btn-light"
+            class="form-control selectpicker"
+            id="slEditScheduleType-@_profile.Id"
+            required>
+            @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
+            {
+            var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
+            var key = (int)obj;
+            <option value="@key">@value</option>
+            }
+            </select>
+            </div>
+            </div>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fas fa-redo"></i>
+            Repeats
+            </label>
+            <div class="col-sm-10">
+            <select title="-- Select --"
+            data-style="btn-light"
+            class="form-control selectpicker"
+            @ref="elCurrentMutipleSelectBox"
+            @onchange=@(()=> { SelectAndBindMulti(FormAction.Add, _profile); })
+            id="slEditRepeat-@_profile.Id"
+            multiple
+            required>
+            @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
+            {
+            var value = Enum.GetName(typeof(DayOfWeek), obj);
+            var key = (int)obj;
+            <option value="@key">@value</option>
+            }
+            </select>
+            </div>
+            </div>
+
+            </fieldset>
+
+            <fieldset class="    p-2">
+            <legend class="w-auto">Attribute Trigger</legend>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fas fa-user-edit"></i>
+            Custom JavaScript
+            </label>
+            <div class="col-sm-10">
+            <textarea id="tbEditJsAction"
+            class="summernote"></textarea>
+            </div>
+            </div>
+
+            </fieldset>
+
+            </div>
+            </div>
+            </div>
+            }
+            </form>
+            }
+            else
+            {
+            <div class="alert alert-info h3" role="alert">
+            Not assigned to any Schedule yet
+            </div>
+            }
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary"
+            data-dismiss="modal">
+            Close
+            </button>
+            <button type="button"
+            class="btn btn-primary"
+            @onclick=@(() => { FormEditScheduleHandle(); })>
+            Save
+            </button>
+            </div>
+            </div>
+            </div>
+            </div>*@
+
+            <!-- Modal Edit Assignment -->
+            @*<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditAssignment" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered justify-content-center ">
+            <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+            <h1 class="modal-title w-100">
+            <i class="fas fa-cogs"></i>
+            </h1>
+            <h2 class="modal-title w-100">
+            Configure AC Properties
+            </h2>
+            </div>
+            <div class="modal-body">
+            <form @ref="elFormEditAssignment">
+            <div class="row">
+            <div class="input-group mb-3 col-12">
+            <div class="input-group-prepend">
+            <span class="input-group-text">
+            <i class="fas fa-id-card"></i>
+            </span>
+            </div>
+            <input class="form-control"
+            type="text"
+            @bind-value="@crEditDeviceAll.Name"
+            placeholder="AC Name"
+            required />
+            </div>
+
+            <div class="input-group mb-3 col-12">
+            <div class="input-group-prepend">
+            <span class="input-group-text">
+            <i class="fas fa-paper-plane"></i>
+            </span>
+            </div>
+            <select @bind="crEditDeviceAll.SectionId"
+            id="slEditAssigned"
+            data-style="btn-light"
+            data-live-search="true"
+            class="form-control selectpicker"
+            required>
+            <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+            @foreach (var _sec in LstAllSection)
+            {
+            <option value="@_sec.Id">@_sec.Name</option>
+            }
+            </select>
+            </div>
+            </div>
+            </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+            <button type="button"
+            class="btn btn-outline-info"
+            @onclick="PreCloseDeviceModal"
+            data-dismiss="modal">
+            Cancle
+            </button>
+            <button type="button"
+            class="btn btn-info"
+            @onclick=@(()=> { ModalAssignmentSubmit(); })>
+            Save Change
+            </button>
+            </div>
+            </div>
+            </div>
+            </div>*@
+
 
             @{
                 if (flagForceSelectInject)
@@ -734,23 +1091,33 @@
 @code {
     enum TabPane { All, Area, Zone, Room }
     bool flagForceSelectInject = false;
+    bool isFilterDvType_ALL = true;
+    bool isFilterGateway_ALL = true;
+    string crDvTypeFilterType = string.Empty;
+    string crGatewayFilterType = string.Empty;
 
     GlobalScheduleModel crEditSchedule = new GlobalScheduleModel();
     DeviceModel crEditDeviceAll = new DeviceModel() { Status = new Dictionary<string, string>() };
+    AreaModel crEditDeviceArea = new AreaModel();
     ZoneModel crEditDeviceZone = new ZoneModel();
     SectionModel crEditDeviceSection = new SectionModel();
     Dictionary<string, string> crDictDvAttrPUT = new Dictionary<string, string>();
-    List<GlobalScheduleModel> LstScheduleOfCrDeviceRoom = new List<GlobalScheduleModel>();
+    List<GlobalScheduleModel> LstScheduleOfCrDevice = new List<GlobalScheduleModel>();
+    List<GlobalSceneModel> LstSceneOfCrDevice = new List<GlobalSceneModel>();
 
     //List<DateTimeOffset?> LstDatetimeBinding = new List<DateTimeOffset?>();
     Dictionary<string, DateTimeOffset?> DictDatetimeBinding = new Dictionary<string, DateTimeOffset?>();
 
     List<GlobalScheduleModel> LstSchedule = new List<GlobalScheduleModel>();
-    List<SectionModel> LstSection = new List<SectionModel>();
+    List<GlobalSceneModel> LstScene = new List<GlobalSceneModel>();
+    List<SectionModel> LstFilterSection = new List<SectionModel>();
+    List<ZoneModel> LstFilterZone = new List<ZoneModel>();
     List<SectionModel> LstAllSection = new List<SectionModel>();
-    List<ZoneModel> LstZone = new List<ZoneModel>();
+    List<ZoneModel> LstAllZone = new List<ZoneModel>();
     List<DeviceModel> LstDevice = new List<DeviceModel>();
-    List<MasterDataModel.DeviceTypeModel> LstDeviceType = new List<MasterDataModel.DeviceTypeModel>();
+    List<AreaModel> LstAllArea = new List<AreaModel>();
+    List<DataSourceModel> LstAllDataSource = new List<DataSourceModel>();
+    List<MasterDataModel.DeviceTypeModel> LstAllDeviceType = new List<MasterDataModel.DeviceTypeModel>();
     List<string> LstACAttr = new List<string>();
     List<MasterDataModel.AttributeModel> LstAllAttribute = new List<MasterDataModel.AttributeModel>();
 
@@ -758,44 +1125,65 @@
     List<DeviceModel> crLstDvInAllZone = new List<DeviceModel>();
     List<DeviceModel> crLstDvInAllArea = new List<DeviceModel>();
 
-    ElementReference elFormEditSchedule, elFormEditDevice, elCurrentSingleSelectBox, elCurrentMutipleSelectBox;
+    ElementReference elFormEditSchedule, elFormEditDevice, elFormEditAssignment, elCurrentMutipleSelectBox;
     enum DayOfWeek { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
-    enum LayoutAreaEnum { Area, Zone, Room }
+    enum LayoutAreaEnum { Area, Zone, Room, DeviceType, Gateway }
     enum FormAction { Add, Edit }
 
     ScheduleService svShedule = new ScheduleService();
+    ScenesService svScene = new ScenesService();
     LayoutAreaSevice svAreaLayout = new LayoutAreaSevice();
     DeviceDataStore svDevice = new DeviceDataStore();
     MasterDataService svMasterData = new MasterDataService();
     UserService svUser = new UserService();
+    DataSourceService svDataSource = new DataSourceService();
 
-    string AccessToken = "";
+    void LocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        //string navigationMethod = e.IsNavigationIntercepted ? "HTML" : "code";
+        //Console.WriteLine($"Notified of navigation via {navigationMethod} to {e.Location}");
+
+        timer.Stop();
+    }
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe from the event when our component is disposed
+        NavHelper.LocationChanged -= LocationChanged;
+    }
+
+    string AccessToken = string.Empty;
+    Timer timer = new Timer();
 
     protected override async Task OnInitializedAsync()
     {
+        NavHelper.LocationChanged += LocationChanged;
+
         AccessToken = await LocalStorage.GetItemAsync<string>("token");
-        if (AccessToken == "")
+        if (AccessToken == null)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
             NavHelper.NavigateTo("/login");
+            return;
         }
-        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
-        LstSchedule = await svShedule.GetItemsAsync(AccessToken);
-        LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        LstAllSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+        await RefetchData(true);
 
         //init Dict AC Attr
-        LstDeviceType = await svMasterData.GetDeviceTypeListAsync(AccessToken);
-        LstACAttr = LstDeviceType.Where(r => r.Name == "AC").FirstOrDefault().Attributes;
+        LstAllDeviceType = await svMasterData.GetDeviceTypeListAsync(AccessToken);
+        LstACAttr = LstAllDeviceType.Where(r => r.Name == "AC").FirstOrDefault().Attributes;
         //foreach(var attr in LstACAttr)
         //{
         //    crDictDvAttrPUT.Add(attr, null);
         //}
 
         LstAllAttribute = await svMasterData.GetAttributeListAsync(AccessToken);
+        // first init all device in list
+        ShowAllDevice(false);
 
-        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+        //JSHelper.InvokeVoidAsync("BeginClickBtnRefreshDataTable");
+
+        timer.Interval = 5000;
+        timer.Elapsed += async (_, _) => await RefreshDataTable();
+        timer.Start();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -812,12 +1200,175 @@
             return;
         }
         JSHelper.InvokeVoidAsync("Interop_InjectSummerNoteDefault", "tbSummer", 400, true, false);
-        JSHelper.InvokeVoidAsync("InjectDataTable");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    //private MudTable<DeviceModel> MainTable;
+    //string mudFilterMain = "";
+    //private DeviceModel elementBeforeEdit;
+    //private bool FilterFunc(DeviceModel _section)
+    //{
+    //    if (string.IsNullOrWhiteSpace(mudFilterMain))
+    //        return true;
+    //    if (_section.Id.ToString().Contains(mudFilterMain))
+    //        return true;
+    //    if (_section.Name.Contains(mudFilterMain))
+    //        return true;
+    //    return false;
+    //}
+
+
+    private MudTable<DeviceModel> MainTable;
+    string mudFilterString = "";
+    private int totalItems;
+    private List<DeviceModel> pagedData;
+    private async Task<TableData<DeviceModel>> ServerReload(TableState state)
+    {
+        var data = new List<DeviceModel>();
+
+        if (isFilterDvType_ALL && isFilterGateway_ALL)
+        {
+            foreach (var it in crLstDvInAllSection.Where(r => r.DeviceType == "VRV" || r.DeviceType == "AC"))
+            {
+                data.Add(it.DeepCopy());
+            }
+        }
+        else if (!isFilterDvType_ALL && isFilterGateway_ALL)
+        {
+            foreach (var it in crLstDvInAllSection.Where(r => r.DeviceType == crDvTypeFilterType).Where(r => r.DeviceType == "VRV" || r.DeviceType == "AC"))
+            {
+                data.Add(it.DeepCopy());
+            }
+        }
+        else if (isFilterDvType_ALL && !isFilterGateway_ALL)
+        {
+            foreach (var it in crLstDvInAllSection.Where(r => r.DataSourceId == crGatewayFilterType).Where(r => r.DeviceType == "VRV" || r.DeviceType == "AC"))
+            {
+                data.Add(it.DeepCopy());
+            }
+        }
+        else if (!isFilterDvType_ALL && !isFilterGateway_ALL)
+        {
+            foreach (var it in crLstDvInAllSection.Where(r => r.DeviceType == crDvTypeFilterType && r.DataSourceId == crGatewayFilterType).Where(r => r.DeviceType == "VRV" || r.DeviceType == "AC"))
+            {
+                data.Add(it.DeepCopy());
+            }
+        }
+
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(mudFilterString))
+                return true;
+            if (element.Id.ToString().Contains(mudFilterString))
+                return true;
+            if (element.Name.Contains(mudFilterString))
+                return true;
+            return false;
+        }).ToList();
+        totalItems = data.Count();
+        switch (state.SortLabel)
+        {
+            case "No":
+                data = data.OrderByDirection(state.SortDirection, o => o.Id).ToList();
+                break;
+            case "Name":
+                data = data.OrderByDirection(state.SortDirection, o => o.Name).ToList();
+                break;
+            case "SetTemp":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["SetTemp"]).ToList();
+                break;
+            case "RoomTemp":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["RoomTemp"]).ToList();
+                break;
+            case "itmACMode":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["itmACMode"]).ToList();
+                break;
+            case "FanSpeed":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["FanSpeed"]).ToList();
+                break;
+            case "FanDirect":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["FanDirect"]).ToList();
+                break;
+            case "ACStatus":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["ACStatus"]).ToList();
+                break;
+            case "ACPower":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["ACPower"]).ToList();
+                break;
+            case "ErrorCode":
+                data = data.OrderByDirection(state.SortDirection, o => o.Status["ErrorCode"]).ToList();
+                break;
+        }
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+        return new TableData<DeviceModel>() { TotalItems = totalItems, Items = pagedData };
+    }
+
+    private void OnTableSearch(string text)
+    {
+        mudFilterString = text;
+        MainTable.ReloadServerData();
+    }
+
+
+    async Task RefetchData(bool isNoti)
+    {
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+
+        var taskLstSchedule = svShedule.GetItemsAsync(AccessToken);
+        var taskLstScene = svScene.GetScenesListAsync(AccessToken);
+        var taskLstAllZone = svAreaLayout.GetZoneListAsync(AccessToken);
+        var taskLstDevice = svDevice.GetOwnerDevicesListAsync(AccessToken);
+        var taskLstAllSection = svAreaLayout.GetSectionListAsync(AccessToken);
+        var taskLstAllArea = svAreaLayout.GetAreaListAsync(AccessToken);
+        var taskLstAllDataSource = svDataSource.GetDataSourceListAsync(AccessToken);
+
+        await Task.WhenAll(taskLstSchedule, taskLstScene, taskLstAllZone, taskLstDevice, taskLstAllSection, taskLstAllArea, taskLstAllDataSource);
+
+        LstSchedule = await taskLstSchedule;
+
+        LstScene = await taskLstScene;
+
+        LstAllZone = await taskLstAllZone;
+
+        LstDevice = await taskLstDevice;
+
+        LstAllSection = await taskLstAllSection;
+
+        LstAllArea = await taskLstAllArea;
+
+        LstAllDataSource = await taskLstAllDataSource;
+
+
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        MainTable.ReloadServerData();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ShowAllDevice(bool isNoti)
+    {
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+        JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+        LstFilterZone.Clear();
+        LstFilterZone.Clear();
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+        crLstDvInAllSection = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        MainTable.ReloadServerData();
+        InvokeAsync(StateHasChanged);
     }
 
     async Task PreCloseDeviceModal()
     {
-        JSHelper.InvokeVoidAsync("Interop_PurgeValidBtCache");
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+    }
+
+    async Task PreEditDeviceArea(AreaModel _item)
+    {
+        crEditDeviceArea = _item.ShallowCopy();
     }
 
     async Task PreEditDeviceZone(ZoneModel _item)
@@ -832,58 +1383,122 @@
 
     async Task PreEditDeviceAll(DeviceModel _item)
     {
+        JSHelper.InvokeVoidAsync("Interop_PurgeValidBtCache");
+
         flagForceSelectInject = true;
-        crEditDeviceAll = _item.ShallowCopy();
+        crEditDeviceAll = _item.DeepCopy();
+
+        LstScheduleOfCrDevice.Clear();
+        LstSceneOfCrDevice.Clear();
+
+        LstScheduleOfCrDevice = LstSchedule.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(_item.Id)).ToList();
+        LstSceneOfCrDevice = LstScene.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(_item.Id) || r.Expressions.Select(x => x.DeviceId).Contains(_item.Id)).ToList();
     }
 
-    async Task PreEditScheduleRoom(DeviceModel _item)
+    //async Task PreEditScheduleRoom2(DeviceModel _item)
+    //{
+    //    //LstScheduleOfCrDevice.Clear();
+    //    //LstSceneOfCrDevice.Clear();
+
+    //    //LstScheduleOfCrDevice = LstSchedule.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(_item.Id)).ToList();
+    //    //LstSceneOfCrDevice = LstScene.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(_item.Id)).ToList();
+    //    crEditDeviceAll = _item.DeepCopy();
+
+    //    InvokeAsync(StateHasChanged);
+    //}
+
+    async Task RefreshDataTable()
     {
-        // Get List of Schedule that Selected device is belonged to
-        crEditDeviceAll = _item;
-        LstScheduleOfCrDeviceRoom.Clear();
-        //LstDatetimeBinding.Clear();
-        DictDatetimeBinding.Clear();
+        var _BackupLstItemId = crLstDvInAllSection.Select(r => r.Id).ToList();
+        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        crLstDvInAllSection = LstDevice.Where(r => _BackupLstItemId.Contains(r.Id)).ToList();
 
-        var _LstSchAction = LstSchedule.Select(r => new { ObjSchedule = r, Actions = r.Actions }).ToList();
-        foreach (var _tmpObj in _LstSchAction)
-        {
-            //var _tmpLstActContainDvId = _tmpObj.LstAction.Where(r => r.DeviceId == _item.Id);
-            var _isDvBelongToSchedule = _tmpObj.Actions.Select(r => r.DeviceId).Contains(_item.Id);
-            if (_isDvBelongToSchedule)
-            {
-                LstScheduleOfCrDeviceRoom.Add(_tmpObj.ObjSchedule);
-            }
-        }
-
-        foreach (var it in LstScheduleOfCrDeviceRoom)
-        {
-            Console.WriteLine(it.Id);
-            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditScheduleType-" + it.Id.ToString(), (GlobalScheduleModel.ScheduleTypeEnum)it.ScheduleType);
-            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditRepeat" + it.Id.ToString(), it.RepeatDayOfWeek);
-
-            // Parse some value to correct format
-            JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsAction", it.JavaScriptAction, 350);
-            //var txtDebug = svShedule.GetDebugAsync(it.Id, AccessToken);
-            //JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsDebug", txtDebug, 200);
-            var _tmpLocalConvert = UnixTime.UnixSecondToLocalTime(it.Time);
-            //LstDatetimeBinding.Add(DateTime.SpecifyKind(_tmpLocalConvert, DateTimeKind.Local));
-            DictDatetimeBinding.Add(it.Id.ToString(), DateTime.SpecifyKind(_tmpLocalConvert, DateTimeKind.Local));
-        }
-
-
-        InvokeAsync(StateHasChanged);
+        MainTable.ReloadServerData();
     }
+
+    async Task OpenInNewTab(AreaModel item)
+    {
+        JSHelper.InvokeVoidAsync("OpenInNewTab", item.Id);
+    }
+
+    //async Task PreEditScheduleRoom(DeviceModel _item)
+    //{
+    //    // Get List of Schedule that Selected device is belonged to
+    //    crEditDeviceAll = _item;
+    //    LstScheduleOfCrDevice.Clear();
+    //    //LstDatetimeBinding.Clear();
+    //    DictDatetimeBinding.Clear();
+
+    //    var _LstSchAction = LstSchedule.Select(r => new { ObjSchedule = r, Actions = r.Actions }).ToList();
+    //    foreach (var _tmpObj in _LstSchAction)
+    //    {
+    //        //var _tmpLstActContainDvId = _tmpObj.LstAction.Where(r => r.DeviceId == _item.Id);
+    //        var _isDvBelongToSchedule = _tmpObj.Actions.Select(r => r.DeviceId).Contains(_item.Id);
+    //        if (_isDvBelongToSchedule)
+    //        {
+    //            LstScheduleOfCrDevice.Add(_tmpObj.ObjSchedule);
+    //        }
+    //    }
+
+    //    foreach (var it in LstScheduleOfCrDevice)
+    //    {
+    //        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditScheduleType-" + it.Id.ToString(), (GlobalScheduleModel.ScheduleTypeEnum)it.ScheduleType);
+    //        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditRepeat" + it.Id.ToString(), it.RepeatDayOfWeek);
+
+    //        // Parse some value to correct format
+    //        JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsAction", it.JavaScriptAction, 350);
+    //        //var txtDebug = svShedule.GetDebugAsync(it.Id, AccessToken);
+    //        //JSHelper.InvokeVoidAsync("Interop_SummerSetCode", "tbEditJsDebug", txtDebug, 200);
+    //        var _tmpLocalConvert = UnixTime.UnixSecondToLocalTime(it.Time);
+    //        //LstDatetimeBinding.Add(DateTime.SpecifyKind(_tmpLocalConvert, DateTimeKind.Local));
+    //        DictDatetimeBinding.Add(it.Id.ToString(), DateTime.SpecifyKind(_tmpLocalConvert, DateTimeKind.Local));
+    //    }
+
+
+    //    InvokeAsync(StateHasChanged);
+    //}
 
     async Task DateRangeBinding(FormAction action, GlobalScheduleModel _item)
     {
 
     }
 
+    //async Task ModalAssignmentSubmit()
+    //{
+    //    var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormEditAssignment);
+    //    if (!isFormValid)
+    //    {
+    //        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+    //        return;
+    //    }
+    //    JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+    //    var isOk = await svDevice.UpdateAllDeviceData(crEditDeviceAll, AccessToken);
+    //    // check response
+    //    if (isOk)
+    //    {
+    //        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item Updated", true);
+    //    }
+    //    else
+    //    {
+    //        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+    //    }
+    //    JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+    //    JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditAssignment", "hide");
+    //    // Re fetch all List
+    //    RefetchData(false);
+    //    InvokeAsync(StateHasChanged);
+    //}
+
+
     async Task toggleACPowerGroupHandle(bool _ACPower, List<DeviceModel> _lstDv, string cbId)
     {
         // Grant User before action
-        var _pwd = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "password","Retype your password", "Submit");
-        if (_pwd == "") return;
+        var _pwd = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "password", "Retype your password", "Submit");
+        if (_pwd == "")
+        {
+            JSHelper.InvokeVoidAsync("Interop_ToggleSwitch", cbId);
+            return;
+        }
         var response = await svUser.Login(await LocalStorage.GetItemAsync<string>("username"), _pwd) ?? "";
         ResultModel objResult = (ResultModel)JsonConvert.DeserializeObject(response, typeof(ResultModel));
         var _reToken = objResult.Token ?? "";
@@ -900,7 +1515,7 @@
                     return;
                 }
             }
-            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All Device in this Group is " + (_ACPower ? "On" : "Off"), true);
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All AirCool in this Group is " + (_ACPower ? "On" : "Off"), true);
         }
         else
         {
@@ -910,9 +1525,12 @@
         }
 
         // Re-Fetch All
-        LstZone = await svAreaLayout.GetZoneListAsync(AccessToken);
-        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        LstAllSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+        //LstAllZone = await svAreaLayout.GetZoneListAsync(AccessToken);
+        //LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        //LstAllSection = await svAreaLayout.GetSectionListAsync(AccessToken);
+
+        //RefetchData(false);
+        MainTable.ReloadServerData();
         InvokeAsync(StateHasChanged);
     }
 
@@ -920,39 +1538,68 @@
     {
         var isSuccess = await svDevice.UpdateDeviceStatusAsync(_dv.Id, new Dictionary<string, string>() { { "ACPower", _ACPower ? "On" : "Off" } }, AccessToken);
         if (!isSuccess) { JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", false); }
-        else { JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", _dv.Name + "turn " + (_ACPower ? "On" : "Off"), true); }
+        else { JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", _dv.Name + "Turn " + (_ACPower ? "On" : "Off"), true); }
 
+        // backup and restore current view list devices
+        var _BackupLstItemId = crLstDvInAllSection.Select(r => r.Id).ToList();
         LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
-        InvokeAsync(StateHasChanged);
+        crLstDvInAllSection = LstDevice.Where(r => _BackupLstItemId.Contains(r.Id)).ToList();
+
+        MainTable.ReloadServerData();
+        //await InvokeAsync(StateHasChanged);
     }
 
     async Task LayoutFilterSelection(LayoutAreaEnum layout)
     {
-        var _slValue = await SelectAndBindSingle();
+        int _slValue = -1;
+        string _slValueText = "";
+        if (layout == LayoutAreaEnum.DeviceType || layout == LayoutAreaEnum.Gateway)
+            _slValueText = await SelectAndBindSingleTextReturn();
+        else
+            _slValue = await SelectAndBindSingle();
 
         if (layout == LayoutAreaEnum.Area)
         {
             // reset own child List
-            LstSection.Clear();
-            LstZone.Clear();
-            InvokeAsync(StateHasChanged);
+            LstFilterZone.Clear();
+            LstFilterSection.Clear();
+            // clear all previous seleted value
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slFilterZone", "");
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slFilterRoom", "");
+
+            // clear current display list
+            crLstDvInAllSection.Clear();
+
+            LstFilterZone = LstAllZone.Where(r => r.Area == _slValue).ToList();
+            //crLstDvInAllArea = LstDevice.Where(r=>(r.DeviceType == "AC") && (r))
+
+            //InvokeAsync(StateHasChanged);
         }
         else if (layout == LayoutAreaEnum.Zone)
         {
-            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Loading Section Data");
-            var _tmpAllSection = await svAreaLayout.GetSectionListAsync(AccessToken);
-            LstSection = _tmpAllSection.Where(r => r.Zone == _slValue).ToList();
+            // reset own child List
+            LstFilterSection.Clear();
+            // clear all previous seleted value
+            JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slFilterRoom", "");
 
-            // get all device in Zone then clear crLstDvInSection
-            crLstDvInAllZone = LstDevice.Where(r => r.DeviceType == "AC").Where(r => LstSection.Select(z => z.Id).Contains(r.SectionId)).ToList();
+            // clear current display list
+            //crLstDvInAllSection.Clear(); // not clear here anymore
 
-            InvokeAsync(StateHasChanged);
-            JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+            var slZone = LstAllZone.Where(r => r.Id == _slValue).FirstOrDefault();
+            var lstSecInZone = LstAllSection.Where(r => r.Zone == slZone.Id).Select(r => r.Id).ToList();
+            crLstDvInAllSection = LstDevice.Where(r => lstSecInZone.Contains(r.SectionId)).ToList();
+
+
+            LstFilterSection = LstAllSection.Where(r => r.Zone == _slValue).ToList();
+            // get all aircool in Zone then clear crLstDvInSection
+            crLstDvInAllZone = LstDevice.Where(r => LstFilterSection.Select(z => z.Id).Contains(r.SectionId)).ToList();
+
+            //InvokeAsync(StateHasChanged);
         }
         else if (layout == LayoutAreaEnum.Room)
         {
             // Device Type AC Filter
-            crLstDvInAllSection = LstDevice.Where(r => r.DeviceType == "AC").Where(r => r.SectionId == _slValue).ToList();
+            crLstDvInAllSection = LstDevice.Where(r => r.SectionId == _slValue).ToList();
 
             //JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Loading Room Data");
             //var _tmpAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
@@ -960,8 +1607,29 @@
             //InvokeAsync(StateHasChanged);
             //JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
 
-            InvokeAsync(StateHasChanged);
+            //InvokeAsync(StateHasChanged);
         }
+        else if (layout == LayoutAreaEnum.DeviceType)
+        {
+            if (_slValueText == "default") isFilterDvType_ALL = true;
+            else
+            {
+                isFilterDvType_ALL = false;
+                crDvTypeFilterType = _slValueText;
+            }
+        }
+        else if (layout == LayoutAreaEnum.Gateway)
+        {
+            if (_slValueText == "default") isFilterGateway_ALL = true;
+            else
+            {
+                isFilterGateway_ALL = false;
+                crGatewayFilterType = _slValueText;
+            }
+        }
+
+        MainTable.ReloadServerData();
+        InvokeAsync(StateHasChanged);
     }
 
     private async void SelectAndBindMulti(FormAction action, GlobalScheduleModel _item)
@@ -1003,7 +1671,7 @@
 
     async Task<int> SelectAndBindSingle()
     {
-        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCurrentSingleSelectBox);
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
         var slKeyItem = _tmpSelectArr[0];
         return await Task.FromResult(int.Parse(slKeyItem.ToString()));
     }
@@ -1020,6 +1688,21 @@
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
     }
 
+    async Task FormDeleteDeviceHandle()
+    {
+        var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE THIS DEVICE", "#C70039", "Cancel", false);
+        if (!isConfirm) return;
+
+        var isOk = await svDevice.DeleteDeviceAsync(crEditDeviceAll.Id, AccessToken);
+        if (!isOk) JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Device deleted", true);
+        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditDevice", "hide");
+
+        var _BackupLstItemId = crLstDvInAllSection.Select(r => r.Id).ToList();
+        LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        crLstDvInAllSection = LstDevice.Where(r => _BackupLstItemId.Contains(r.Id)).ToList();
+    }
+
     async Task FormEditDeviceHandle()
     {
         var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elFormEditDevice);
@@ -1031,14 +1714,22 @@
 
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
 
-        var isSuccess = await svDevice.UpdateDeviceStatusAsync(crEditDeviceAll.Id, crDictDvAttrPUT, AccessToken);
-        if (!isSuccess) { JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true); }
+        // first await POST update room assignment
+        var isFirstOk = await svDevice.UpdateAllDeviceData(crEditDeviceAll, AccessToken);
+        // then PUT AC attributes
+        var isSecondOk = await svDevice.UpdateDeviceStatusAsync(crEditDeviceAll.Id, crDictDvAttrPUT, AccessToken);
+
+        if (!isFirstOk || !isSecondOk) { JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true); }
+
+        // backup and restore current view list devices
+        var _BackupLstItemId = crLstDvInAllSection.Select(r => r.Id).ToList();
         LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        crLstDvInAllSection = LstDevice.Where(r => _BackupLstItemId.Contains(r.Id)).ToList();
 
         JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Attribute Updated", true);
         JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditDevice", "hide");
 
-
+        MainTable.ReloadServerData();
         InvokeAsync(StateHasChanged);
     }
 
@@ -1079,7 +1770,7 @@
         return await Task.FromResult(slKeyItem.ToString());
     }
 
-    public void DisplayResult(DateRange range)
+    public void DisplayResult(BlazorDateRangePicker.DateRange range)
     {
         //JSHelper.InvokeVoidAsync("console.log", range.Start, range.End);
         var lstRangeDate = DateTimeHelper.DateTime2StringRange(range.Start.DateTime, range.End.DateTime);

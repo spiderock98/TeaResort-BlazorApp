@@ -1,0 +1,466 @@
+﻿@page "/gateway"
+@inject NavigationManager uriHelper
+@using BlazorDateRangePicker
+@using Helper
+@inject IJSRuntime JSHelper
+@using SmartRetail.Shared
+@using SmartRetail.Client.Services
+@using Share.Models
+@using System.Collections
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+@using Newtonsoft.Json
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Gateway Listing</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <MudTable Items="@LstAllDataSource" Hover="true">
+                <HeaderContent>
+                    <MudTh>Id</MudTh>
+                    <MudTh>Name</MudTh>
+                    @*<MudTh>SourceType</MudTh>*@
+                    @*<MudTh>IsRequestServer</MudTh>*@
+                    @*<MudTh>IsUpdateOutsideDevice</MudTh>*@
+                    @*<MudTh>Interval</MudTh>*@
+                    <MudTh>Input</MudTh>
+                    <MudTh>LastUpdateDeviceTime</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ID</MudTd>
+                    <MudTd>@context.Name</MudTd>
+                    @*<MudTd>@context.SourceType</MudTd>*@
+                    @*<MudTd>@context.IsRequestServer</MudTd>*@
+                    @*<MudTd>@context.IsUpdateOutsideDevice</MudTd>*@
+                    @*<MudTd>@context.Interval</MudTd>*@
+                    @{
+                        var lstIOStatus = LstAllDevice.Where(r => r.Capabilitie == "ViotBI8").SelectMany(r => r.Status).ToList();
+                        <MudTd>@(JsonConvert.SerializeObject(lstIOStatus))</MudTd>
+                    }
+                    <MudTd>@UnixTime.UnixMillisToLocalTimeFormat(context.LastUpdateDeviceTime)</MudTd>
+                    <MudTd>
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                            @if (context.SourceType == "SVMDS4")
+                            {
+                                <MudMenuItem OnClick="@(() => { PreChangeTmpLimit(context.ID); })">Change Temp. Limit</MudMenuItem>
+                            }
+                            <MudMenuItem OnClick="@(() => { PreChangeAlias(context.ID); })">Change Gateway Alias</MudMenuItem>
+                            @*<MudMenuItem OnClick="@(() => { PreViewInput(context.ID); })">View Input</MudMenuItem>*@
+                        </MudMenu>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            @*<table class="bootstrap-table"
+                       data-search="true"
+                       data-show-export="true"
+                       data-search-align="right"
+                       data-buttons-align="right"
+                       data-pagination="true"
+                       data-height="700">
+                    <thead>
+                        <tr class="text-center">
+                            <th>No.</th>
+                            <th>Name</th>
+                            <th>SourceType</th>
+                            <th>IsRequestServer</th>
+                            <th>IsUpdateOutsideDevice</th>
+                            <th>Interval</th>
+                            <th>LastUpdateDeviceTime</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var _gateway in LstAllDataSource)
+                        {
+                            <tr class="text-center">
+                                <th>@_gateway.ID</th>
+                                <td>@_gateway.Name</td>
+                                <td>@_gateway.SourceType</td>
+                                <td>@_gateway.IsRequestServer</td>
+                                <td>@_gateway.IsUpdateOutsideDevice</td>
+                                <td>@_gateway.Interval</td>
+                                <td>@UnixTime.UnixMillisToLocalTimeFormat(_gateway.LastUpdateDeviceTime)</td>
+                                <td>
+                                    <MudIconButton></MudIconButton>
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>*@
+
+
+            @*<div class="table-responsive">
+                    <HxGrid @ref="HxTable" TItem="DataSourceModel" DataProvider="ClientSideProcessingDataProvider" PageSize="10">
+                        <Columns>
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="No."
+                                          ItemTextSelector="@(item => item.ID)"
+                                          SortKeySelector="@(item => item.ID)"
+                                          IsDefaultSortColumn="true" />
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="NAME"
+                                          ItemTextSelector="@(item => item.Name)"
+                                          SortKeySelector="@(item => item.Name)" />
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="Source Type"
+                                          ItemTextSelector="@(item => item.SourceType)"
+                                          SortKeySelector="@(item => item.SourceType)" />
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="IsRequestServer"
+                                          SortKeySelector="@(item => item.IsRequestServer)"
+                                          ItemTextSelector="@(item => item.IsRequestServer.ToString())" />
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="IsUpdateOutsideDevice"
+                                          ItemTextSelector="@(item => item.IsUpdateOutsideDevice.ToString())"
+                                          SortKeySelector="@(item => item.IsUpdateOutsideDevice)" />
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="IsUpdateOutsideDevice"
+                                          ItemTextSelector="@(item => item.IsUpdateOutsideDevice.ToString())"
+                                          SortKeySelector="@(item => item.IsUpdateOutsideDevice)" />
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="Interval"
+                                          ItemTextSelector="@(item => item.Interval.ToString())"
+                                          SortKeySelector="@(item => item.Interval)" />
+                            <HxGridColumn TItem="DataSourceModel"
+                                          HeaderText="LastUpdateDeviceTime"
+                                          ItemTextSelector="@(item => item.LastUpdateDeviceTime.ToString())"
+                                          SortKeySelector="@(item => item.LastUpdateDeviceTime)" />
+
+                        </Columns>
+                    </HxGrid>
+                </div>*@
+
+
+            @{
+                if (flagForceSelectInject)
+                {
+                    InjectSelectAfterModal(true);
+                    //Console.WriteLine("Inject Inline");
+                }
+            }
+
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+<MudOverlay Visible="isPageSpinnerVisible"
+            DarkBackground="true"
+            Absolute="true">
+    <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+</MudOverlay>
+
+
+<MudDialog @bind-IsVisible="isModalTempLimitVisible" Options="new DialogOptions() { NoHeader = true }">
+    <DialogContent>
+
+        <MudNumericField T="int"
+                         Label="Min Temperature"
+                         Required="true" RequiredError="Min Temperature"
+                         @bind-Value="SetTempLimitItem.data.low"
+                         Variant="Variant.Outlined" />
+
+        <MudNumericField T="int"
+                         Label="Max Temperature"
+                         Required="true" RequiredError="Max Temperature"
+                         @bind-Value="SetTempLimitItem.data.high"
+                         Variant="Variant.Outlined" />
+
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Info"
+                   OnClick="@(()=>{ SubmitChangeTmpLimit(); })"
+                   Class="px-10">
+            Save change
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="isModalGatewayNameVisible"
+           Options="new DialogOptions() { NoHeader = true }">
+    <DialogContent>
+
+        <MudTextField T="string"
+                      Label="Alias name"
+                      Required="true" RequiredError="Alias name"
+                      @bind-Value="CrDtSrcItem.Name"
+                      Variant="Variant.Outlined" />
+
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Info"
+                   OnClick="@(()=>{ SubmitChangeSrcName(); })"
+                   Class="px-10">
+            Save change
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="isModalDS4InpVisible"
+           Options="new DialogOptions() { NoHeader = true }">
+    <DialogContent>
+
+        <MudSimpleTable Elevation="0"
+                        Style="overflow-x: auto;">
+            <thead>
+                <tr>
+                    <th>Keycard</th>
+                    <th>Living room door</th>
+                    <th>Living room motion</th>
+                    <th>Dinner table motion</th>
+                    <th>Bedroom 1 door</th>
+                    <th>Bedroom 1 motion</th>
+                    <th>Bedroom 2 door</th>
+                    <th>Bedroom 2 motion</th>
+                    <th>Bedroom master door</th>
+                    <th>Bedroom master motion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    @for (int idx = 1; idx < 32; idx++)
+                    {
+                        <td>@(@LstInpDS4[idx].data.status == 1 ? "On" : "Off")</td>
+                    }
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+
+    </DialogContent>
+
+    <DialogActions>
+        @*<MudButton Variant="Variant.Filled"
+                   Color="Color.Info"
+                   OnClick="@(()=>{ SubmitChangeInterlock(); })"
+                   Class="px-10">
+            Save change
+        </MudButton>*@
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+    bool flagForceSelectInject = false;
+    bool isPageSpinnerVisible = false;
+    //bool isPageSpinner = false;
+    string AccessToken = "";
+    ElementReference elModalEdit, elCrSingleSelectBox;
+    private HxGrid<DataSourceModel> HxTable;
+
+    List<DataSourceModel> LstAllDataSource = new List<DataSourceModel>();
+    List<DeviceModel> LstAllDevice = new List<DeviceModel>();
+
+    DataSourceService svDataSource = new DataSourceService();
+    DeviceDataStore svDevice = new DeviceDataStore();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isPageSpinnerVisible = true;
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == null)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login"); return;
+        }
+        await RefetchData(true);
+        isPageSpinnerVisible = false;
+
+        //HxTable.RefreshDataAsync();
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (flagForceSelectInject)
+        {
+            InjectSelectAfterModal(false);
+        }
+        await JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+        if (!firstRender)
+        {
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    private Task<GridDataProviderResult<DataSourceModel>> ClientSideProcessingDataProvider(GridDataProviderRequest<DataSourceModel> request)
+    {
+        return Task.FromResult(request.ApplyTo(LstAllDataSource));
+    }
+
+    async Task InjectSelectAfterModal(bool nextFlagState)
+    {
+        flagForceSelectInject = nextFlagState;
+    }
+
+
+    async Task RefetchData(bool isNoti)
+    {
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+
+        var taskLstAllDataSource = svDataSource.GetDataSourceListAsync(AccessToken);
+        var taskLstAllDevice = svDevice.GetOwnerDevicesListAsync(AccessToken);
+
+        await Task.WhenAll(taskLstAllDataSource, taskLstAllDevice);
+
+        LstAllDataSource = await taskLstAllDataSource;
+        LstAllDevice = await taskLstAllDevice;
+
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task<int> SelectAndBindSingle()
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCrSingleSelectBox);
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(int.Parse(slKeyItem.ToString()));
+    }
+
+    async Task EditModalSubmit()
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", elModalEdit);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+    }
+
+    async Task<string> SelectAndBindSingleTextReturn()
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(slKeyItem.ToString());
+    }
+
+    /// <summary>
+    /// modal to change alias friendly name by data source
+    /// </summary>
+    ///
+    bool isModalDS4InpVisible = false;
+    DS4InputService svDS4Input = new DS4InputService();
+    List<InputDS4Model> LstInpDS4 = new List<InputDS4Model>();
+    async Task PreViewInput(string scrId)
+    {
+        isPageSpinnerVisible = true;
+        LstInpDS4.Clear();
+        for (int idx = 0; idx < 32; idx++)
+        {
+            // input bắt đầu từ 1, get 0 chơi thôi
+            var _result = await svDS4Input.GetInputBySrc(AccessToken, scrId, idx);
+            //var _result = await svDS4Input.GetInput(Resources.GetLink.DictDS4IP.GetValueOrDefault(scrId), idx);
+            LstInpDS4.Add(_result);
+        }
+
+        isModalDS4InpVisible = true;
+        isPageSpinnerVisible = false;
+        StateHasChanged();
+
+    }
+    async Task SubmitChangeInterlock()
+    {
+
+    }
+
+    /// /// <summary>
+    /// modal to change alias friendly name by data source
+    /// </summary>
+    ///
+    bool isModalGatewayNameVisible = false;
+    DataSourceModel CrDtSrcItem = new DataSourceModel();
+    async Task PreChangeAlias(string srcId)
+    {
+        CrDtSrcItem = LstAllDataSource.Where(r => r.ID == srcId).FirstOrDefault();
+        if (CrDtSrcItem == default)
+        {
+            FireNotification("Data source not found!", Severity.Error);
+            return;
+        }
+
+        isModalGatewayNameVisible = true;
+        StateHasChanged();
+    }
+    async Task SubmitChangeSrcName()
+    {
+        isModalGatewayNameVisible = false;
+
+        var isOk = await svDataSource.UpdateDataSourceItem(CrDtSrcItem, AccessToken);
+        if (isOk) FireNotification("Data source name changed", Severity.Success);
+        else FireNotification("Something went wrong!", Severity.Error);
+    }
+
+
+
+    /// <summary>
+    /// modal to change temp limit by data source
+    /// </summary>
+    ///
+    bool isModalTempLimitVisible = false;
+    string CrModalDtSrcIdTmpLimit;
+    DataSourceModel CrModalDtSource = new DataSourceModel();
+
+    DS4TempLimitService svDS4TmpLimit = new DS4TempLimitService();
+    TemperatureDS4Model SetTempLimitItem = new TemperatureDS4Model() { cmd = "setTempLimit" };
+
+    async Task PreChangeTmpLimit(string srcId)
+    {
+        isPageSpinnerVisible = true;
+        CrModalDtSrcIdTmpLimit = srcId;
+        CrModalDtSource = LstAllDataSource.Where(r => r.ID == srcId).FirstOrDefault();
+        if (CrModalDtSource == default) return;
+
+        //SetTempLimitItem = await svDS4TmpLimit.GetTmpLimit(Resources.GetLink.DictDS4IP.GetValueOrDefault(srcId));
+        SetTempLimitItem = await svDS4TmpLimit.GetTmpLimitBySrc(AccessToken, srcId);
+
+        isModalTempLimitVisible = true;
+        isPageSpinnerVisible = false;
+        StateHasChanged();
+    }
+
+    async Task SubmitChangeTmpLimit()
+    {
+        isModalTempLimitVisible = false;
+
+        //var isOk = await svDS4TmpLimit.UpdateItemAsync(SetTempLimitItem, Resources.GetLink.DictDS4IP.GetValueOrDefault(CrModalDtSrcIdTmpLimit));
+        var isOk = await svDS4TmpLimit.UpdateItemAsyncBySrc(SetTempLimitItem, AccessToken, CrModalDtSrcIdTmpLimit);
+        if (isOk) FireNotification("Temperature limit setup successfully", Severity.Success);
+        else FireNotification("Something went wrong!", Severity.Error);
+    }
+    //AdditionalInfo LimitItem = new AdditionalInfo();
+    //public class AdditionalInfo
+    //{
+    //    public int MaxTemp { get; set; }
+    //    public int MinTemp { get; set; }
+    //}
+    void FireNotification(string message, MudBlazor.Severity status)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        Snackbar.Add(message, status);
+    }
+}

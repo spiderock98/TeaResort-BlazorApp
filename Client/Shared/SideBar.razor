@@ -1,13 +1,13 @@
-@inject NavigationManager navigationHelper
+﻿@inject NavigationManager navigationHelper
 @inject IJSRuntime JSHelper
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-light-cyan elevation-4 position-fixed">
     <!-- Brand Logo -->
     <a href="#" class="brand-link" style="background-color:white;">
         <img src="public/img/daikin-logo.png" alt="Daikin-Logo" class="brand-image-xl logo-xl"
-            style="max-width: 206px;max-height: 206px;">
+             style="max-width: 206px;max-height: 206px;">
         <img src="public/img/daikin-logo-square.png" alt="Daikin-Logo" class="brand-image-xs logo-xs"
-            style="max-width: 43px;max-height: 43px;">
+             style="max-width: 43px;max-height: 43px;">
         <span class="brand-text font-weight-light">.</span>
     </a>
 
@@ -28,41 +28,49 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <!-- Add icons to the links using the .nav-icon class
-    with font-awesome or any other icon font library -->
+                with font-awesome or any other icon font library -->
+                @*<li class="nav-item">
+                <a class="nav-link @CheckActiveStatus("dashboard","active")" @onclick=@(() =>
+                SelectMenu("dashboard"))>
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <p class="font-weight-bolder user-select-none">
+                DASHBOARD
+                </p>
+                </a>
+                </li>*@
+
                 <li class="nav-item">
-                    <a class="nav-link @CheckActiveStatus("dashboard","active")" @onclick=@(() =>
-                        SelectMenu("dashboard"))>
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                    <a class="nav-link @CheckActiveStatus("gateway","active")" @onclick=@(() => SelectMenu("gateway"))>
+                        <i class="nav-icon fas fa-dice-d6"></i>
                         <p class="font-weight-bolder user-select-none">
-                            DASHBOARD
-                            @*<i class="right fas fa-angle-left"></i>*@
+                            GATEWAY LISTING
                         </p>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link @CheckActiveStatus("device","active")" @onclick=@(() => SelectMenu("device"))>
-                        <i class="nav-icon fas fa-eye"></i>
+                    <a class="nav-link @CheckActiveStatus("ac","active")" @onclick=@(() => SelectMenu("ac"))>
+                        <i class="nav-icon fas fa-microchip"></i>
                         <p class="font-weight-bolder user-select-none">
-                            DEVICE LISTING
+                            AC LISTING
                         </p>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link @CheckActiveStatus("schedule","active")" @onclick=@(() =>
-                        SelectMenu("schedule"))>
-                        <i class="nav-icon fas fa-calendar-alt"></i>
-                        <p class="font-weight-bolder user-select-none">
-                            SCHEDULE PROFILES
-                        </p>
-                    </a>
+                <a class="nav-link @CheckActiveStatus("schedule","active")" @onclick=@(() =>
+                SelectMenu("schedule"))>
+                <i class="nav-icon fas fa-calendar-alt"></i>
+                <p class="font-weight-bolder user-select-none">
+                SCHEDULE PROFILES
+                </p>
+                </a>
                 </li>
-                
+
                 <li class="nav-item">
                     <a class="nav-link @CheckActiveStatus("interlock","active")" @onclick=@(() =>
-                        SelectMenu("interlock"))>
-                        <i class="nav-icon fas fa-door-closed"></i>
+                       SelectMenu("interlock"))>
+                        <i class="nav-icon fas fa-calendar-alt"></i>
                         <p class="font-weight-bolder user-select-none">
                             INTERLOCK PROFILES
                         </p>
@@ -70,12 +78,53 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link @CheckActiveStatus("daily","active")" @onclick=@(() => SelectMenu("daily"))>
+                    <a class="nav-link @CheckActiveStatus("energy","active")" @onclick=@(() => SelectMenu("energy"))>
                         <i class="nav-icon fas fa-chart-line"></i>
                         <p class="font-weight-bolder user-select-none">
-                            ENERGY DAILY USE
+                            SCHNEIDER®️ POWERTAG
                         </p>
                     </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#collapseLayout" class="nav-link @CheckActiveStatus("layout_area","active")" @onclick=@(()
+                       => { SelectMenu("layout_area"); ToggleArrow("layout_area"); }) data-toggle="collapse">
+                        <i class="nav-icon fas fa-layer-group"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            LAYOUT MANAGEMENT
+                            <i class="@CheckArrowStatus("layout_area") right"></i>
+                        </p>
+                    </a>
+
+                    <ul class="nav collapse" id="collapseLayout">
+                        <li>
+                            <a class="nav-link @CheckActiveStatus("layout_area","active")" @onclick=@(() => {
+                               SelectMenu("layout_area"); })>
+                                <i class="nav-icon far fa-circle nav-icon"></i>
+                                <p class="font-weight-bolder user-select-none">
+                                    AREA
+                                </p>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link @CheckActiveStatus("layout_zone","active")" @onclick=@(() => {
+                               SelectMenu("layout_zone"); })>
+                                <i class="nav-icon far fa-circle nav-icon"></i>
+                                <p class="font-weight-bolder user-select-none">
+                                    ZONE
+                                </p>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link @CheckActiveStatus("layout_room","active")" @onclick=@(() => {
+                               SelectMenu("layout_room"); })>
+                                <i class="nav-icon far fa-circle nav-icon"></i>
+                                <p class="font-weight-bolder user-select-none">
+                                    ROOM
+                                </p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
                 <li class="nav-item">
@@ -98,24 +147,26 @@
 
             </ul>
         </nav>
-        <!-- /.sidebar-menu -->
     </div>
-    <!-- /.sidebar -->
 </aside>
 
 @code {
     Dictionary<string, string> menuPaths = new Dictionary<string, string>()
 {
-{"dashboard","/dashboard"}, {"device","/device"} , {"schedule", "/schedule"}, {"daily", "/daily"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}, { "interlock", "/interlock" }
+{"dashboard","/dashboard"}, {"ac","/ac"} , {"schedule", "/schedule"}, {"energy", "/energy"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}, { "interlock", "/interlock" }, { "layout_area", "/layout_area" },{ "layout_zone", "/layout_zone" }, { "layout_room", "/layout_room" }, { "gateway", "/gateway" }
 };
 
+    Dictionary<string, bool> arrowDir = new Dictionary<string, bool>()
+{
+        { "layout_area", false}
+    };
     string currentMenu = "";
 
     protected override async Task OnInitializedAsync()
     {
         currentMenu = navigationHelper.ToBaseRelativePath(navigationHelper.Uri);
         //if (currentMenu == string.Empty) SelectMenu("dashboard");
-        if (currentMenu == string.Empty) navigationHelper.NavigateTo("/interlock");
+        if (currentMenu == string.Empty) navigationHelper.NavigateTo("/gateway");
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -125,6 +176,18 @@
             return;
         }
     }
+
+    protected void ToggleArrow(string menu)
+    {
+        var isCollapse = arrowDir[menu];
+        arrowDir[menu] = isCollapse ? false : true;
+    }
+
+    private string CheckArrowStatus(string menu)
+    {
+        return arrowDir[menu] ? "fas fa-angle-down" : "fas fa-angle-left";
+    }
+
     void SelectMenu(string menu)
     {
         try

@@ -29,12 +29,17 @@ namespace SmartRetail.Share.Models
         [JsonProperty]
         public int LastUpdate { get; set; }
         [JsonProperty]
-        public List<string> Infos { get; set; }
+        public Dictionary<string, string> Infos { get; set; }
         public ZoneModel()
         { }
         public ZoneModel ShallowCopy()
         {
             return (ZoneModel)this.MemberwiseClone();
+        }
+        public ZoneModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<ZoneModel>(_tmpSerializeString);
         }
     }
 }

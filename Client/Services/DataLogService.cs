@@ -6,15 +6,13 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SmartRetail.Services
+namespace SmartRetail.Client.Services
 {
     public class DataLogService
     {
         HttpClient _client = new HttpClient();
         public DataLogService()
-        {
-
-        }
+        { }
 
         public async Task<List<DataLogModel>> GetAllDataAsync(string token, int fromTime, int toTime)
         {
@@ -38,7 +36,7 @@ namespace SmartRetail.Services
         public async Task<List<DataLogModel>> GetDataAsync(string token, int deviceId, int fromTime, int toTime)
         {
             List<DataLogModel> dataList = new List<DataLogModel>();
-            var uri = new Uri(Resources.GetLink.GET_DATA_LOG(token, deviceId, fromTime, toTime));
+            var uri = new Uri(Resources.GetLink.GET_DATA_LOG(token, fromTime, deviceId, toTime));
             try
             {
                 HttpResponseMessage response = await _client.GetAsync(uri);

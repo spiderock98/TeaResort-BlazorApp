@@ -1,137 +1,252 @@
 @page "/logs"
 @using Share.Models
-@using SmartRetail.Services
+@using SmartRetail.Client.Services
 @using System.Collections
 @inject NavigationManager NavHelper
 @inject IJSRuntime JSHelper
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @using BlazorDateRangePicker
 @using Helper
+@using System.Threading.Tasks;
+@using Newtonsoft.Json;
+
 
 <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
                     <h1 style="font-size:50px;">History Logs</h1>
                 </div>
-            </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
+            </div>
+        </div>
     </section>
-    <!-- /.content-header -->
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
-
 
             <div class="card card-info card-outline card-outline-tabs">
                 <div class="card-header p-0 border-bottom-0">
 
                     <div class="row">
-                        @*<div class="input-group m-3 col-12 col-lg-6">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        Device
-                                    </span>
-                                </div>
-                                <DateRangePicker class="form-control"
-                                                 OnRangeSelect="DateRangeSubmitHandle" />
-                            </div>*@
-
-                        <div class="input-group m-3 col-12">
+                        <div class="input-group col-12">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">
                                     Date Range Filter
                                 </span>
                             </div>
                             <DateRangePicker class="form-control"
-                                             DateFormat="dddd dd/MM/yyyy"
+                                             DateFormat="dddd dd/MM/yyyy HH:mm"
+                                             TimePicker="true"
                                              OnRangeSelect="DateRangeSubmitHandle" />
                         </div>
-                    </div>
 
+                        <div class=" col-6">
+                            <MudSelect T="int"
+                                       Label="Select Device"
+                                       Margin="Margin.Dense"
+                                       Class="m-3"
+                                       Dense="true"
+                                       SelectedValuesChanged="async(e) =>
+                                                              {
+                                                                  LstDataLog = await svDataLog.GetDataAsync(AccessToken, e.FirstOrDefault(), crTsStart, crTsEnd);
+                                                                  InvokeAsync(StateHasChanged);
+                                                              }"
+                                       @bind-Value="crDeviceFilter"
+                                       AnchorOrigin="Origin.BottomCenter">
+                                @foreach (var it in LstDevice)
+                                {
+                                    <MudSelectItem Value="@(it.Id)">
+                                        @it.Id - @it.Name
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+
+                        <div class=" col-6">
+                            <MudSelect T="string"
+                                       Label="Attribute"
+                                       Dense="true"
+                                       Class="m-3"
+                                       AnchorOrigin="Origin.BottomCenter"
+                                       @bind-Value="crAttrFilter"
+                                       SelectedValuesChanged='async(e) =>
+                                                              {
+                                                                  LstDataLog = await svDataLog.GetDataAsync(AccessToken, crDeviceFilter, crTsStart, crTsEnd);
+                                                                  var _slVal = e.FirstOrDefault();
+                                                                  if (_slVal != "all") LstDataLog = LstDataLog.Where(r=>r.Attribute == _slVal).ToList();
+                                                                  InvokeAsync(StateHasChanged);
+                                                              }'>
+                                @{
+                                    var _crFilterDvItem = LstDevice.Where(dv => dv.Id == crDeviceFilter).FirstOrDefault();
+                                    if (_crFilterDvItem == default) return;
+                                    var _LstAttrOfDevice = LstAllAttr.Where(attr => _crFilterDvItem.DataSaveList.Contains(attr.Name)).ToList();
+                                    if (_LstAttrOfDevice.Count > 0)
+                                    {
+                                        <MudSelectItem T="string" Value='string.Format("{0}", "all")'>-- All --</MudSelectItem>
+                                        foreach (var it in _LstAttrOfDevice)
+                                        {
+                                            <MudSelectItem Value="@(it.Name)" />
+                                        }
+                                    }
+                                }
+
+                            </MudSelect>
+                        </div>
+                        
+                    </div>
                 </div>
 
                 <div class="card-body">
+                    @*<div class="table-responsive">
+                            <HxGrid @ref="HxTable" TItem="DataLogModel" DataProvider="ClientSideProcessingDataProvider" PageSize="10">
+                                <Columns>
+                                    <HxGridColumn TItem="DataLogModel" HeaderText="DEVICE" ItemTextSelector="@(item => item.DeviceId.ToString() + item.DeviceName)" SortKeySelector="@(item => item.DeviceId)" IsDefaultSortColumn="true" />
+                                    <HxGridColumn TItem="DataLogModel"
+                                                  HeaderText="ATTRIBUTE"
+                                                  ItemTextSelector="@(item => item.Attribute)"
+                                                  SortKeySelector="@(item => item.Attribute)" />
+                                    <HxGridColumn TItem="DataLogModel"
+                                                  HeaderText="LOG TIME"
+                                                  ItemTextSelector="@(item => (UnixTime.UnixSecondToLocalTimeFormat(item.Time)))"
+                                                  SortKeySelector="@(item => item.Time)" />
+                                    <HxGridColumn TItem="DataLogModel"
+                                                  HeaderText="OLD VALUE"
+                                                  SortKeySelector="@(item => item.OldValue)"
+                                                  ItemTextSelector="@(item => item.OldValue)" />
+                                    <HxGridColumn TItem="DataLogModel"
+                                                  HeaderText="NEW VALUE"
+                                                  ItemTextSelector="@(item => item.Value)"
+                                                  SortKeySelector="@(item => item.Value)" />
+                                </Columns>
+                            </HxGrid>
+                        </div>*@
 
-                    <table class="bootstrap-table"
-                           data-search="true"
-                           data-show-export="true"
-                           data-search-align="right"
-                           data-buttons-align="right">
-                        <thead>
-                            <tr>
-                                <th class="text-center">No.</th>
-                                <th class="text-center">DEVICE</th>
-                                <th class="text-center">ATTRIBUTE</th>
-                                <th class="text-center">LOG TIME</th>
-                                <th class="text-center">OLD VALUE</th>
-                                <th class="text-center">NEW VALUE</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int idx = 0;
-                                @foreach (var _log in LstDataLog)
-                                {
-                                    <tr class="text-center">
-                                        <th>@(++idx)</th>
-                                        <td>
-                                            @_log.DeviceId - @LstDevice.Where(r => r.Id == _log.DeviceId).FirstOrDefault()?.Name;
-                                        </td>
-                                        <td>
-                                            @_log.Attribute
-                                        </td>
-                                        <td>
-                                            @(UnixTime.UnixMillisToLocalTimeFormat(Convert.ToInt64(_log.Time)))
-                                        </td>
-                                        <td>
-                                            @_log.OldValue
-                                        </td>
-                                        <td>
-                                            @_log.Value
-                                        </td>
-                                    </tr>
-                                }
-                            }
 
-                        </tbody>
-                    </table>
+                    <MudTable Hover=true
+                              Elevation="0"
+                              Dense="true"
+                              Items="@LstDataLog"
+                              Bordered="true"
+                              Filter="new Func<DataLogModel,bool>(TableFilterFunc)">
+                        <ToolBarContent>
+                            @*<MudText Typo="Typo.h6">List All Area</MudText>*@
+                            <MudSpacer />
+                            <MudButton Variant="Variant.Outlined"
+                                       StartIcon="@Icons.Material.Filled.Save"
+                                       Color="Color.Info"
+                                       Size="Size.Small"
+                                       Class="mr-4 mt-3"
+                                       OnClick="DownloadExcelFile">
+                                Export
+                            </MudButton>
+                            <MudTextField @bind-Value="TableFilterString"
+                                          Placeholder="Search"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          IconSize="Size.Medium"
+                                          Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+
+                        <HeaderContent>
+                            <MudTh Style="text-align:center;">
+                                DEVICE
+                                <MudTableSortLabel T="DataLogModel"
+                                                   SortBy="new Func<DataLogModel, object>(x=>x.DeviceId)"></MudTableSortLabel>
+                            </MudTh>
+
+                            <MudTh Style="text-align:center;">
+                                ATTRIBUTE
+                                <MudTableSortLabel T="DataLogModel"
+                                                   SortBy="new Func<DataLogModel, object>(x=>x.Attribute)"></MudTableSortLabel>
+                            </MudTh>
+
+                            <MudTh Style="text-align:center;">
+                                LOG TIME
+                                <MudTableSortLabel InitialDirection="SortDirection.Descending"
+                                                   T="DataLogModel"
+                                                   SortBy="new Func<DataLogModel, object>(x=>x.Time)"></MudTableSortLabel>
+                            </MudTh>
+
+                            <MudTh Style="text-align:center;">
+                                OLD VALUE
+                                <MudTableSortLabel T="DataLogModel"
+                                                   SortBy="new Func<DataLogModel, object>(x=>x.OldValue)"></MudTableSortLabel>
+                            </MudTh>
+
+                            <MudTh Style="text-align:center;">
+                                NEW VALUE
+                                <MudTableSortLabel T="DataLogModel"
+                                                   SortBy="new Func<DataLogModel, object>(x=>x.Value)"></MudTableSortLabel>
+                            </MudTh>
+                        </HeaderContent>
+
+                        <RowTemplate>
+                            <MudTd Style="text-align:center;" DataLabel="ID">@context.DeviceId.ToString()</MudTd>
+                            <MudTd Style="text-align:center;" DataLabel="NAME">@context.Attribute</MudTd>
+                            <MudTd Style="text-align:center;" DataLabel="NAME">@UnixTime.UnixSecondToLocalTimeFormat(@context.Time)</MudTd>
+                            <MudTd Style="text-align:center;" DataLabel="NAME">@context.OldValue</MudTd>
+                            <MudTd Style="text-align:center;" DataLabel="NAME">@context.Value</MudTd>
+                        </RowTemplate>
+
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+
+
 
                 </div>
-
             </div>
-
-
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
-    <!-- /.content -->
 </div>
-
 
 @code {
     string AccessToken = "";
     DataLogService svDataLog = new DataLogService();
     DeviceDataStore svDevice = new DeviceDataStore();
+    MasterDataService svMasterData = new MasterDataService();
     List<DataLogModel> LstDataLog = new List<DataLogModel>();
     List<DeviceModel> LstDevice = new List<DeviceModel>();
+    List<MasterDataModel.AttributeModel> LstAllAttr = new List<MasterDataModel.AttributeModel>();
+    int crDeviceFilter = -1;
+    string crAttrFilter = "";
+    int crTsStart, crTsEnd;
     //Dictionary<int, string> DicDeviceName;
+    //private HxGrid<DataLogModel> HxTable;
 
     protected override async Task OnInitializedAsync()
     {
         AccessToken = await LocalStorage.GetItemAsync<string>("token");
-        if (AccessToken == "")
+        if (AccessToken == null)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
-            NavHelper.NavigateTo("/login");
+            NavHelper.NavigateTo("/login"); return;
         }
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initialize Data\nPlease wait ...");
         LstDataLog = await svDataLog.GetAllDataAsync(AccessToken, UnixTime.LocalTimeToUnixSecond(DateTime.Now.Date), UnixTime.LocalTimeToUnixSecond(DateTime.Now.Date.AddDays(-7)));
-        if (LstDataLog.Count == 0) {
-            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "No logs data This Week", false);
-        }
+        //HxTable.RefreshDataAsync();
+
+        //if (LstDataLog.Count == 0)
+        //{
+        //    JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "No logs data This Week", false);
+        //}
         LstDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        LstAllAttr = await svMasterData.GetAttributeListAsync(AccessToken);
+
+        // In case navigate from query string
+        string queryDeviceId, tsStart, tsEnd;
+        if (NavigationHelper.TryGetQueryString<string>(NavHelper, "DeviceId", out queryDeviceId) && string.IsNullOrEmpty(queryDeviceId) == false && NavigationHelper.TryGetQueryString<string>(NavHelper, "tsStart", out tsStart) && string.IsNullOrEmpty(tsStart) == false && NavigationHelper.TryGetQueryString<string>(NavHelper, "tsEnd", out tsEnd) && string.IsNullOrEmpty(tsEnd) == false)
+        {
+            crTsStart = Convert.ToInt32(tsStart);
+            crTsEnd = Convert.ToInt32(tsEnd);
+            crDeviceFilter = Convert.ToInt32(queryDeviceId);
+
+            LstDataLog = await svDataLog.GetDataAsync(AccessToken, crDeviceFilter, crTsStart, crTsEnd);
+            InvokeAsync(StateHasChanged);
+        }
+
+
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
     }
 
@@ -141,22 +256,65 @@
         {
             return;
         }
-        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTrable");
     }
 
-    async Task DateRangeSubmitHandle(DateRange range)
+    //private Task<GridDataProviderResult<DataLogModel>> ClientSideProcessingDataProvider(GridDataProviderRequest<DataLogModel> request)
+    //{
+    //    return Task.FromResult(request.ApplyTo(LstDataLog));
+    //}
+
+
+    string TableFilterString = "";
+    private bool TableFilterFunc(DataLogModel element)
+    {
+        if (string.IsNullOrWhiteSpace(TableFilterString))
+            return true;
+        if (element.DeviceId.ToString().Contains(TableFilterString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Attribute.Contains(TableFilterString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.OldValue.Contains(TableFilterString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Value.Contains(TableFilterString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    async Task DateRangeSubmitHandle(BlazorDateRangePicker.DateRange range)
     {
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Loading Data Logs\nPlease wait ...");
-        var _tmpStart = range.Start.ToUnixTimeSeconds();
-        var _tmpEnd = range.End.ToUnixTimeSeconds();
+        crTsStart = Convert.ToInt32(range.Start.ToUnixTimeSeconds());
+        crTsEnd = Convert.ToInt32(range.End.ToUnixTimeSeconds());
 
-        LstDataLog = await svDataLog.GetAllDataAsync(AccessToken, Convert.ToInt32(_tmpStart), Convert.ToInt32(_tmpEnd));
+        //LstDataLog = await svDataLog.GetAllDataAsync(AccessToken, tsStart, tsEnd);
+        LstDataLog = await svDataLog.GetDataAsync(AccessToken, crDeviceFilter, crTsStart, crTsEnd);
         if (LstDataLog.Count == 0)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "No logs data", false);
         }
 
+        //HxTable.RefreshDataAsync();
         JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    }
 
+    private void DownloadExcelFile()
+    {
+        // convert ms to dattime before export
+        List<DataLogExport> LstExport = new List<DataLogExport>();
+        foreach(var it in LstDataLog)
+        {
+            //var _modItem = it.DeepCopy();
+            DataLogExport result = new DataLogExport(it.DeepCopy());
+
+            result.TimeUTC = UnixTime.UnixSecondToLocalTime(it.Time);
+            result.DeviceName = LstDevice.Where(r=>r.Id == it.DeviceId).FirstOrDefault()?.Name;
+
+            LstExport.Add(result);
+        }
+
+        var excelBytes = ExcelHelper<DataLogExport>.GenerateExcelWorkbook(LstExport);
+        JSHelper.InvokeVoidAsync("saveAsFile", $"ListGateWay_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.xlsx", Convert.ToBase64String(excelBytes));
     }
 }

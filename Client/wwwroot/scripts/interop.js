@@ -1,3 +1,45 @@
+function Inject_BootstrapMenu() {
+  /////// Prevent closing from click inside dropdown
+  document.querySelectorAll(".dropdown-menu").forEach(function (element) {
+    element.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+  });
+
+  // make it as accordion for smaller screens
+  if (window.innerWidth < 992) {
+    // close all inner dropdowns when parent is closed
+    document
+      .querySelectorAll(".navbar .dropdown")
+      .forEach(function (everydropdown) {
+        everydropdown.addEventListener("hidden.bs.dropdown", function () {
+          // after dropdown is hidden, then find all submenus
+          this.querySelectorAll(".submenu").forEach(function (everysubmenu) {
+            // hide every submenu as well
+            everysubmenu.style.display = "none";
+          });
+        });
+      });
+
+    document.querySelectorAll(".dropdown-menu a").forEach(function (element) {
+      element.addEventListener("click", function (e) {
+        let nextEl = this.nextElementSibling;
+        if (nextEl && nextEl.classList.contains("submenu")) {
+          // prevent opening link if link needs to open dropdown
+          e.preventDefault();
+          //console.log(nextEl);
+          if (nextEl.style.display == "block") {
+            nextEl.style.display = "none";
+          } else {
+            nextEl.style.display = "block";
+          }
+        }
+      });
+    });
+  }
+  // end if innerWidth
+}
+
 function RenderPieChartLayout() {
   var donutData = {
     labels: ["Electrics", "HVAC"],
@@ -138,17 +180,6 @@ function Interop_ShowHideModal(mdId, state) {
   $(`#${mdId}`).modal(`${state}`);
 }
 
-function Interop_InjectBootstrapTable() {
-  const $table = $(`#table`);
-  $table.bootstrapTable({
-    exportDataType: "all",
-    exportTypes: ["json", "xml", "csv", "txt", "sql", "excel", "pdf"],
-    formatNoMatches: () => {
-      return "";
-    },
-  });
-}
-
 function Interop_GotoUrlAsync(uri, timeout) {
   setTimeout(() => {
     document.getElementById(uri).scrollIntoView({ behavior: "smooth" });
@@ -169,11 +200,27 @@ function _handleSelect() {
     );
   });
 }
-async function Interop_DisplayChange(el) {
+
+function _handlejQuerySelect() {
+  return new Promise((resolve, reject) => {
+    $("select").one("change", function (e) {
+      var valueSelected = this.value;
+      resolve(valueSelected);
+    });
+  });
+}
+
+async function Interop_jQueryDisplayChange() {
+  let result = await _handlejQuerySelect();
+  //console.log(result);
+  return result;
+}
+
+async function Interop_DisplayChange() {
   //console.log(el);
   let arrResult = await _handleSelect();
   //console.log($(el).val());
-  console.log(arrResult);
+  //console.log(arrResult);
   return arrResult;
 }
 
@@ -182,8 +229,8 @@ function _handleSelectById(slElId) {
     $(`#${slElId}`).one(
       "changed.bs.select",
       (e, clickedIndex, isSelected, previousValue) => {
-        console.log(e);
-        console.log("haha id", clickedIndex);
+        //console.log(e);
+        //console.log("haha id", clickedIndex);
         const slOptionText = $(e.currentTarget)
           .children("option")
           .eq(clickedIndex)
@@ -203,6 +250,18 @@ function Interop_FormValidate(elForm) {
   return elForm.checkValidity();
 }
 
+// this is for event register and call this function once onAfterRender
+function OneTimeEventHandle() {
+  // $(".modal")
+  //   .on("show.bs.modal", function (e) {
+  //     $("body").addClass("example-open");
+  //   })
+  //   .on("hide.bs.modal", function (e) {
+  //     $("body").removeClass("example-open");
+  //   });
+  // $(".modal").on("hide.bs.modal", function (e) {});
+}
+
 async function Interop_Swal2InputAsync(inputType, title, confirmText) {
   const result = await Swal.fire({
     title: title,
@@ -219,6 +278,11 @@ async function Interop_Swal2InputAsync(inputType, title, confirmText) {
     return result.value;
   }
   return "";
+}
+
+function OpenInNewTab(url) {
+  //console.log("haah");
+  window.open(url, "_blank").focus();
 }
 
 async function Interop_Swal2HelperAsync(
@@ -280,7 +344,7 @@ function Interop_Swal2Helper(icon, text, isToast) {
 function Interop_ToggleSwitch(cbId) {
   let cbEl = $(`#${cbId}`);
   cbEl.prop("checked", !cbEl.prop("checked"));
-  console.log(cbId);
+  //console.log(cbId);
 }
 
 function Interop_InjectBootstrapTable() {
@@ -345,25 +409,24 @@ function Interop_PurgeValidBtCache() {
   $("form.was-validated").removeClass("was-validated");
 }
 
+function Interop_PurgeBootstrapSelectCache() {
+  $(".selectpicker").selectpicker("render");
+  $(".selectpicker").selectpicker("refresh");
+}
+
 function Interop_PurgeAllCache() {
   // clear all select bootstrap
   $(".selectpicker").selectpicker("deselectAll");
   $(".selectpicker").selectpicker("val", []);
 
   // clear all validate sign
-  $("form.was-validated").removeClass("was-validated");
-}
-
-function Interop_PurgeBootstrapSelectCache() {
-  $(".selectpicker").selectpicker("render");
-  $(".selectpicker").selectpicker("refresh");
+  Interop_PurgeValidBtCache();
 }
 
 function Interop_InjectBootstrapSelectionById(id, value) {
   //console.log(id, value);
   $(`#${id}`).selectpicker("val", value);
-  $(".selectpicker").selectpicker("render");
-  $(".selectpicker").selectpicker("refresh");
+  Interop_PurgeBootstrapSelectCache();
 }
 
 function InjectBootstrapSwitch() {
@@ -371,6 +434,7 @@ function InjectBootstrapSwitch() {
     $(this).bootstrapSwitch("state", $(this).prop("checked"));
   });
 }
+
 function InjectFormValidate() {
   // Fetch all the forms we want to apply custom Bootstrap validation styles to
   var forms = document.getElementsByClassName("needs-validation");
@@ -410,16 +474,32 @@ function InjectBootstrapSlider() {
     .slider()
     .on("slideStop", () => {
       let slValue = $(".slider").bootstrapSlider("getValue");
-      console.log(slValue);
+      //console.log(slValue);
       $(".card-header b").text(`from ${slValue[0]} to ${slValue[1]}`);
     });
 }
 
 function Interop_InjectBootstrapSelect() {
-  console.log($(".selectpicker").val());
   $(".selectpicker").selectpicker();
   $(".btn-light").css("color", "#1f2d3d");
   $(".btn-light").css("border-color", "#d8d8d8");
+}
+
+//function BeginClickBtnRefreshDataTable() {
+//    setInterval(() => {
+//        document.getElementById("btnRefreshDataTable").click();
+//    }, 5000);
+//}
+
+
+//!ref: https://stackoverflow.com/questions/60547310/blazor-export-to-excel
+function saveAsFile(filename, bytesBase64) {
+  var link = document.createElement("a");
+  link.download = filename;
+  link.href = "data:application/octet-stream;base64," + bytesBase64;
+  document.body.appendChild(link); // Needed for Firefox
+  link.click();
+  document.body.removeChild(link);
 }
 
 $(document).ready(() => {});

@@ -7,9 +7,16 @@ namespace SmartRetail.Share.Models
 {
     public class DataLogModel : BaseNotifyModel
     {
-        public DataLogModel()
+        public DataLogModel() { }
+        public DataLogModel(DataLogModel data)
         {
-
+            this.DeviceId = data.DeviceId;
+            this.Attribute = data.Attribute;
+            this.DeviceName = data.DeviceName;
+            this.OldValue = data.OldValue;
+            this.SectionName = data.SectionName;
+            this.Time = data.Time;
+            this.Value = data.Value;
         }
 
         //-- For Internal Using ---------------
@@ -72,6 +79,22 @@ namespace SmartRetail.Share.Models
             get { return _Value; }
             set { SetProperty(ref _Value, value); }
         }
-    }
 
+        public DataLogModel ShallowCopy()
+        {
+            return (DataLogModel)this.MemberwiseClone();
+        }
+        public DataLogModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<DataLogModel>(_tmpSerializeString);
+        }
+    }
+    public class DataLogExport : DataLogModel
+    {
+    public DataLogExport(DataLogModel data) : base(data)
+        { }
+        public DataLogExport() { }
+        public DateTime TimeUTC { get; set; }
+    }
 }

@@ -17,6 +17,20 @@ namespace SmartRetail.Client.Helper
             return (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds;
         }
 
+        public static string UnixSecondToLocalTimeFormat(long value)
+        {
+            var _value = (long)value ;
+            if (_value <= 24 * 3600)
+            {
+                var hours = _value / 3600;
+                var minute = (_value % 3600) / 60;
+                var second = _value % 60;
+                return hours.ToString("00") + ":" + minute.ToString("00") + ":" + second.ToString("00");
+            }
+            else
+                return UnixSecondToLocalTime((long)_value).ToString("yyyy/MM/dd HH:mm:ss");
+        }
+
         public static string UnixMillisToLocalTimeFormat(long value)
         {
             var _value = (long)value / 1000;
@@ -35,6 +49,13 @@ namespace SmartRetail.Client.Helper
         {
             System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
             dtDateTime = dtDateTime.AddSeconds(value).ToLocalTime();
+            return dtDateTime;
+        }
+
+        public static System.DateTime UnixMillisToLocalTime(long value)
+        {
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddMilliseconds(value).ToLocalTime();
             return dtDateTime;
         }
 

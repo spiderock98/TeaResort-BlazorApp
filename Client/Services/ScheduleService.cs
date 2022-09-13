@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using SmartRetail.Share.Models;
 using Newtonsoft.Json;
 
-namespace SmartRetail.Services
+namespace SmartRetail.Client.Services
 {
     public class ScheduleService
     {
@@ -32,7 +32,6 @@ namespace SmartRetail.Services
             }
             catch { }
             return await Task.FromResult(false);
-
         }
 
         public async Task<string> GetDebugAsync(int scheduleId, string token)

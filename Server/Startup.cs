@@ -24,6 +24,14 @@ namespace SmartRetail.Server
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                builder.WithOrigins("http://45.251.112.69:6003/interlock", "http://45.251.112.69:9003")
+                       .AllowAnyMethod()
+                       .AllowAnyHeader());
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,12 +52,17 @@ namespace SmartRetail.Server
 
             app.UseRouting();
 
+            app.UseCors();
+
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");
             });
+
+
         }
     }
 }

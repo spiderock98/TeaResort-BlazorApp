@@ -3,7 +3,7 @@
 @inject NavigationManager navigationManager
 @*@inject IdentityAuthenticationStateProvider authStateProvider*@
 @inject IJSRuntime JSHelper
-@using SmartRetail.Services
+@using SmartRetail.Client.Services
 @using Newtonsoft.Json
 @using Share.Models
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
@@ -92,10 +92,10 @@
                 await LocalStorage.SetItemAsync("token", _TOKEN);
                 await LocalStorage.SetItemAsync("username", NewUserParameter.User);
 
-                NavHelper.NavigateTo("/dashboard");
+                NavHelper.NavigateTo("/gateway");
             }
             JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
-            navigationManager.NavigateTo("/schedule");
+            navigationManager.NavigateTo("/gateway");
         }
         catch (Exception ex)
         {

@@ -6,3 +6,12 @@ fieldset {
   color: #1f2d3d;
   border-color: #d8d8d8;
 }
+
+.modal {
+  /* background: linear-gradient(#03a9f4, #e91ee3) !important; */
+  background: linear-gradient(#c1e2f1, #f7e8f6) !important;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}

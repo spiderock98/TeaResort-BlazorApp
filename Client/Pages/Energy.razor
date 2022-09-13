@@ -1,0 +1,262 @@
+﻿@page "/energy"
+@using BlazorDateRangePicker
+@using Helper
+@inject IJSRuntime JSHelper
+@using SmartRetail.Client.Services
+@using Share.Models
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+@using System.Timers
+@using Newtonsoft.Json
+
+
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Daily Energy</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            @*<div class="card card-primary">
+                <div class="card-body">*@
+
+            <MudTable ServerData="@(new Func<TableState, Task<TableData<DeviceModel>>>(ServerReload))"
+                      FixedHeader="true"
+                      Height="600px"
+                      Hover="true"
+                      @ref="MainTable">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">List PowerTag</MudText>
+                    <MudSpacer />
+                    <MudTextField T="string"
+                                  ValueChanged="@(s=> { mudFilterString = s; MainTable.ReloadServerData(); })"
+                                  Placeholder="Search" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Class="mt-0">
+                    </MudTextField>
+                </ToolBarContent>
+
+                <HeaderContent>
+                    <MudTh Style="text-align:center;">
+                        No.
+                        <MudTableSortLabel T="DeviceModel" SortLabel="No"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Name
+                        <MudTableSortLabel T="DeviceModel" SortLabel="Name"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Current A (A)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="currentA"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Current B (A)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="currentA"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Current C (A)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="currentA"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Voltage AN - 1P (V)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="voltageAN"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Voltage AB - 3P (V)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="voltageAN"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Voltage BC - 3P (V)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="voltageAN"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Voltage CA - 3P (V)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="voltageAN"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Total Active Power (W)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="powerA"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Total Active Energy (kW.h)
+                        <MudTableSortLabel T="DeviceModel" SortLabel="energyPActive"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Power Factor
+                        <MudTableSortLabel T="DeviceModel" SortLabel="powerFactorT"></MudTableSortLabel>
+                    </MudTh>
+
+                    <MudTh Style="text-align:center;">
+                        Action
+                    </MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd Style="text-align:center;">@context.Id</MudTd>
+                    <MudTd Style="text-align:center;">@context.Name</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("currentA")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("currentB")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("currentC")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("voltageAN")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("voltageAB")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("voltageBC")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("voltageCA")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("powerA")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("energyPActive")</MudTd>
+                    <MudTd Style="text-align:center;">@context.Status.GetValueOrDefault("powerFactorT")</MudTd>
+                    <MudTd Style="text-align:center;">
+                        <MudIconButton Icon="@Icons.Material.Filled.HistoryToggleOff"
+                                       Color="Color.Info"
+                                       Title="Show today logs"
+                                       Link="@string.Format("/logs?DeviceId={0}&tsStart={1}&tsEnd={2}", context.Id, DateTimeOffset.Now.AddDays(-1).ToUnixTimeSeconds(), DateTimeOffset.Now.ToUnixTimeSeconds())"
+                                       Target="_blank"
+                                       OnClick="(e) => {  }"
+                                       Size="Size.Small" />
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+
+            @*</div>
+                </div>*@
+        </div>
+    </section>
+</div>
+
+@code {
+    string AccessToken = "";
+    EnergyService svEnergy = new EnergyService();
+    UserService svUser = new UserService();
+    //CloudUser CurrentUser = new CloudUser() { Infor = new UserInfor(), Roles = new List<Role>() };
+    DeviceDataStore svDevice = new DeviceDataStore();
+
+    List<DeviceModel> LstAllDevice = new List<DeviceModel>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == null)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login"); return;
+        }
+        //CurrentUser = await svUser.GetUserAllInforAsync(AccessToken);
+        await RefetchData(true);
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+
+        //var result = await svEnergy.GetDataAsync("admin", "admin");
+        //Console.WriteLine(result.MeterInstantData.ElementAtOrDefault(0).voltageAN);
+
+        Timer timer = new Timer();
+        timer.Interval = 5000;
+        timer.Elapsed += async (_, _) => RefetchData(false);
+        timer.Start();
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+    }
+
+    async Task RefetchData(bool isNoti)
+    {
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+
+        var taskLstDevice = svDevice.GetOwnerDevicesListAsync(AccessToken);
+
+        await Task.WhenAll(taskLstDevice);
+
+        LstAllDevice = await taskLstDevice;
+
+        if (isNoti) JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        MainTable.ReloadServerData();
+        //InvokeAsync(StateHasChanged);
+    }
+
+    private MudTable<DeviceModel> MainTable;
+    string mudFilterString = "";
+    private int totalItems;
+    private List<DeviceModel> pagedData;
+    private async Task<TableData<DeviceModel>> ServerReload(TableState state)
+    {
+        var data = new List<DeviceModel>();
+        foreach (var it in LstAllDevice)
+        {
+            if (it.Capabilitie == "SchneiderPowerTag_1P" || it.Capabilitie == "SchneiderPowerTag_3P")
+            { data.Add(it.DeepCopy()); }
+        }
+        //Console.WriteLine(JsonConvert.SerializeObject(data));
+
+        //data = data.Where(element =>
+        //{
+        //    if (string.IsNullOrWhiteSpace(mudFilterString))
+        //        return true;
+        //    if (element.Id.ToString().Contains(mudFilterString))
+        //        return true;
+        //    if (element.Name.Contains(mudFilterString))
+        //        return true;
+        //    return false;
+        //}).ToList();
+        totalItems = data.Count();
+        //switch (state.SortLabel)
+        //{
+        //    case "No":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Id).ToList();
+        //        break;
+        //    case "Name":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Name).ToList();
+        //        break;
+        //    case "currentA":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Status["currentA"]).ToList();
+        //        break;
+        //    case "voltageAN":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Status["voltageAN"]).ToList();
+        //        break;
+        //    case "powerA":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Status["powerA"]).ToList();
+        //        break;
+        //    case "powerFactorT":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Status["powerFactorT"]).ToList();
+        //        break;
+        //    case "energyPActive":
+        //        data = data.OrderByDirection(state.SortDirection, o => o.Status["energyPActive"]).ToList();
+        //        break;
+        //}
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+
+        return new TableData<DeviceModel>() { TotalItems = totalItems, Items = pagedData };
+    }
+}

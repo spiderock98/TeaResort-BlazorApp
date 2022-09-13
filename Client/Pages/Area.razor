@@ -1,8 +1,13 @@
-﻿@page "/area"
-@inject NavigationManager uriHelper
-@using BlazorDateRangePicker
-@using Helper
+﻿@page "/layout_area"
 @inject IJSRuntime JSHelper
+@using SmartRetail.Client.Services
+@using Newtonsoft.Json
+@using Helper
+@using Share.Models
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+@using System.Collections
+
 
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -10,7 +15,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
-                    <h1 style="font-size:50px;">Area Listing</h1>
+                    <h1 style="font-size:50px;">Layout Area</h1>
                 </div>
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -20,551 +25,479 @@
     <section class="content">
         <div class="container-fluid">
 
-            <div class="row">
+            <MudButton Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.AddCircle"
+                       Color="Color.Success" data-toggle="modal"
+                       data-target="#mdNewArea"
+                       @onclick="PreNew">
+                NEW AREA
+            </MudButton>
 
-                <div class="form-group col-4">
-                    <label>
-                        <i class="fas fa-map-marker-alt"></i>
-                        Area
-                    </label>
-                    <div class="input-group ">
-                        <select title="-- Select --"
-                                data-style="btn-light"
-                                class="form-control selectpicker">
-                            <option>TP. Hồ Chí Minh</option>
-                            <option>Hà Nội</option>
-                            <option>Hải Phòng</option>
-                            <option>Đà Nẵng</option>
-                            <option>Hội An</option>
-                            <option>Nha Trang</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group col-4">
-                    <label>
-                        <i class="fas fa-city"></i>
-                        Zone
-                    </label>
-                    <div class="input-group ">
-                        <select title="-- Select --"
-                                data-style="btn-light"
-                                class="form-control selectpicker">
-                            <option>Biệt thự 1</option>
-                            <option>Biệt thự 2</option>
-                            <option>Biệt thự 3</option>
-                            <option>Biệt thự 4</option>
-                            <option>Biệt thự 5</option>
-                            <option>Biệt thự 6</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group col-4">
-                    <label>
-                        <i class="fas fa-store"></i>
-                        Room
-                    </label>
-                    <div class="input-group ">
-                        <select title="-- Select --"
-                                data-style="btn-light"
-                                class="form-control selectpicker">
-                            <option>Tầng Trệt</option>
-                            <option>Tầng 1</option>
-                            <option>Tầng 2</option>
-                            <option>Tầng 3</option>
-                            <option>Tầng 4</option>
-                            <option>Tầng 5</option>
-                        </select>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="card">
-                @*<div class="card-header">
-            <h3 class="card-title">Daily Engergy</h3>
-            </div>*@
-                <!-- /.card-header -->
-                <div class="card-body">
-                    <table id="example1" class="table table-bordered table-striped">
-                        <thead>
-                            <tr class="text-center">
-                                <th></th>
-                                <th>City</th>
-                                <th>District</th>
-                                <th>Ward</th>
-                                <th>Current Power <sup>kW</sup></th>
-                                <th>Total Engergy <sup>kW.h</sup></th>
-                                <th>Energy Target <sup>kW.h</sup></th>
-                                <th>Status</th>
-                                <th>Maintenance</th>
-                                <th>Schedule Enabler</th>
-                                <th>Setting</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-                            <tr class="text-center">
-                                <td>
-                                    <div class="custom-control custom-checkbox">
-                                        <input class="custom-control-input custom-control-input-success" type="checkbox"
-                                               id="cbSelectStore0">
-                                        <label for="cbSelectStore0" class="custom-control-label"></label>
-                                    </div>
-                                </td>
-                                <td>TP. Hồ Chí Minh</td>
-                                <td>TP. Thủ Đức</td>
-                                <td>Tăng Nhơn Phú A</td>
-                                <td>90</td>
-                                <td>500</td>
-                                <td>200</td>
-                                <td class="text-danger">
-                                    <i class="far fa-times-circle"></i> Offline
-                                </td>
-                                <td>
-                                    <i class="fas fa-exclamation-triangle" style="color: #aeae00;"></i>
-                                </td>
-                                <td>
-                                    <input type="checkbox" name="my-checkbox" checked data-bootstrap-switch
-                                           data-off-color="danger" data-on-color="success">
-                                </td>
-
-                                <td>
-                                    <button class="btn" type="button" data-toggle="modal" data-target="#modalStore0">
-                                        <i class="fas fa-cog"></i>
+            @*<table class="bootstrap-table"
+               data-search="false"
+               data-show-export="true"
+               data-click-to-select="true"
+               data-search-align="right"
+               data-buttons-align="right">
+            <thead>
+                <tr class="text-center">
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (var _area in LstAllArea.OrderByDescending(r => r.Id))
+                    {
+                        <tr class="text-center">
+                            <th>@_area.Id</th>
+                            <td>@_area.Name</td>
+                            <td>
+                                <div class="d-flex justify-content-center flex-wrap">
+                                    <button type="button"
+                                            data-target="#mdEditArea"
+                                            data-toggle="modal"
+                                            class="btn btn-xs btn-warning m-1"
+                                            @onclick=@(() => { PreEdit(_area); })>
+                                        <i class="fas fa-pen"></i>
                                     </button>
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="modalStore0" tabindex="-1"
-                                         aria-labelledby="lbModalStore0" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="lbModalStore0">Store Trần Hưng Đạo</h5>
-                                                    <button type="button" class="close" data-dismiss="modal"
-                                                            aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
 
-                                                    <!-- TODO: May Try Fieldset and Legend -->
-                                                    @* Reference:
-                                                https://getbootstrap.com/docs/4.5/components/forms/?#validation *@
-                                                    <form id="formModifyStore0" class="needs-validation" novalidate>
-                                                        <div class="form-row">
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="validationCustom00">Store</label>
-                                                                <input type="text" class="form-control"
-                                                                       id="validationCustom00" value="Trần Hưng Đạo"
-                                                                       required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid name of Store.
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="validationCustom01">Address</label>
-                                                                <input type="text" class="form-control"
-                                                                       id="validationCustom01" value="TP. Hồ Chí Minh"
-                                                                       required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid Address.
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-row">
-                                                            <div class="col-md-3 mb-3">
-                                                                <label for="validationCustom02">Area</label>
-                                                                <input type="number" class="form-control"
-                                                                       id="validationCustom02" value="50" required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid Number.
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-9 mb-3">
-                                                                <label for="customFile0">Layout</label>
-                                                                <div class="custom-file">
-                                                                    <input type="file" class="custom-file-input"
-                                                                           id="customFile0">
-                                                                    <label class="custom-file-label"
-                                                                           for="customFile0">Choose file</label>
-                                                                </div>
-
-                                                                <div class="invalid-feedback">
-                                                                    Please select a valid state.
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-
-                                                    </form>
-
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                            data-dismiss="modal">
-                                                        Close
-                                                    </button>
-                                                    <button type="submit" form="formModifyStore0"
-                                                            class="btn btn-primary">
-                                                        Save
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </td>
-                            </tr>
-
-                            <tr class="text-center">
-                                <td>
-                                    <div class="custom-control custom-checkbox">
-                                        <input class="custom-control-input custom-control-input-success" type="checkbox"
-                                               id="cbSelectStore0">
-                                        <label for="cbSelectStore0" class="custom-control-label"></label>
-                                    </div>
-                                </td>
-                                <td>TP. Hồ Chí Minh</td>
-                                <td>TP. Thủ Đức</td>
-                                <td>Tăng Nhơn Phú B</td>
-                                <td>90</td>
-                                <td>500</td>
-                                <td>200</td>
-                                <td class="text-success">
-                                    <i class="far fa-check-circle"></i> Online
-                                </td>
-                                <td></td>
-                                <td>
-                                    <input type="checkbox" name="my-checkbox" checked data-bootstrap-switch
-                                           data-off-color="danger" data-on-color="success">
-                                </td>
-
-                                <td>
-                                    <button class="btn" type="button" data-toggle="modal" data-target="#modalStore1">
-                                        <i class="fas fa-cog"></i>
+                                    <button data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="Delete"
+                                            class="btn btn-xs btn-danger m-1"
+                                            @onclick=@(() => { ModalInfoHandle(_area, ModalType.Delete); })>
+                                        <i class="fas fa-trash"></i>
                                     </button>
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="modalStore1" tabindex="-1"
-                                         aria-labelledby="lbModalStore1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="lbModalStore1">Store Mạc Đĩnh Chi</h5>
-                                                    <button type="button" class="close" data-dismiss="modal"
-                                                            aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
 
-                                                    <!-- TODO: May Try Fieldset and Legend -->
-                                                    @* Reference:
-                                                https://getbootstrap.com/docs/4.5/components/forms/?#validation *@
-                                                    <form id="formModifyStore1" class="needs-validation" novalidate>
-                                                        <div class="form-row">
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="validationCustom10">Store</label>
-                                                                <input type="text" class="form-control"
-                                                                       id="validationCustom10" value="Trần Hưng Đạo"
-                                                                       required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid name of Store.
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="validationCustom11">Address</label>
-                                                                <input type="text" class="form-control"
-                                                                       id="validationCustom11" value="TP. Hồ Chí Minh"
-                                                                       required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid Address.
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-row">
-                                                            <div class="col-md-3 mb-3">
-                                                                <label for="validationCustom12">Area</label>
-                                                                <input type="number" class="form-control"
-                                                                       id="validationCustom12" value="50" required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid Number.
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-9 mb-3">
-                                                                <label for="customFile1">Layout</label>
-                                                                <div class="custom-file">
-                                                                    <input type="file" class="custom-file-input"
-                                                                           id="customFile1" required>
-                                                                    <label class="custom-file-label"
-                                                                           for="customFile1">Choose file</label>
-                                                                </div>
-
-                                                                <div class="invalid-feedback">
-                                                                    Please select a valid state.
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-
-                                                    </form>
-
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                            data-dismiss="modal">
-                                                        Close
-                                                    </button>
-                                                    <button type="button" form="formModifyStore1"
-                                                            class="btn btn-primary">
-                                                        Save
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </td>
-                            </tr>
-
-                            <tr class="text-center">
-                                <td>
-                                    <div class="custom-control custom-checkbox">
-                                        <input class="custom-control-input custom-control-input-success" type="checkbox"
-                                               id="cbSelectStore0">
-                                        <label for="cbSelectStore0" class="custom-control-label"></label>
-                                    </div>
-                                </td>
-                                <td>TP. Hồ Chí Minh</td>
-                                <td>TP. Thủ Đức</td>
-                                <td>Phú Hữu</td>
-                                <td>90</td>
-                                <td>500</td>
-                                <td>200</td>
-                                <td class="text-success">
-                                    <i class="far fa-check-circle"></i> Online
-                                </td>
-                                <td></td>
-                                <td>
-                                    <input type="checkbox" name="my-checkbox" checked data-bootstrap-switch
-                                           data-off-color="danger" data-on-color="success">
-                                </td>
-
-                                <td>
-                                    <button class="btn" type="button" data-toggle="modal" data-target="#modalStore2">
-                                        <i class="fas fa-cog"></i>
-                                    </button>
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="modalStore2" tabindex="-1"
-                                         aria-labelledby="lbModalStore2" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="lbModalStore2">Store 3</h5>
-                                                    <button type="button" class="close" data-dismiss="modal"
-                                                            aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-
-                                                    <!-- TODO: May Try Fieldset and Legend -->
-                                                    @* Reference:
-                                                https://getbootstrap.com/docs/4.5/components/forms/?#validation *@
-                                                    <form id="formModifyStore2" class="needs-validation" novalidate>
-                                                        <div class="form-row">
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="validationCustom20">Store</label>
-                                                                <input type="text" class="form-control"
-                                                                       id="validationCustom20" value="Trần Hưng Đạo"
-                                                                       required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid name of Store.
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="validationCustom21">Address</label>
-                                                                <input type="text" class="form-control"
-                                                                       id="validationCustom21" value="TP. Hồ Chí Minh"
-                                                                       required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid Address.
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-row">
-                                                            <div class="col-md-3 mb-3">
-                                                                <label for="validationCustom22">Area</label>
-                                                                <input type="number" class="form-control"
-                                                                       id="validationCustom22" value="50" required>
-                                                                <div class="invalid-feedback">
-                                                                    Please provide a valid Number.
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-9 mb-3">
-                                                                <label for="customFile2">Layout</label>
-                                                                <div class="custom-file">
-                                                                    <input type="file" class="custom-file-input"
-                                                                           id="customFile2" required>
-                                                                    <label class="custom-file-label"
-                                                                           for="customFile2">Choose file</label>
-                                                                </div>
-
-                                                                <div class="invalid-feedback">
-                                                                    Please select a valid state.
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-
-                                                    </form>
-
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                            data-dismiss="modal">
-                                                        Close
-                                                    </button>
-                                                    <button type="button" form="formModifyStore2"
-                                                            class="btn btn-primary">
-                                                        Save
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </td>
-                            </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-                <!-- /.card-body -->
-            </div>
-            <!-- /.card -->
-
-            <div class="card card-primary card-outline">
-                @*<div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-edit"></i>
-                        Vertical Tabs Examples
-                    </h3>
-                </div>*@
-
-                <div class="card-body">
-                    @*<h4 class="mt-4">Right Sided <small>(nav-tabs-right)</small></h4>*@
-                    <div class="row">
-                        <div class="col-7 col-sm-9">
-                            <div class="tab-content" id="vert-tabs-right-tabContent">
-                                <div class="tab-pane fade show active" id="vert-tabs-right-home" role="tabpanel"
-                                     aria-labelledby="vert-tabs-right-home-tab">
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin malesuada lacus ullamcorper dui
-                                    molestie, sit amet congue quam finibus. Etiam ultricies nunc non magna feugiat commodo. Etiam odio
-                                    magna, mollis auctor felis vitae, ullamcorper ornare ligula. Proin pellentesque tincidunt nisi,
-                                    vitae ullamcorper felis aliquam id. Pellentesque habitant morbi tristique senectus et netus et
-                                    malesuada fames ac turpis egestas. Proin id orci eu lectus blandit suscipit. Phasellus porta, ante
-                                    et varius ornare, sem enim sollicitudin eros, at commodo leo est vitae lacus. Etiam ut porta sem.
-                                    Proin porttitor porta nisl, id tempor risus rhoncus quis. In in quam a nibh cursus pulvinar non
-                                    consequat neque. Mauris lacus elit, condimentum ac condimentum at, semper vitae lectus. Cras
-                                    lacinia erat eget sapien porta consectetur.
                                 </div>
-                                <div class="tab-pane fade" id="vert-tabs-right-profile" role="tabpanel"
-                                     aria-labelledby="vert-tabs-right-profile-tab">
-                                    Mauris tincidunt mi at erat gravida, eget tristique urna bibendum. Mauris pharetra purus ut ligula
-                                    tempor, et vulputate metus facilisis. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                                    Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Maecenas
-                                    sollicitudin, nisi a luctus interdum, nisl ligula placerat mi, quis posuere purus ligula eu
-                                    lectus. Donec nunc tellus, elementum sit amet ultricies at, posuere nec nunc. Nunc euismod
-                                    pellentesque diam.
-                                </div>
-                                <div class="tab-pane fade" id="vert-tabs-right-messages" role="tabpanel"
-                                     aria-labelledby="vert-tabs-right-messages-tab">
-                                    Morbi turpis dolor, vulputate vitae felis non, tincidunt congue mauris. Phasellus volutpat augue
-                                    id mi placerat mollis. Vivamus faucibus eu massa eget condimentum. Fusce nec hendrerit sem, ac
-                                    tristique nulla. Integer vestibulum orci odio. Cras nec augue ipsum. Suspendisse ut velit
-                                    condimentum, mattis urna a, malesuada nunc. Curabitur eleifend facilisis velit finibus tristique.
-                                    Nam vulputate, eros non luctus efficitur, ipsum odio volutpat massa, sit amet sollicitudin est
-                                    libero sed ipsum. Nulla lacinia, ex vitae gravida fermentum, lectus ipsum gravida arcu, id
-                                    fermentum metus arcu vel metus. Curabitur eget sem eu risus tincidunt eleifend ac ornare magna.
-                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>*@
 
-                                <div class="callout callout-danger tab-pane fade" id="vert-tabs-right-settings" role="tabpanel"
-                                    aria-labelledby="vert-tabs-right-settings-tab">
-                                    <h5>I am a danger callout!</h5>
-                                    <p>
-                                        There is a problem that we need to fix. A wonderful serenity has taken possession of my entire
-                                        soul,
-                                        like these sweet mornings of spring which I enjoy with my whole heart.
-                                    </p>
-                                </div>
 
-                            </div>
-                        </div>
-                        <div class="col-5 col-sm-3">
-                            <div class="nav flex-column nav-tabs nav-tabs-right h-100" id="vert-tabs-right-tab" role="tablist"
-                                 aria-orientation="vertical">
-                                <a class="nav-link active" id="vert-tabs-right-home-tab" data-toggle="pill"
-                                   href="#vert-tabs-right-home" role="tab" aria-controls="vert-tabs-right-home"
-                                   aria-selected="true">Home</a>
-                                <a class="nav-link" id="vert-tabs-right-profile-tab" data-toggle="pill"
-                                   href="#vert-tabs-right-profile" role="tab" aria-controls="vert-tabs-right-profile"
-                                   aria-selected="false">Profile</a>
-                                <a class="nav-link" id="vert-tabs-right-messages-tab" data-toggle="pill"
-                                   href="#vert-tabs-right-messages" role="tab" aria-controls="vert-tabs-right-messages"
-                                   aria-selected="false">Messages</a>
-                                <a class="nav-link" id="vert-tabs-right-settings-tab" data-toggle="pill"
-                                   href="#vert-tabs-right-settings" role="tab" aria-controls="vert-tabs-right-settings"
-                                   aria-selected="false">Settings</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- /.card -->
-            </div>
 
-        </div><!-- /.container-fluid -->
+            <MudTable Hover=true
+                      ServerData="@(new Func<TableState, Task<TableData<AreaModel>>>(ServerReload))"
+                      @ref="MainTable">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">List All Area</MudText>
+                    <MudSpacer />
+                    <MudTextField T="string"
+                                  ValueChanged="@(s=>OnTableSearch(s))" 
+                                  Placeholder="Search"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Class="mt-0">
+                    </MudTextField>
+                </ToolBarContent>
+
+                <HeaderContent>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending" T="AreaModel" SortLabel="No">No.</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel SortLabel="Name" T="AreaModel">NAME</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd Style="text-align:center;" DataLabel="ID">@context.Id</MudTd>
+                    <MudTd Style="text-align:center;" DataLabel="NAME">@context.Name</MudTd>
+                    <MudTd Style="text-align:center;">
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                                   OnClick=@(() => { PreEdit(context); })
+                                   data-target="#mdEditArea"
+                                   data-toggle="modal">
+                            Edit
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
+                                   OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No matching records found</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading...</MudText>
+                </LoadingContent>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+
+
+        </div>
     </section>
     <!-- /.content -->
 </div>
 
+<!-- Modal Edit Area -->
+<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditArea" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered justify-content-center ">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                <h1 class="modal-title w-100">
+                    <i class="fas fa-cogs"></i>
+                </h1>
+                <h2 class="modal-title w-100">
+                    Edit Area
+                </h2>
+            </div>
+            <div class="modal-body">
+                <form @ref="elFormEdit">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
+                            </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@CrEditArea.Name"
+                                   placeholder="Room Name"
+                                   required />
+                        </div>
+                    </div>
+
+                    @foreach (var _zone in LstAllZone.Where(r => r.Area == CrEditArea.Id).ToList())
+                    {
+                        <div class="alert alert-light d-flex" role="alert">
+                            <div class="flex-grow-1">
+                                <span class="badge badge-success">
+                                    <h5>@_zone.Name</h5>
+                                </span>
+                            </div>
+                            <button class="btn btn-outline-success mr-1"
+                                    type="button"
+                                    @onclick=@(()=> { DetachZone(_zone); })>
+                                <i class="fas fa-unlock-alt"></i>
+                                Detach
+                            </button>
+                            <button class="btn btn-outline-success ml-1"
+                                    type="button">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                        </div>
+                    }
+                </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button"
+                        class="btn btn-outline-info"
+                        data-dismiss="modal"
+                        @onclick="PreCloseModalEdit">
+                    Cancle
+                </button>
+                <button type="button"
+                        class="btn btn-info"
+                        @onclick=@(()=> { ModalSubmit(ModalType.Edit); })>
+                    Save Change
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal New Area -->
+<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdNewArea" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered justify-content-center">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                <h1 class="modal-title w-100">
+                    <i class="fas fa-folder-plus"></i>
+                </h1>
+                <h2 class="modal-title w-100">
+                    New Area Layout
+                </h2>
+            </div>
+            <div class="modal-body">
+                <form @ref="elFormNew">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
+                            </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@NewAreaParam.Name"
+                                   placeholder="Area Name"
+                                   required />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button"
+                        class="btn btn-outline-info"
+                        data-dismiss="modal">
+                    Cancle
+                </button>
+                <button type="button"
+                        class="btn btn-info"
+                        @onclick=@(()=> { ModalSubmit(ModalType.Create); })>
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @code {
+    enum ModalType { Create, Edit, Delete }
+    ElementReference elFormNew, elFormEdit;
+    string AccessToken = "";
+
+    AreaModel NewAreaParam = new AreaModel();
+    AreaModel CrEditArea = new AreaModel();
+
+    List<AreaModel> LstAllArea = new List<AreaModel>();
+    List<ZoneModel> LstAllZone = new List<ZoneModel>();
+    List<SectionModel> LstAllSection = new List<SectionModel>();
+
+    LayoutAreaSevice svLayout = new LayoutAreaSevice();
+
     protected override async Task OnInitializedAsync()
-    { }
+    {
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == null)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login");
+            return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+        LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        // In case navigate from query string
+        string queryAreaId;
+        if (NavigationHelper.TryGetQueryString<string>(NavHelper, "AreaId", out queryAreaId) && queryAreaId != null)
+        {
+            var _objArea = LstAllArea.Where(r => r.Id == Convert.ToInt32(queryAreaId)).FirstOrDefault();
+            if (_objArea == default) return;
+
+            await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditArea", "show");
+
+            InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
+            PreEdit(_objArea);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+
         if (!firstRender)
         {
             return;
         }
+        //JSHelper.InvokeVoidAsync("OneTimeEventHandle");
         JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
-        JSHelper.InvokeVoidAsync("InjectDataTable");
-        JSHelper.InvokeVoidAsync("InjectBootstrapSwitch");
-        JSHelper.InvokeVoidAsync("InjectFormValidate");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
     }
 
-    public void DisplayResult(DateRange range)
-    {
-        //JSHelper.InvokeVoidAsync("console.log", range.Start, range.End);
-        var lstRangeDate = DateTimeHelper.DateTime2StringRange(range.Start.DateTime, range.End.DateTime);
-        //JSHelper.InvokeVoidAsync("console.log", lstRangeDate);
-        //JSHelper.InvokeVoidAsync("console.log", lstRangeDate.ToArray());
-        JSHelper.InvokeVoidAsync("RenderAreaChartLayout", lstRangeDate);
-    }
+    private MudTable<AreaModel> MainTable;
+    string mudFilterString = "";
 
-    protected async Task ViewPhoto(string type)
+    private int totalItems;
+    private List<AreaModel> pagedData;
+
+    private async Task<TableData<AreaModel>> ServerReload(TableState state)
     {
-        await JSHelper.InvokeVoidAsync("Swal.fire", new
+        var data = await svLayout.GetAreaListAsync(AccessToken);
+        data = data.Where(element =>
         {
-            title = type == "layout" ? "Bản vẽ mặt bằng" : "Hình ảnh thực tế",
-            //text= "Modal with a custom image.",
-            imageUrl = type == "layout" ?
-        "https://kientrucsuvietnam.vn/wp-content/uploads/2016/04/thiet-ke-nha-dep-tu-van-thiet-ke-nha-pho-5x11m-2-tang-2.jpg" :
-        "https://unsplash.it/400/200",
-            imageWidth = 400,
-            imageHeight = 200,
-            imageAlt = "Custom image",
-        });
+            if (string.IsNullOrWhiteSpace(mudFilterString))
+                return true;
+            if (element.Id.ToString().Contains(mudFilterString))
+                return true;
+            if (element.Name.Contains(mudFilterString))
+                return true;
+            return false;
+        }).ToList();
+        totalItems = data.Count();
+        switch (state.SortLabel)
+        {
+            case "No":
+                data = data.OrderByDirection(state.SortDirection, o => o.Id).ToList();
+                break;
+            case "Name":
+                data = data.OrderByDirection(state.SortDirection, o => o.Name).ToList();
+                break;
+        }
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+        return new TableData<AreaModel>() { TotalItems = totalItems, Items = pagedData };
+    }
+
+    private void OnTableSearch(string text)
+    {
+        mudFilterString = text;
+        MainTable.ReloadServerData();
+    }
+
+
+    async Task<int> SelectAndBindSingleInt()
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(int.Parse(slKeyItem.ToString()));
+    }
+
+    async Task DetachAllZoneInArea(AreaModel _area)
+    {
+        // get all zone belong to area then detach all
+        var _crLstZoneAssignedToArea = LstAllZone.Where(r => r.Area == _area.Id).ToList();
+        var isAllOk = true;
+        foreach (var _zone in _crLstZoneAssignedToArea)
+        {
+            _zone.Area = -1;
+            var _isThisOk = await svLayout.UpdateZoneAsync(_zone, AccessToken);
+            if (_isThisOk == false) isAllOk = false;
+        }
+        if (isAllOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All zones of this area has been detached", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+    }
+
+    async Task DetachZone(ZoneModel _zone)
+    {
+        _zone.Area = -1;
+        var isOk = await svLayout.UpdateZoneAsync(_zone, AccessToken);
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item detached", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        // Re fetch all List
+        //LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        //LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        //LstAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        //LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ModalSubmit(ModalType submitType)
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", submitType == ModalType.Create ? elFormNew : elFormEdit);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        var isOk = false;
+        if (submitType == ModalType.Create)
+        {
+            isOk = await svLayout.InsertAreaAsync(NewAreaParam, AccessToken);
+        }
+        else if (submitType == ModalType.Edit)
+        {
+            isOk = await svLayout.UpdateAreaAsync(CrEditArea, AccessToken);
+        }
+        // check response
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item " + (submitType == ModalType.Create ? "Added" : "Updated"), true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", submitType == ModalType.Create ? "mdNewArea" : "mdEditArea", "hide");
+
+        // Re fetch all List
+        //LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+
+        MainTable.ReloadServerData();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ModalInfoHandle(AreaModel _area, ModalType action)
+    {
+        string InputAreaName = "";
+        // Pre Validate
+        if (action == ModalType.Delete)
+        {
+            var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE AREA " + _area.Name, "#C70039", "Cancel", false);
+            if (!isConfirm) return;
+        }
+        else
+        {
+            InputAreaName = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "text", "Area Name", _area.Name, action == ModalType.Edit ? "Save Changed" : "Create");
+            if (InputAreaName == "") return;
+            _area.Name = InputAreaName;
+        }
+
+        // Request to server
+        var isOk = false;
+        if (action == ModalType.Create)
+        {
+            isOk = await svLayout.InsertAreaAsync(_area, AccessToken);
+        }
+        else if (action == ModalType.Edit)
+        {
+            isOk = await svLayout.UpdateAreaAsync(_area, AccessToken);
+        }
+        else if (action == ModalType.Delete)
+        {
+            isOk = await svLayout.DeleteAreaAsync(_area.Id, AccessToken);
+            DetachAllZoneInArea(_area);
+        }
+
+        // check response
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item changed", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+
+        // Re fetch all List
+        //LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        MainTable.ReloadServerData();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task PreCloseModalEdit()
+    {
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+    }
+    async Task PreNew()
+    {
+        NewAreaParam = new AreaModel();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task PreEdit(AreaModel _area)
+    {
+        CrEditArea = _area.DeepCopy();
+        await InvokeAsync(StateHasChanged);
     }
 }

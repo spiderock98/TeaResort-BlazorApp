@@ -1,0 +1,468 @@
+﻿@page "/layout_room"
+@inject IJSRuntime JSHelper
+@using SmartRetail.Client.Services
+@using Newtonsoft.Json
+@using Share.Models
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+@using System.Collections
+@using Helper 
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Layout Room</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle" Color="Color.Success" data-toggle="modal"
+                    data-target="#mdNewSection" @onclick="PreNew">
+                NEW ROOM
+            </MudButton>
+
+            <MudTable Items="@LstAllSection" 
+                      @ref="table"
+                      Hover=true
+                      Filter="new Func<SectionModel, bool>(FilterFunc)">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">List All Section</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="mudFilterMain" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+
+                <HeaderContent>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending" T="SectionModel" SortBy="new Func<SectionModel, object>(o=>o.Id)">No.</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<SectionModel, object>(o=>o.Name)" T="SectionModel">NAME</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel T="SectionModel" SortBy="new Func<SectionModel, object>(o=>o.Zone)">ZONE</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd Style="text-align:center;">@context.Id</MudTd>
+                    <MudTd Style="text-align:center;">@context.Name</MudTd>
+                    <MudTd Style="text-align:center;">
+                        @LstAllZone.Where(r => r.Id == context.Zone).FirstOrDefault()?.Name
+                    </MudTd>
+                    <MudTd Style="text-align:center;">
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                                   OnClick=@(() => { PreEdit(context); })
+                                   data-target="#mdEditSection"
+                                   data-toggle="modal">
+                            Edit
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
+                                   OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+
+
+        </div>
+    </section>
+    <!-- /.content -->
+</div>
+
+<!-- Modal Edit Section -->
+<div class="modal animate__animated  animate__bounceInUp" data-backdrop="static" id="mdEditSection" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered justify-content-center ">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                <h1 class="modal-title w-100">
+                    <i class="fas fa-cogs"></i>
+                </h1>
+                <h2 class="modal-title w-100">
+                    Edit Room
+                </h2>
+            </div>
+            <div class="modal-body">
+                <form @ref="elFormEdit">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
+                            </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@CrEditSection.Name"
+                                   placeholder="Room Name"
+                                   required />
+                        </div>
+
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-paper-plane"></i>
+                                </span>
+                            </div>
+                            <select @onchange=@(async() =>
+                                                {
+                                                    var slKey = await SelectAndBindSingleInt();
+                                                    CrEditSection.Zone = slKey;
+                                                })
+                                    id="slEditAssigned"
+                                    data-style="btn-light"
+                                    data-live-search="true"
+                                    class="form-control selectpicker"
+                                    required>
+                                <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                @foreach (var _zone in LstAllZone)
+                                {
+                                    <option value="@_zone.Id">@_zone.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @foreach (var _device in LstAllDevice.Where(r => r.SectionId == CrEditSection.Id).ToList())
+                    {
+                        <div class="alert alert-light d-flex" role="alert">
+                            <div class="flex-grow-1">
+                                <span class="badge badge-success">
+                                    <h5>@_device.Name</h5>
+                                </span>
+                            </div>
+                            <button class="btn btn-outline-success mr-1"
+                                    type="button"
+                                    @onclick=@(()=> { DetachDevice(_device); })>
+                                <i class="fas fa-unlock-alt"></i>
+                                Detach
+                            </button>
+                            <button class="btn btn-outline-success ml-1"
+                                    type="button">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                        </div>
+                    }
+                </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button"
+                        class="btn btn-outline-info"
+                        data-dismiss="modal"
+                        @onclick="PreCloseModalEdit">
+                    Cancle
+                </button>
+                <button type="button"
+                        class="btn btn-info"
+                        @onclick=@(()=> { ModalSubmit(ModalType.Edit); })>
+                    Save Change
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal New Zone -->
+<div class="modal animate__animated  animate__bounceInUp" data-backdrop="static" id="mdNewSection" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered justify-content-center">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                <h1 class="modal-title w-100">
+                    <i class="fas fa-folder-plus"></i>
+                </h1>
+                <h2 class="modal-title w-100">
+                     New Room Layout
+                </h2>
+            </div>
+            <div class="modal-body">
+                <form @ref="elFormNew">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
+                            </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@NewSectionParam.Name"
+                                   placeholder="Room Name"
+                                   required />
+                        </div>
+
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-paper-plane"></i>
+                                </span>
+                            </div>
+                            <select @onchange=@(async() =>
+                                                {
+                                                    var slKey = await SelectAndBindSingleInt();
+                                                    NewSectionParam.Zone = slKey;
+                                                })
+                                    title="-- Assigned to Zone --"
+                                    data-style="btn-light"
+                                    data-live-search="true"
+                                    class="form-control selectpicker"
+                                    required>
+                                <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                @foreach (var _zone in LstAllZone)
+                                {
+                                    <option value="@_zone.Id">@_zone.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-info"
+                        data-dismiss="modal">
+                    Cancle
+                </button>
+                <button type="button"
+                        class="btn btn-info"
+                        @onclick=@(()=> { ModalSubmit(ModalType.Create); })>
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    enum ModalType { Create, Edit, Delete }
+    ElementReference elFormNew, elFormEdit;
+    string AccessToken = "";
+    string mudFilterMain = "";
+
+    SectionModel NewSectionParam = new SectionModel();
+    SectionModel CrEditSection = new SectionModel();
+
+    List<AreaModel> LstAllArea = new List<AreaModel>();
+    List<ZoneModel> LstAllZone = new List<ZoneModel>();
+    List<SectionModel> LstAllSection = new List<SectionModel>();
+    List<DeviceModel> LstAllDevice = new List<DeviceModel>();
+
+    LayoutAreaSevice svLayout = new LayoutAreaSevice();
+    DeviceDataStore svDevice = new DeviceDataStore();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == null)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login"); return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+        LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        LstAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        ////LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        // In case navigate from query string
+        string querySecId;
+        if (NavigationHelper.TryGetQueryString<string>(NavHelper, "SectionId", out querySecId) && querySecId != null)
+        {
+            var _objSection = LstAllSection.Where(r => r.Id == Convert.ToInt32(querySecId)).FirstOrDefault();
+            if (_objSection == default) return;
+
+            await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditSection", "show");
+
+            InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
+            PreEdit(_objSection);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+
+        if (!firstRender)
+        {
+            return;
+        }
+        //JSHelper.InvokeVoidAsync("OneTimeEventHandle");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+    private MudTable<SectionModel> table;
+    private bool FilterFunc(SectionModel _section)
+    {
+        if (string.IsNullOrWhiteSpace(mudFilterMain))
+            return true;
+        if (_section.Id.ToString().Contains(mudFilterMain))
+            return true;
+        if (_section.Name.Contains(mudFilterMain))
+            return true;
+        return false;
+    }
+
+    async Task<int> SelectAndBindSingleInt()
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(int.Parse(slKeyItem.ToString()));
+    }
+
+    async Task DetachAllDeviceInSection(SectionModel _section)
+    {
+        // get all device belong to section then detach all
+        var _crLstDvAssignedToSec = LstAllDevice.Where(r => r.SectionId == _section.Id).ToList();
+        var isAllOk = true;
+        foreach (var _device in _crLstDvAssignedToSec)
+        {
+            _device.SectionId = -1;
+            var _isThisOk = await svDevice.UpdateAllDeviceData(_device, AccessToken);
+            if (_isThisOk == false) isAllOk = false;
+        }
+        if (isAllOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All devices of this section has been detached", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+    }
+
+    async Task DetachDevice(DeviceModel _device)
+    {
+        _device.SectionId = -1;
+        var isOk = await svDevice.UpdateAllDeviceData(_device, AccessToken);
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item detached", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        // Re fetch all List
+        //LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        //LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        //LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        LstAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        //LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ModalSubmit(ModalType submitType)
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", submitType == ModalType.Create ? elFormNew : elFormEdit);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        var isOk = false;
+        if (submitType == ModalType.Create)
+        {
+            isOk = await svLayout.InsertSectionAsync(NewSectionParam, AccessToken);
+        }
+        else if (submitType == ModalType.Edit)
+        {
+            isOk = await svLayout.UpdateSectionAsync(CrEditSection, AccessToken);
+        }
+        // check response
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item " + (submitType == ModalType.Create ? "Added" : "Updated"), true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", submitType == ModalType.Create ? "mdNewSection" : "mdEditSection", "hide");
+        // Re fetch all List
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ModalInfoHandle(SectionModel _section, ModalType action)
+    {
+        string InputSectionName = "";
+        // Pre Validate
+        if (action == ModalType.Delete)
+        {
+            var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE SECTION " + _section.Name, "#C70039", "Cancel", false);
+            if (!isConfirm) return;
+        }
+        else
+        {
+            InputSectionName = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "text", "Section Name", _section.Name, action == ModalType.Edit ? "Save Changed" : "Create");
+            if (InputSectionName == "") return;
+            _section.Name = InputSectionName;
+        }
+
+        // Request to server
+        var isOk = false;
+        if (action == ModalType.Create)
+        {
+            isOk = await svLayout.InsertSectionAsync(_section, AccessToken);
+        }
+        else if (action == ModalType.Edit)
+        {
+            isOk = await svLayout.UpdateSectionAsync(_section, AccessToken);
+        }
+        else if (action == ModalType.Delete)
+        {
+            isOk = await svLayout.DeleteSectionAsync(_section.Id, AccessToken);
+            DetachAllDeviceInSection(_section);
+        }
+
+        // check response
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item changed", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+
+        // Re fetch all List
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        table.ReloadServerData();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task PreCloseModalEdit()
+    {
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+    }
+    async Task PreNew()
+    {
+        NewSectionParam = new SectionModel();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task PreEdit(SectionModel _section)
+    {
+        CrEditSection = _section.ShallowCopy();
+
+        var _crAssignTo = LstAllZone.Where(r => r.Id == CrEditSection.Zone).FirstOrDefault()?.Id;
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditAssigned", _crAssignTo);
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

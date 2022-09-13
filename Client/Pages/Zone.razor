@@ -1,0 +1,586 @@
+﻿@page "/layout_zone"
+@inject IJSRuntime JSHelper
+@using SmartRetail.Client.Services
+@using Newtonsoft.Json
+@using Share.Models
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavHelper
+@using System.Collections
+@using Helper 
+
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Layout Zone</h1>
+                </div>
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle" Color="Color.Success" data-toggle="modal"
+                       data-target="#mdNewZone" @onclick="PreNew">
+                NEW ZONE
+            </MudButton>
+
+            @*<table class="bootstrap-table"
+               data-search="false"
+               data-show-export="true"
+               data-click-to-select="true"
+               data-search-align="right"
+               data-buttons-align="right">
+            <thead>
+                <tr class="text-center">
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>AREA</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (var _zone in LstAllZone.OrderByDescending(r => r.Id))
+                    {
+                        <tr class="text-center">
+                            <th>@_zone.Id</th>
+                            <td>@_zone.Name</td>
+                            <td>@LstAllArea.Where(r => r.Id == _zone.Area).FirstOrDefault()?.Name</td>
+                            <td>
+                                <div class="d-flex justify-content-center flex-wrap">
+
+                                    <button type="button"
+                                            data-target="#mdEditZone"
+                                            data-toggle="modal"
+                                            class="btn btn-xs btn-warning m-1"
+                                            @onclick=@(() => { PreEdit(_zone); })>
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+
+                                    <button data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="Delete"
+                                            class="btn btn-xs btn-danger m-1"
+                                            @onclick=@(() => { ModalInfoHandle(_zone, ModalType.Delete); })>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>*@
+
+
+            <MudTable @ref="table"
+                      Items="@LstAllZone.OrderByDescending(r=>r.Id)" 
+                      Hover=true
+                      Filter="new Func<ZoneModel, bool>(FilterFunc)">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">List All Zone</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="mudFilterMain" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+
+                <HeaderContent>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel InitialDirection="SortDirection.Descending" T="ZoneModel" SortBy="new Func<ZoneModel, object>(o=>o.Id)">No.</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel T="ZoneModel" SortBy="new Func<ZoneModel, object>(o=>o.Name)">NAME</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"><MudTableSortLabel T="ZoneModel" SortBy="new Func<ZoneModel, object>(o=>o.Area)">AREA</MudTableSortLabel></MudTh>
+                    <MudTh Style="text-align:center;"></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd Style="text-align:center;">@context.Id</MudTd>
+                    <MudTd Style="text-align:center;">@context.Name</MudTd>
+                    <MudTd Style="text-align:center;">
+                        @LstAllArea.Where(r => r.Id == context.Area).FirstOrDefault()?.Name
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                                   OnClick=@(() => { PreEdit(context); })
+                                   data-target="#mdEditZone"
+                                   data-toggle="modal">
+                            Edit
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Secondary" Size="Size.Small"
+                                   OnClick=@(() => { ModalInfoHandle(context, ModalType.Delete); })>Delete</MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+
+
+        </div>
+    </section>
+    <!-- /.content -->
+</div>
+
+<!-- Modal Edit Zone -->
+<div class="modal animate__animated  animate__bounceInUp" data-backdrop="static" id="mdEditZone" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered justify-content-center ">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                <h1 class="modal-title w-100">
+                    <i class="fas fa-cogs"></i>
+                </h1>
+                <h2 class="modal-title w-100">
+                    Edit Zone
+                </h2>
+            </div>
+            <div class="modal-body">
+                <form @ref="elFormEdit">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
+                            </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@CrEditZone.Name"
+                                   placeholder="Zone Name"
+                                   required />
+                        </div>
+
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-paper-plane"></i>
+                                </span>
+                            </div>
+                            <select @onchange=@(async() =>
+                                                {
+                                                    var slKey = await SelectAndBindSingleInt();
+                                                    CrEditZone.Area = slKey;
+                                                })
+                                    id="slEditAssigned"
+                                    data-style="btn-light"
+                                    data-live-search="true"
+                                    class="form-control selectpicker"
+                                    required>
+                                <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                @foreach (var _area in LstAllArea)
+                                {
+                                    <option value="@_area.Id">@_area.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @foreach (var _section in LstAllSection.Where(r => r.Zone == CrEditZone.Id).ToList())
+                    {
+                        <div class="alert alert-light d-flex" role="alert">
+                            <div class="flex-grow-1">
+                                <span class="badge badge-success">
+                                    <h5>@_section.Name</h5>
+                                </span>
+                            </div>
+                            <button class="btn btn-outline-success mr-1"
+                                    type="button"
+                                    @onclick=@(()=> { DetachSection(_section); })>
+                                <i class="fas fa-unlock-alt"></i>
+                                Detach
+                            </button>
+                            <button class="btn btn-outline-success ml-1"
+                                    type="button">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                        </div>
+                    }
+                </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button"
+                        class="btn btn-outline-info"
+                        @onclick="PreCloseModalEdit"
+                        data-dismiss="modal">
+                    Cancle
+                </button>
+                <button type="button"
+                        class="btn btn-info"
+                        @onclick=@(()=> { ModalSubmit(ModalType.Edit); })>
+                    Save Change
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal New Zone -->
+<div class="modal animate__animated  animate__bounceInUp" data-backdrop="static" id="mdNewZone" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered justify-content-center">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                <h1 class="modal-title w-100">
+                    <i class="fas fa-folder-plus"></i>
+                </h1>
+                <h2 class="modal-title w-100">
+                     New Zone Layout
+                </h2>
+            </div>
+
+            <div class="modal-body">
+                <form @ref="elFormNew">
+                    <div class="row">
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
+                            </div>
+                            <input class="form-control"
+                                   type="text"
+                                   @bind-value="@NewZoneParam.Name"
+                                   placeholder="Zone Name"
+                                   required />
+                        </div>
+
+                        <div class="input-group mb-3 col-12">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-paper-plane"></i>
+                                </span>
+                            </div>
+                            <select @onchange=@(async() =>
+                                                {
+                                                    var slKey = await SelectAndBindSingleInt();
+                                                    NewZoneParam.Area = slKey;
+                                                })
+                                    title="-- Assigned to Area --"
+                                    data-style="btn-light"
+                                    data-live-search="true"
+                                    class="form-control selectpicker"
+                                    required>
+                                <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                @foreach (var _area in LstAllArea)
+                                {
+                                    <option value="@_area.Id">@_area.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button"
+                        class="btn btn-outline-info"
+                        data-dismiss="modal">
+                    Cancle
+                </button>
+                <button type="button"
+                        class="btn btn-info"
+                        @onclick=@(()=> { ModalSubmit(ModalType.Create); })>
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    enum ModalType { Create, Edit, Delete }
+    //enum ModalInputSelectAction { Multi }
+    ElementReference elFormNew, elFormEdit;
+
+    string AccessToken = "";
+    //ZoneModel crEditAssignedZone = new ZoneModel();
+    //List<int> crLstAssignedSectionId = new List<int>();
+    //List<SectionModel> LstAllUnAssigedSection = new List<SectionModel>();
+
+    ZoneModel NewZoneParam = new ZoneModel();
+    ZoneModel CrEditZone = new ZoneModel();
+
+    List<AreaModel> LstAllArea = new List<AreaModel>();
+    List<ZoneModel> LstAllZone = new List<ZoneModel>();
+    List<SectionModel> LstAllSection = new List<SectionModel>();
+    //List<DeviceModel> LstAllDevice = new List<DeviceModel>();
+
+    LayoutAreaSevice svLayout = new LayoutAreaSevice();
+    //DeviceDataStore svDevice = new DeviceDataStore();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccessToken = await LocalStorage.GetItemAsync<string>("token");
+        if (AccessToken == null)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
+            NavHelper.NavigateTo("/login"); return;
+        }
+
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "Initializing Data\nPlease Wait ...");
+        LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        //LstAllDevice = await svDevice.GetOwnerDevicesListAsync(AccessToken);
+        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        ////LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", false, "");
+
+        // In case navigate from query string
+        string queryZoneId;
+        if (NavigationHelper.TryGetQueryString<string>(NavHelper, "ZoneId", out queryZoneId) && queryZoneId != null)
+        {
+            var _objZone = LstAllZone.Where(r => r.Id == Convert.ToInt32(queryZoneId)).FirstOrDefault();
+            if (_objZone == default) return;
+
+            await JSHelper.InvokeVoidAsync("Interop_ShowHideModal", "mdEditZone", "show");
+
+            InvokeAsync(StateHasChanged); // Error SelectBootstrap not load if not change state here
+            PreEdit(_objZone);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        JSHelper.InvokeVoidAsync("Interop_PurgeBootstrapSelectCache");
+
+        if (!firstRender)
+        {
+            return;
+        }
+        //JSHelper.InvokeVoidAsync("OneTimeEventHandle");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelect");
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapTable");
+    }
+
+
+    private MudTable<ZoneModel> table;
+    string mudFilterMain = "";
+    private bool FilterFunc(ZoneModel _zone)
+    {
+        if (string.IsNullOrWhiteSpace(mudFilterMain))
+            return true;
+        if (_zone.Id.ToString().Contains(mudFilterMain))
+            return true;
+        if (_zone.Name.Contains(mudFilterMain))
+            return true;
+        return false;
+    }
+
+
+
+    async Task<int> SelectAndBindSingleInt()
+    {
+        var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
+        var slKeyItem = _tmpSelectArr[0];
+        return await Task.FromResult(int.Parse(slKeyItem.ToString()));
+    }
+
+    //async Task PreModalAssigned(ZoneModel _district)
+    //{
+    //    crEditAssignedZone = _district.ShallowCopy();
+    //    crLstAssignedSectionId = LstAllSection.Where(r => r.Zone == _district.Id).Select(r => r.Id).ToList();
+    //}
+
+    //async Task ModalAssignedHandle(int assignZoneId)
+    //{
+    //    var _LstSubmitSectionChange = LstAllSection.Where(r => crLstAssignedSectionId.Contains(r.Id)).ToList();
+    //    bool isAllOk = true;
+    //    foreach (var it in _LstSubmitSectionChange)
+    //    {
+    //        it.Zone = assignZoneId;
+    //        var isOk = await svLayout.UpdateSectionAsync(it, AccessToken);
+    //        if (!isOk) isAllOk = false;
+    //    }
+    //    if (isAllOk)
+    //    {
+    //        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item changed", true);
+    //    }
+    //    else
+    //    {
+    //        JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+    //    }
+
+    //    // Re fetch all List
+    //    LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+    //    LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+    //    LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+    //    //LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
+    //    crLstAssignedSectionId = LstAllSection.Where(r => r.Zone == CrEditZone.Id).Select(r => r.Id).ToList();
+
+    //    InvokeAsync(StateHasChanged);
+    //}
+
+    //private async void SelectAndBindMulti()
+    //{
+    //    var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange");
+    //    var ParseValue = int.Parse(_tmpSelectArr[0].ToString());
+    //    if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix
+    //    var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
+    //    if (stateOfValue)
+    //    {
+    //        if (!crLstAssignedSectionId.Contains(ParseValue))
+    //        {
+    //            crLstAssignedSectionId.Add(ParseValue);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        if (crLstAssignedSectionId.Contains(ParseValue))
+    //        {
+    //            crLstAssignedSectionId.Remove(ParseValue);
+    //        }
+    //    }
+    //}
+
+    async Task DetachAllSectionInZone(ZoneModel _zone)
+    {
+        // get all section belong to zone then detach all
+        var _crLstSectionAssignedToZone = LstAllSection.Where(r => r.Zone == _zone.Id).ToList();
+        var isAllOk = true;
+        foreach(var _secId in _crLstSectionAssignedToZone)
+        {
+            _secId.Zone = -1;
+            var _isThisOk = await svLayout.UpdateSectionAsync(_secId, AccessToken);
+            if (_isThisOk == false) isAllOk = false;
+        }
+        if (isAllOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "All sections of this zone has been detached", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+    }
+
+    async Task DetachSection(SectionModel _room)
+    {
+        _room.Zone = -1;
+        var isOk = await svLayout.UpdateSectionAsync(_room, AccessToken);
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item detached", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        // Re fetch all List
+        //LstAllArea = await svLayout.GetAreaListAsync(AccessToken);
+        //LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        LstAllSection = await svLayout.GetSectionListAsync(AccessToken);
+        //LstAllUnAssigedSection = LstAllSection.Where(r => r.Zone == -1).ToList();
+        //crLstAssignedSectionId = LstAllSection.Where(r => r.Zone == CrEditZone.Id).Select(r => r.Id).ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ModalSubmit(ModalType submitType)
+    {
+        var isFormValid = await JSHelper.InvokeAsync<bool>("Interop_FormValidate", submitType == ModalType.Create ?  elFormNew : elFormEdit);
+        if (!isFormValid)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "warning", "Please fill all required field", true);
+            return;
+        }
+        JSHelper.InvokeVoidAsync("Interop_Swal2spinner", true, "");
+        var isOk = false;
+        if (submitType == ModalType.Create)
+        {
+            isOk = await svLayout.InsertZoneAsync(NewZoneParam, AccessToken);
+        }
+        else if (submitType == ModalType.Edit)
+        {
+            isOk = await svLayout.UpdateZoneAsync(CrEditZone, AccessToken);
+        }
+        // check response
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item " + (submitType == ModalType.Create ? "Added" : "Updated"), true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+        JSHelper.InvokeVoidAsync("Interop_ShowHideModal", submitType == ModalType.Create ? "mdNewZone" : "mdEditZone", "hide");
+        // Re fetch all List
+        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        table.ReloadServerData();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ModalInfoHandle(ZoneModel _zone, ModalType action)
+    {
+        string InputZoneName = "";
+        // Pre Validate
+        if (action == ModalType.Delete)
+        {
+            var isConfirm = await JSHelper.InvokeAsync<bool>("Interop_Swal2HelperAsync", "warning", "This action cannot be undone", "DELETE ZONE " + _zone.Name, "#C70039", "Cancel", false);
+            if (!isConfirm) return;
+        }
+        else
+        {
+            InputZoneName = await JSHelper.InvokeAsync<string>("Interop_Swal2InputAsync", "text", "Zone Name", _zone.Name, action == ModalType.Edit ? "Save Changed" : "Create");
+            if (InputZoneName == "") return;
+            _zone.Name = InputZoneName;
+        }
+
+        // Request to server
+        var isOk = false;
+        if (action == ModalType.Create)
+        {
+            isOk = await svLayout.InsertZoneAsync(_zone, AccessToken);
+        }
+        else if (action == ModalType.Edit)
+        {
+            isOk = await svLayout.UpdateZoneAsync(_zone, AccessToken);
+        }
+        else if (action == ModalType.Delete)
+        {
+            isOk = await svLayout.DeleteZoneAsync(_zone.Id, AccessToken);
+            DetachAllSectionInZone(_zone);
+        }
+
+        // check response
+        if (isOk)
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "success", "Item changed", true);
+        }
+        else
+        {
+            JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Oops, Something went wrong", true);
+        }
+
+        // Re fetch all List
+        LstAllZone = await svLayout.GetZoneListAsync(AccessToken);
+        table.ReloadServerData();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task PreCloseModalEdit() {
+        JSHelper.InvokeVoidAsync("Interop_PurgeAllCache");
+    }
+    async Task PreNew()
+    {
+        NewZoneParam = new ZoneModel();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task PreEdit(ZoneModel _zone)
+    {
+        CrEditZone = _zone.ShallowCopy();
+
+        var _crAssignTo = LstAllArea.Where(r => r.Id == CrEditZone.Area).FirstOrDefault()?.Id;
+        JSHelper.InvokeVoidAsync("Interop_InjectBootstrapSelectionById", "slEditAssigned", _crAssignTo);
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

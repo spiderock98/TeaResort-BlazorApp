@@ -67,6 +67,8 @@ namespace SmartRetail.Share.Models
         [JsonProperty]
         public List<string> MeterSaveList { get; set; } = new List<string>(); // Only Save Data In This Object
         [JsonProperty]
+        public long RequestUpdate { get; set; } = 0;
+        [JsonProperty]
         public long LastUpdate { get; set; }
         [JsonProperty]
         public int SectionId { get; set; }
@@ -82,6 +84,12 @@ namespace SmartRetail.Share.Models
         public DeviceModel ShallowCopy()
         {
             return (DeviceModel)this.MemberwiseClone();
+        }
+
+        public DeviceModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<DeviceModel>(_tmpSerializeString);
         }
         public List<string> UpdateStatus(Dictionary<string, string> data)
         {

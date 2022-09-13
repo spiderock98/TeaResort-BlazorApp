@@ -1,55 +1,57 @@
-﻿using Newtonsoft.Json;
-
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SmartRetail.Share.Models
 {
-    public class SectionModel : BaseNotifyModel
-    {
-        #region private varian
 
-        int _Id;
-        string _Name;
-        int _Location;
-        string _Description;
-        string _Icon;
-        #endregion
+    [JsonObject(MemberSerialization.OptIn)]
+    public class SectionModel
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string ObjectId { get; set; }
+        [JsonProperty]
+        public int Id { get; set; }
+        [JsonProperty]
+        public string Name { get; set; }
+        [JsonProperty]
+        public int Zone { get; set; }
+        [JsonProperty]
+        public string Description { get; set; }
+        [JsonProperty]
+        public string Icon { get; set; }
+        [JsonProperty]
+        public int LastUpdate { get; set; }
+        [JsonProperty]
+        public Dictionary<string, string> Infos { get; set; }
+
         public SectionModel()
+        { }
+
+        public void Update(SectionModel _room)
         {
-        }
-        [JsonProperty]
-        public int Id
-        {
-            get { return _Id; }
-            set { SetProperty(ref _Id, value); }
-        }
-        [JsonProperty]
-        public string Name
-        {
-            get { return _Name; }
-            set { SetProperty(ref _Name, value); }
-        }
-        [JsonProperty]
-        public int Zone
-        {
-            get { return _Location; }
-            set { SetProperty(ref _Location, value); }
-        }
-        [JsonProperty]
-        public string Description
-        {
-            get { return _Description; }
-            set { SetProperty(ref _Description, value); }
-        }
-        [JsonProperty]
-        public string Icon
-        {
-            get { return _Icon; }
-            set { SetProperty(ref _Icon, value); }
+            Id = _room.Id;
+            Name = _room.Name;
+            Zone = _room.Zone;
+            Description = _room.Description;
+            Icon = _room.Icon;
+            Infos = _room.Infos;
         }
 
         public SectionModel ShallowCopy()
         {
             return (SectionModel)this.MemberwiseClone();
         }
+        public SectionModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<SectionModel>(_tmpSerializeString);
+        }
     }
+
 }

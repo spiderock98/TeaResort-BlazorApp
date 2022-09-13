@@ -1,6 +1,6 @@
 ﻿@page "/users"
 @using Share.Models
-@using SmartRetail.Services
+@using SmartRetail.Client.Services
 @inject NavigationManager NavHelper
 @using System.Collections
 @using Helper
@@ -10,196 +10,175 @@
 
 <div class="content-wrapper">
 
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col text-center">
                     <h1 style="font-size:50px;">Users</h1>
                 </div>
-            </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
+            </div>
+        </div>
     </section>
-    <!-- /.content-header -->
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
 
-            <div class="card card-info card-outline card-outline-tabs">
-                <div class="card-header p-0 border-bottom-0">
-                    <ul class="nav nav-tabs justify-content-end" id="custom-tabs-four-tab" role="tablist">
-                        @*<li class="nav-item">
-                            <button type="button"
-                                    class="btn btn-outline-success p-2"
-                                    data-toggle="modal"
-                                    data-target="#mdAddNewUserInfo"
-                                    @onclick="RegisterUserShow">
-                                <i class="fas fa-plus-circle"></i>
-                                ADD USER
-                            </button>
-                        </li>*@
-                    </ul>
-                </div>
+            <MudButton Link="/register"
+                       Target="_blank"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Rounded.PersonAddAlt"
+                       Color="Color.Tertiary">
+                Register User
+            </MudButton>
 
-
-                <div class="card-body">
-
-                    <table id="table"
-                           data-search="true"
-                           data-show-export="true"
-                           data-search-align="right"
-                           data-buttons-align="right">
-                        <thead>
-                            <tr>
-                                <th class="text-center">No.</th>
-                                <th class="text-center">FULL NAME</th>
-                                <th class="text-center">EMAIL</th>
-                                <th class="text-center">ROLE</th>
-                                <th class="text-center">ENABLED</th>
-                                <th class="text-center">EDIT</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int idx = 0;
-                                @if (ListUserInfo != null)
+                <MudSimpleTable Elevation="0">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>FULL NAME</th>
+                            <th>EMAIL</th>
+                            <th>ROLE</th>
+                            <th>ENABLED</th>
+                            <th>EDIT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int idx = 0;
+                            @if (ListUserInfo != null)
+                            {
+                                foreach (var _user in ListUserInfo)
                                 {
-                                    foreach (var _user in ListUserInfo)
-                                    {
-                                        <tr class="text-center">
-                                            <th>@(++idx)</th>
-                                            <td>@_user.Infor.UserName</td>
-                                            <td>@_user.Infor.Email</td>
-                                            <td>@string.Join("-", _user.Roles)</td>
-                                            @{
-                                                if (_user.IsActive)
-                                                {
-                                                    <td class="text-success">
-                                                        <i class="fas fa-check-circle"></i>
-                                                    </td>
-                                                }
-                                                else
-                                                {
-                                                    <td class="text-danger">
-                                                        <i class="fas fa-times-circle"></i>
-                                                    </td>
-                                                }
+                                    <tr>
+                                        <td>@(++idx)</td>
+                                        <td>@_user.Infor.UserName</td>
+                                        <td>@_user.Infor.Email</td>
+                                        <td>@string.Join("-", _user.Roles)</td>
+                                        @{
+                                            if (_user.IsActive)
+                                            {
+                                                <td class="text-success">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </td>
                                             }
+                                            else
+                                            {
+                                                <td class="text-danger">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </td>
+                                            }
+                                        }
 
-                                            <td>
-                                                <button class="btn btn-sm btn-primary"
-                                                        data-toggle="modal"
-                                                        data-target="#mdEditUserInfo"
-                                                        @onclick="() => PreEditOrDelete(_user)">
-                                                    <i class="far fa-edit"></i>
-                                                    EDIT
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
+                                        <td>
+                                            <button class="btn btn-sm btn-primary"
+                                                    data-toggle="modal"
+                                                    data-target="#mdEditUserInfo"
+                                                    @onclick="() => PreEditOrDelete(_user)">
+                                                <i class="far fa-edit"></i>
+                                                EDIT
+                                            </button>
+                                        </td>
+                                    </tr>
                                 }
-
                             }
-
-                        </tbody>
-                    </table>
-
-                </div>
-                <!-- /.card -->
-            </div>
+                        }
+                    </tbody>
+                </MudSimpleTable>
 
             @* Modal Add NEW User *@
             @*<div class="modal fade" id="mdAddNewUserInfo" data-backdrop="static" data-keyboard="false">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content bg-light">
-                        <div class="modal-header">
-                            <h4 class="modal-title">Add New User</h4>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content bg-light">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Add New User</h4>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
 
-                        <div class="modal-body">
-                            <form id="mdNewUser"
-                                  autocomplete="off">
-                                <DataAnnotationsValidator />
-                                <div class="form-row">
-                                    <div class="form-group col-12 col-lg-4">
-                                        <label>
-                                            User Name
-                                        </label>
-                                        <InputText @bind-Value="registerParameters.UserName" class="form-control" type="text" autocomplete="nope" />
-                                        <ValidationMessage For=@(() => registerParameters.UserName) />
+                            <div class="modal-body">
+                                <form id="mdNewUser"
+                                      autocomplete="off">
+                                    <DataAnnotationsValidator />
+                                    <div class="form-row">
+                                        <div class="form-group col-12 col-lg-4">
+                                            <label>
+                                                User Name
+                                            </label>
+                                            <InputText @bind-Value="registerParameters.UserName" class="form-control" type="text" autocomplete="nope" />
+                                            <ValidationMessage For=@(() => registerParameters.UserName) />
+                                        </div>
+
+                                        <div class="form-group col-12 col-lg-4">
+                                            <label>
+                                                Password
+                                            </label>
+                                            <InputText @bind-Value="registerParameters.Password" class="form-control" type="password" autocomplete="new-password" />
+                                            <ValidationMessage For=@(() => registerParameters.Password) />
+                                        </div>
+
+                                        <div class="form-group col-12 col-lg-4">
+                                            <label>
+                                                Password Confirmation
+                                            </label>
+                                            <InputText @bind-Value="registerParameters.PasswordConfirm" class="form-control" type="password" />
+                                            <ValidationMessage For=@(() => registerParameters.PasswordConfirm) />
+
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label>
+                                                Email
+                                            </label>
+                                            <InputText @bind-Value="registerParameters.Email" class="form-control" type="email" />
+                                            <ValidationMessage For=@(() => registerParameters.Email) />
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label>
+                                                Phone Number
+                                            </label>
+                                            <InputText @bind-Value="registerParameters.PhoneNumber" class="form-control" type="text" />
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label>
+                                                Company
+                                            </label>
+                                            <InputText @bind-Value="registerParameters.Company" class="form-control" type="text" />
+                                        </div>
+
+                                        <div class="form-group col-12">
+                                            <label>
+                                                Department
+                                            </label>
+                                            <InputText @bind-Value="registerParameters.Department" class="form-control" type="text" />
+                                        </div>
                                     </div>
+                                </form>
+                            </div>
 
-                                    <div class="form-group col-12 col-lg-4">
-                                        <label>
-                                            Password
-                                        </label>
-                                        <InputText @bind-Value="registerParameters.Password" class="form-control" type="password" autocomplete="new-password" />
-                                        <ValidationMessage For=@(() => registerParameters.Password) />
-                                    </div>
-
-                                    <div class="form-group col-12 col-lg-4">
-                                        <label>
-                                            Password Confirmation
-                                        </label>
-                                        <InputText @bind-Value="registerParameters.PasswordConfirm" class="form-control" type="password" />
-                                        <ValidationMessage For=@(() => registerParameters.PasswordConfirm) />
-
-                                    </div>
-
-                                    <div class="form-group col-12">
-                                        <label>
-                                            Email
-                                        </label>
-                                        <InputText @bind-Value="registerParameters.Email" class="form-control" type="email" />
-                                        <ValidationMessage For=@(() => registerParameters.Email) />
-                                    </div>
-
-                                    <div class="form-group col-12">
-                                        <label>
-                                            Phone Number
-                                        </label>
-                                        <InputText @bind-Value="registerParameters.PhoneNumber" class="form-control" type="text" />
-                                    </div>
-
-                                    <div class="form-group col-12">
-                                        <label>
-                                            Company
-                                        </label>
-                                        <InputText @bind-Value="registerParameters.Company" class="form-control" type="text" />
-                                    </div>
-
-                                    <div class="form-group col-12">
-                                        <label>
-                                            Department
-                                        </label>
-                                        <InputText @bind-Value="registerParameters.Department" class="form-control" type="text" />
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-                        <div class="modal-footer justify-content-between">
-                            <button type="button" class="btn btn-outline-danger" data-dismiss="modal">
-                                CLOSE
-                            </button>
-                            <button type="submit" class="btn btn-outline-info" form="mdNewUser">CREATE ACCOUNT</button>
+                            <div class="modal-footer justify-content-between">
+                                <button type="button" class="btn btn-outline-danger" data-dismiss="modal">
+                                    CLOSE
+                                </button>
+                                <button type="submit" class="btn btn-outline-info" form="mdNewUser">CREATE ACCOUNT</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>*@
+                </div>*@
 
             @* Modal Edit User Info *@
-            <div class="modal fade" id="mdEditUserInfo" data-backdrop="static" data-keyboard="false">
+            <div class="modal animate__animated animate__bounceInUp" id="mdEditUserInfo" data-backdrop="static" data-keyboard="false">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content bg-light">
-                        <div class="modal-header">
-                            <h4 class="modal-title">Edit User Infomation</h4>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+
+                        <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                            <h1 class="modal-title w-100">
+                                <i class="fas fa-plus-circle"></i>
+                            </h1>
+                            <h2 class="modal-title w-100">
+                                Edit User Infomation
+                            </h2>
                         </div>
 
                         <div class="modal-body">
@@ -213,10 +192,10 @@
                                         <label>
                                             User Name
                                         </label>
-                                        <input value="@_currentEditUser.UserName" 
-                                               class="form-control" 
-                                               type="text" 
-                                               autocomplete="nope" 
+                                        <input value="@_currentEditUser.UserName"
+                                               class="form-control"
+                                               type="text"
+                                               autocomplete="nope"
                                                readonly>
                                         <div class="invalid-feedback">
                                             Please fill your User Name.
@@ -227,17 +206,17 @@
                                         <label>
                                             Email
                                         </label>
-                                        <input @bind-value="@_currentEditUser.Email" 
-                                               class="form-control" 
-                                               type="email" >
+                                        <input @bind-value="@_currentEditUser.Email"
+                                               class="form-control"
+                                               type="email">
                                     </div>
 
                                     <div class="form-group col-12">
                                         <label>
                                             Phone Number
                                         </label>
-                                        <input @bind-value="@_currentEditUser.PhoneNumber" 
-                                               class="form-control" 
+                                        <input @bind-value="@_currentEditUser.PhoneNumber"
+                                               class="form-control"
                                                type="text">
                                     </div>
 
@@ -245,8 +224,8 @@
                                         <label>
                                             Company
                                         </label>
-                                        <input @bind-value="@_currentEditUser.Company" 
-                                               class="form-control" 
+                                        <input @bind-value="@_currentEditUser.Company"
+                                               class="form-control"
                                                type="text">
                                     </div>
 
@@ -254,8 +233,8 @@
                                         <label>
                                             Location
                                         </label>
-                                        <input @bind-value="@_currentEditUser.Location" 
-                                               class="form-control" 
+                                        <input @bind-value="@_currentEditUser.Location"
+                                               class="form-control"
                                                type="text">
                                     </div>
 
@@ -282,9 +261,9 @@
                             </form>
                         </div>
 
-                        <div class="modal-footer d-flex">
-                            <button type="button" class="mr-auto btn btn-outline-danger" data-dismiss="modal">
-                                Close
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="button" class="btn btn-outline-danger" data-dismiss="modal">
+                                CANCLE
                             </button>
                             <button @onclick="DeleteUser" type="button" data-dismiss="modal" class="btn btn-danger">
                                 <i class="fas fa-user-slash"></i>
@@ -295,7 +274,7 @@
                                 @(_currentEditUser.IsActive ? "DISABLE USER" : "ENABLE USER")
                             </button>
                             <button @onclick=@(() => { SaveEdit(); }) type="button" class="btn btn-outline-info">
-                                Update User Info
+                                UPDATE USER INFO
                             </button>
                         </div>
                     </div>
@@ -325,12 +304,12 @@
     protected override async Task OnInitializedAsync()
     {
         AccessToken = await LocalStorage.GetItemAsync<string>("token");
-        if (AccessToken == "")
+        if (AccessToken == null)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
-            NavHelper.NavigateTo("/login");
+            NavHelper.NavigateTo("/login"); return;
         }
-        // check user auth role by get username then check in list 
+        // check user auth role by get username then check in list
         //var authUser = await svUser.GetRoles(AccessToken);
         //if (authUser.Contains(Role.Admin.ToString()) == false)
         //{
@@ -441,7 +420,7 @@
     {
         var _tmpSelectArr = await JSHelper.InvokeAsync<ArrayList>("Interop_DisplayChange", elCurrentMutipleSelectBox);
         var ParseEnumValue = (Role)int.Parse(_tmpSelectArr[0].ToString());
-        if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix 
+        if (_tmpSelectArr[1] == null) return; // some time random error here so this is fix
         var stateOfValue = bool.Parse(_tmpSelectArr[1].ToString());
         if (stateOfValue)
         {

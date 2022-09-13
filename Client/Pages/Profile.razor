@@ -1,6 +1,6 @@
 @page "/profile"
 @using Share.Models
-@using SmartRetail.Services
+@using SmartRetail.Client.Services
 @using System.Collections
 @inject NavigationManager NavHelper
 @inject IJSRuntime JSHelper
@@ -160,10 +160,10 @@
     protected override async Task OnInitializedAsync()
     {
         AccessToken = await LocalStorage.GetItemAsync<string>("token");
-        if (AccessToken == "")
+        if (AccessToken == null)
         {
             JSHelper.InvokeVoidAsync("Interop_Swal2Helper", "error", "Please Sign In Again", false);
-            NavHelper.NavigateTo("/login");
+            NavHelper.NavigateTo("/login"); return;
         }
         _currentEditUser = await svUser.GetUserAllInforAsync(AccessToken);
     }

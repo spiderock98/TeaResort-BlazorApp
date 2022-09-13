@@ -7,7 +7,7 @@ using SmartRetail.Share.Models;
 using Newtonsoft.Json;
 using System.Linq;
 
-namespace SmartRetail.Services
+namespace SmartRetail.Client.Services
 {
     public class DeviceDataStore
     {
@@ -115,6 +115,27 @@ namespace SmartRetail.Services
             return await Task.FromResult(true);
         }
 
+        public async Task<bool> UpdateAllDeviceData(DeviceModel item, string token)
+        {
+            var uri = new Uri(Resources.GetLink.POST_UPDATE_DEVICE(token));
+            var _JsonValue = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
+            try
+            {
+                HttpResponseMessage response = await _client.PostAsync(uri, _JsonValue);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    return await Task.FromResult(true);
+                }
+                return await Task.FromResult(false);
+            }
+            catch
+            {
+                return await Task.FromResult(false);
+            }
+        }
+
         public async Task<bool> UpdateItemAsync(int deviceId, string deviceType, string dataSource, string deviceName, int roomId, string token)
         {
             var uri = new Uri(Resources.GetLink.POST_DEVICE_UPDATE(deviceId, deviceType, dataSource, deviceName, roomId, token));
@@ -189,6 +210,34 @@ namespace SmartRetail.Services
             }
             return await Task.FromResult(true);
         }
+
+        public async Task<bool> DeleteDeviceAsync(int id, string token)
+        {
+            try
+            {
+                string RequestUrl = Resources.GetLink.DELETE_DEVICE(id, token);
+                var uri = new Uri(RequestUrl);
+                HttpResponseMessage response = await _client.DeleteAsync(uri);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                }
+                return await Task.FromResult(true);
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(false);
+            }
+        }
+
+        // public async Task<List<GlobalScheduleModel>> GetLstScheduleOfDv(string token, int dvId)
+        // {
+        //     var result = new List<GlobalScheduleModel>();
+        //     var svSchedule = new ScheduleService();
+        //     var LstAllSchedule = await svSchedule.GetItemsAsync(token);
+        //     result = LstAllSchedule.Where(r => r.Actions.SelectMany(x => x.DeviceList).Contains(dvId)).ToList();
+        //     return result;
+        // }
 
         //public async Task<bool> UpdateStatusAsync(List<DeviceParaListTransfer> datas, string token)
         //{
