@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static SmartRetail.Share.Models.MasterDataModel;
+using static SmartRetail.Client.Models.MasterDataModel;
 using Newtonsoft.Json;
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
     public enum LogicExpression { Or, And, Not, OpenpArenthesis, CloseParenthesis, None };
     public class ScenesExpressionModel

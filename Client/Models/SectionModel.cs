@@ -1,20 +1,15 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
 
     [JsonObject(MemberSerialization.OptIn)]
     public class SectionModel
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string ObjectId { get; set; }
         [JsonProperty]
         public int Id { get; set; }
         [JsonProperty]

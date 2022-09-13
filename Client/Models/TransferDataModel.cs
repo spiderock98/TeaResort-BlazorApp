@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 
-namespace SmartRetail.Share.Models
+namespace SmartRetail.Client.Models
 {
     [JsonObject(MemberSerialization.OptIn)]
     public class UserInforTransfer

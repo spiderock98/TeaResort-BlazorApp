@@ -1075,6 +1075,508 @@
             </div>*@
 
 
+            <!-- Modal Edit Schedule -->
+            @*<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditSchedule" tabindex="-1">
+<<<<<<< HEAD
+            <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+            <div class="modal-header">
+            <h2 class="modal-title">
+            Schedule Profile Of Device
+            <span class="badge badge-pill badge-success">[@crEditDeviceAll.Id - @crEditDeviceAll.Name]</span>
+            </h2>
+            <button type="button" class="close" data-dismiss="modal"
+            aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+
+            @if (LstScheduleOfCrDevice.Count > 0)
+            {
+            foreach (var _schedule in LstScheduleOfCrDevice)
+            {
+            <div class="alert alert-light d-flex" role="alert">
+            <div class="flex-grow-1">
+            <span class="badge badge-success">
+            <h5>@_schedule.Name</h5>
+            </span>
+            </div>
+            <a class="btn btn-success ml-1"
+            type="button"
+            target="_blank"
+            href="/schedule?scheduleId=@_schedule.Id&deviceId=@crEditDeviceAll.Id">
+            <i class="fas fa-external-link-alt"></i>
+            </a>
+            </div>
+            }
+
+            }
+
+
+            <div id="accordion">
+            @if (LstScheduleOfCrDevice.Count > 0)
+            {
+            <form @ref="elFormEditSchedule"
+            class="needs-validation"
+            id="formEditSchedule"
+            novalidate>
+
+            @foreach (var _profile in LstScheduleOfCrDevice)
+            {
+            <div class="card card-light">
+            <div class="card-header">
+            <h4 class="card-title w-100 d-flex">
+            <a class="d-block w-100 flex-grow-1" data-toggle="collapse" href="#collapse-@_profile.Id">
+            <span class="badge badge-pill badge-info ">
+            <h4>
+            @_profile.Name
+            </h4>
+            </span>
+            </a>
+
+            <a class="btn btn-primary mr-auto"
+            href="/schedule?scheduleId=@_profile.Id&deviceId=@crEditDeviceAll.Id"
+            target="_blank">
+            <i class="fas fa-external-link-alt"></i>
+            </a>
+            </h4>
+            </div>
+            <div id="collapse-@_profile.Id" class="collapse" data-parent="#accordion">
+            <div class="card-body">
+
+
+            <fieldset class="border p-2">
+            <legend class="w-auto">Time Settings</legend>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fas fa-clock"></i>
+            Time Range
+            </label>
+            <div class="col-sm-10">
+            <DateRangePicker class="form-control"
+            SingleDatePicker="true"
+            TimePicker="true"
+            TimePicker24Hour="true"
+            DateFormat="dddd dd/MM/yyyy - hh:mm tt"
+            @bind-StartDate="DictDatetimeBinding[_profile.Id.ToString()]"
+            OnRangeSelect=@(() => { DateRangeBinding(FormAction.Edit, _profile); })
+            required />
+            </div>
+            </div>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fab fa-slack-hash"></i>
+            Schedule Type
+            </label>
+            <div class="col-sm-10">
+            <select @ref="elCurrentSingleSelectBox"
+            @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(); _profile.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
+            title="-- Select --"
+            data-style="btn-light"
+            class="form-control selectpicker"
+            id="slEditScheduleType-@_profile.Id"
+            required>
+            @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
+            {
+            var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
+            var key = (int)obj;
+            <option value="@key">@value</option>
+            }
+            </select>
+            </div>
+            </div>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fas fa-redo"></i>
+            Repeats
+            </label>
+            <div class="col-sm-10">
+            <select title="-- Select --"
+            data-style="btn-light"
+            class="form-control selectpicker"
+            @ref="elCurrentMutipleSelectBox"
+            @onchange=@(()=> { SelectAndBindMulti(FormAction.Add, _profile); })
+            id="slEditRepeat-@_profile.Id"
+            multiple
+            required>
+            @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
+            {
+            var value = Enum.GetName(typeof(DayOfWeek), obj);
+            var key = (int)obj;
+            <option value="@key">@value</option>
+            }
+            </select>
+            </div>
+            </div>
+
+            </fieldset>
+
+            <fieldset class="    p-2">
+            <legend class="w-auto">Attribute Trigger</legend>
+
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label">
+            <i class="fas fa-user-edit"></i>
+            Custom JavaScript
+            </label>
+            <div class="col-sm-10">
+            <textarea id="tbEditJsAction"
+            class="summernote"></textarea>
+            </div>
+            </div>
+
+            </fieldset>
+
+            </div>
+            </div>
+            </div>
+            }
+            </form>
+            }
+            else
+            {
+            <div class="alert alert-info h3" role="alert">
+            Not assigned to any Schedule yet
+            </div>
+            }
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary"
+            data-dismiss="modal">
+            Close
+            </button>
+            <button type="button"
+            class="btn btn-primary"
+            @onclick=@(() => { FormEditScheduleHandle(); })>
+            Save
+            </button>
+            </div>
+            </div>
+            </div>
+            </div>*@
+
+            <!-- Modal Edit Assignment -->
+            @*<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditAssignment" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered justify-content-center ">
+            <div class="modal-content">
+            <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+            <h1 class="modal-title w-100">
+            <i class="fas fa-cogs"></i>
+            </h1>
+            <h2 class="modal-title w-100">
+            Configure AC Properties
+            </h2>
+            </div>
+            <div class="modal-body">
+            <form @ref="elFormEditAssignment">
+            <div class="row">
+            <div class="input-group mb-3 col-12">
+            <div class="input-group-prepend">
+            <span class="input-group-text">
+            <i class="fas fa-id-card"></i>
+            </span>
+            </div>
+            <input class="form-control"
+            type="text"
+            @bind-value="@crEditDeviceAll.Name"
+            placeholder="AC Name"
+            required />
+            </div>
+
+            <div class="input-group mb-3 col-12">
+            <div class="input-group-prepend">
+            <span class="input-group-text">
+            <i class="fas fa-paper-plane"></i>
+            </span>
+            </div>
+            <select @bind="crEditDeviceAll.SectionId"
+            id="slEditAssigned"
+            data-style="btn-light"
+            data-live-search="true"
+            class="form-control selectpicker"
+            required>
+            <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+            @foreach (var _sec in LstAllSection)
+            {
+            <option value="@_sec.Id">@_sec.Name</option>
+            }
+            </select>
+            </div>
+            </div>
+            </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+            <button type="button"
+            class="btn btn-outline-info"
+            @onclick="PreCloseDeviceModal"
+            data-dismiss="modal">
+            Cancle
+            </button>
+            <button type="button"
+            class="btn btn-info"
+            @onclick=@(()=> { ModalAssignmentSubmit(); })>
+            Save Change
+            </button>
+            </div>
+            </div>
+            </div>
+=======
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title">
+                                    Schedule Profile Of Device
+                                    <span class="badge badge-pill badge-success">[@crEditDeviceAll.Id - @crEditDeviceAll.Name]</span>
+                                </h2>
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+
+                                @if (LstScheduleOfCrDevice.Count > 0)
+                                {
+                                    foreach (var _schedule in LstScheduleOfCrDevice)
+                                    {
+                                        <div class="alert alert-light d-flex" role="alert">
+                                            <div class="flex-grow-1">
+                                                <span class="badge badge-success">
+                                                    <h5>@_schedule.Name</h5>
+                                                </span>
+                                            </div>
+                                            <a class="btn btn-success ml-1"
+                                               type="button"
+                                               target="_blank"
+                                               href="/schedule?scheduleId=@_schedule.Id&deviceId=@crEditDeviceAll.Id">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                        </div>
+                                    }
+
+                                }
+
+
+                                <div id="accordion">
+                                        @if (LstScheduleOfCrDevice.Count > 0)
+                                        {
+                                            <form @ref="elFormEditSchedule"
+                                                  class="needs-validation"
+                                                  id="formEditSchedule"
+                                                  novalidate>
+
+                                                @foreach (var _profile in LstScheduleOfCrDevice)
+                                                {
+                                                    <div class="card card-light">
+                                                        <div class="card-header">
+                                                            <h4 class="card-title w-100 d-flex">
+                                                                <a class="d-block w-100 flex-grow-1" data-toggle="collapse" href="#collapse-@_profile.Id">
+                                                                    <span class="badge badge-pill badge-info ">
+                                                                        <h4>
+                                                                            @_profile.Name
+                                                                        </h4>
+                                                                    </span>
+                                                                </a>
+
+                                                                <a class="btn btn-primary mr-auto"
+                                                                   href="/schedule?scheduleId=@_profile.Id&deviceId=@crEditDeviceAll.Id"
+                                                                   target="_blank">
+                                                                    <i class="fas fa-external-link-alt"></i>
+                                                                </a>
+                                                            </h4>
+                                                        </div>
+                                                        <div id="collapse-@_profile.Id" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+
+
+                                                                <fieldset class="border p-2">
+                                                                    <legend class="w-auto">Time Settings</legend>
+
+                                                                    <div class="form-group row">
+                                                                        <label class="col-sm-2 col-form-label">
+                                                                            <i class="fas fa-clock"></i>
+                                                                            Time Range
+                                                                        </label>
+                                                                        <div class="col-sm-10">
+                                                                            <DateRangePicker class="form-control"
+                                                                                             SingleDatePicker="true"
+                                                                                             TimePicker="true"
+                                                                                             TimePicker24Hour="true"
+                                                                                             DateFormat="dddd dd/MM/yyyy - hh:mm tt"
+                                                                                             @bind-StartDate="DictDatetimeBinding[_profile.Id.ToString()]"
+                                                                                             OnRangeSelect=@(() => { DateRangeBinding(FormAction.Edit, _profile); })
+                                                                                             required />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="form-group row">
+                                                                        <label class="col-sm-2 col-form-label">
+                                                                            <i class="fab fa-slack-hash"></i>
+                                                                            Schedule Type
+                                                                        </label>
+                                                                        <div class="col-sm-10">
+                                                                            <select @ref="elCurrentSingleSelectBox"
+                                                                                    @onchange=@(async() => { var _tmpKey = await SelectAndBindSingle(); _profile.ScheduleType = (GlobalScheduleModel.ScheduleTypeEnum)_tmpKey; })
+                                                                                    title="-- Select --"
+                                                                                    data-style="btn-light"
+                                                                                    class="form-control selectpicker"
+                                                                                    id="slEditScheduleType-@_profile.Id"
+                                                                                    required>
+                                                                                @foreach (var obj in Enum.GetValues(typeof(GlobalScheduleModel.ScheduleTypeEnum)))
+                                                                                {
+                                                                                    var value = Enum.GetName(typeof(GlobalScheduleModel.ScheduleTypeEnum), obj);
+                                                                                    var key = (int)obj;
+                                                                                    <option value="@key">@value</option>
+                                                                                }
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="form-group row">
+                                                                        <label class="col-sm-2 col-form-label">
+                                                                            <i class="fas fa-redo"></i>
+                                                                            Repeats
+                                                                        </label>
+                                                                        <div class="col-sm-10">
+                                                                            <select title="-- Select --"
+                                                                                    data-style="btn-light"
+                                                                                    class="form-control selectpicker"
+                                                                                    @ref="elCurrentMutipleSelectBox"
+                                                                                    @onchange=@(()=> { SelectAndBindMulti(FormAction.Add, _profile); })
+                                                                                    id="slEditRepeat-@_profile.Id"
+                                                                                    multiple
+                                                                                    required>
+                                                                                @foreach (var obj in Enum.GetValues(typeof(DayOfWeek)))
+                                                                                {
+                                                                                    var value = Enum.GetName(typeof(DayOfWeek), obj);
+                                                                                    var key = (int)obj;
+                                                                                    <option value="@key">@value</option>
+                                                                                }
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </fieldset>
+
+                                                                <fieldset class="    p-2">
+                                                                    <legend class="w-auto">Attribute Trigger</legend>
+
+                                                                    <div class="form-group row">
+                                                                        <label class="col-sm-2 col-form-label">
+                                                                            <i class="fas fa-user-edit"></i>
+                                                                            Custom JavaScript
+                                                                        </label>
+                                                                        <div class="col-sm-10">
+                                                                            <textarea id="tbEditJsAction"
+                                                                                      class="summernote"></textarea>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </fieldset>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <div class="alert alert-info h3" role="alert">
+                                                Not assigned to any Schedule yet
+                                            </div>
+                                        }
+                                    </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                        data-dismiss="modal">
+                                    Close
+                                </button>
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        @onclick=@(() => { FormEditScheduleHandle(); })>
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>*@
+
+            <!-- Modal Edit Assignment -->
+            @*<div class="modal animate__animated animate__bounceInUp" data-backdrop="static" id="mdEditAssignment" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered justify-content-center ">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white d-flex justify-content-center flex-column text-center">
+                            <h1 class="modal-title w-100">
+                                <i class="fas fa-cogs"></i>
+                            </h1>
+                            <h2 class="modal-title w-100">
+                                Configure AC Properties
+                            </h2>
+                        </div>
+                        <div class="modal-body">
+                            <form @ref="elFormEditAssignment">
+                                <div class="row">
+                                    <div class="input-group mb-3 col-12">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-id-card"></i>
+                                            </span>
+                                        </div>
+                                        <input class="form-control"
+                                               type="text"
+                                               @bind-value="@crEditDeviceAll.Name"
+                                               placeholder="AC Name"
+                                               required />
+                                    </div>
+
+                                    <div class="input-group mb-3 col-12">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </span>
+                                        </div>
+                                        <select @bind="crEditDeviceAll.SectionId"
+                                                id="slEditAssigned"
+                                                data-style="btn-light"
+                                                data-live-search="true"
+                                                class="form-control selectpicker"
+                                                required>
+                                            <option style="background: #5cb85c; color: #fff;" value="-1">None Of Below</option>
+                                            @foreach (var _sec in LstAllSection)
+                                            {
+                                                <option value="@_sec.Id">@_sec.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="button"
+                                    class="btn btn-outline-info"
+                                    @onclick="PreCloseDeviceModal"
+                                    data-dismiss="modal">
+                                Cancle
+                            </button>
+                            <button type="button"
+                                    class="btn btn-info"
+                                    @onclick=@(()=> { ModalAssignmentSubmit(); })>
+                                Save Change
+                            </button>
+                        </div>
+                    </div>
+                </div>
+>>>>>>> 827ee1b78a51199c26cff91dfb0e5655d69bf113
+            </div>*@
+
+
             @{
                 if (flagForceSelectInject)
                 {
