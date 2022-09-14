@@ -8,9 +8,7 @@ namespace SmartRetail.Client.Models
     public class DataLogModel
     {
         public DataLogModel()
-        {
-
-        }
+        { }
 
         public string DeviceName { get; set; }
         public string SectionName { get; set; }
@@ -28,6 +26,17 @@ namespace SmartRetail.Client.Models
         public string OldValue { get; set; }
         [JsonProperty]
         public string Value { get; set; }
+
+
+        public DataLogModel ShallowCopy()
+        {
+            return (DataLogModel)this.MemberwiseClone();
+        }
+        public DataLogModel DeepCopy()
+        {
+            var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
+            return JsonConvert.DeserializeObject<DataLogModel>(_tmpSerializeString);
+        }
     }
 
 }

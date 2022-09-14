@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using SmartRetail.Share.Models;
+using SmartRetail.Client.Models;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.WebUtilities;
 

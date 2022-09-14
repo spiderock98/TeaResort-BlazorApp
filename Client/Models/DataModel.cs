@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SmartRetail.Client.Models
 {
-    public class DataMode
+    public class DataModel
     {
         string id;
         int time;
