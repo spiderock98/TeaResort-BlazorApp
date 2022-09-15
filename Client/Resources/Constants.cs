@@ -15,9 +15,11 @@ namespace SmartRetail.Resources
         //public static string SERVER_IP = "192.168.99.198:5000";
         //public static string SERVER_POWERTAG = "http://45.251.112.69:5004/192.168.99.116";
 
-        public static string SERVER_IP = "45.251.112.69:9003";
+        //public static string SERVER_IP = "45.251.112.69:9003";
         //public static string SERVER_IP = "192.168.1.115:5000";
         //public static string SERVER_IP = "112.213.87.154:1001";
+        public static string SERVER_IP = "192.168.1.200:5000";
+
         public static string CLIENT_SERVER = "";
 
         // todo: hardcode here

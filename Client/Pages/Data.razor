@@ -1,7 +1,41 @@
 ﻿@page "/data"
 
-<h3>Data</h3>
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Data</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" KeepPanelsAlive="keepPanelsAlive">
+                <MudTabPanel Text="Day">
+                    <div class="chart-container" style="height: 70vh;">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </MudTabPanel>
+                <MudTabPanel Text="Month">
+
+                </MudTabPanel>
+                <MudTabPanel Text="Year">
+
+                </MudTabPanel>
+            </MudTabs>
+        </div>
+    </section>
+</div>
 
 @code {
+    private bool keepPanelsAlive = true;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        await JSRuntime.InvokeVoidAsync("DayChart");
+
+    }
 }
