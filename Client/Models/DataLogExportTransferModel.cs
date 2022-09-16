@@ -7,28 +7,28 @@ using System.Threading.Tasks;
 namespace SmartRetail.Client.Models
 {
     [JsonObject(MemberSerialization.OptIn)]
-    public class DataLogExport : DataLogModel
+    public class DataLogExportTransferModel : DataLogModel
     {
         [JsonProperty]
-        public DateTime TimeUTC { get; set; }
+        public string TimeUTC { get; set; }
         [JsonProperty]
         public string DeviceName { get; set; }
 
-        public DataLogExport(DataLogModel item)
+        public DataLogExportTransferModel(DataLogModel item)
         {
             Attribute = item.Attribute;
             OldValue = item.OldValue;
             Value = item.Value;
         }
 
-        public DataLogExport ShallowCopy()
+        public DataLogExportTransferModel ShallowCopy()
         {
-            return (DataLogExport)this.MemberwiseClone();
+            return (DataLogExportTransferModel)this.MemberwiseClone();
         }
-        public DataLogExport DeepCopy()
+        public DataLogExportTransferModel DeepCopy()
         {
             var _tmpSerializeString = JsonConvert.SerializeObject(ShallowCopy());
-            return JsonConvert.DeserializeObject<DataLogExport>(_tmpSerializeString);
+            return JsonConvert.DeserializeObject<DataLogExportTransferModel>(_tmpSerializeString);
         }
 
     }

@@ -6,7 +6,6 @@ namespace SmartRetail.Resources
     public static class GetLink
     {
         //public static string  SERVER_IP = "http://103.1.239.33:5000";
-        //Local Server
         //public static string SERVER_IP = "http://10.0.2.2:5000";
         //public static string SERVER_IP = "localhost:5000";
         //public static string SERVER_IP = "http://viot.ddns.net:5000";
@@ -16,7 +15,8 @@ namespace SmartRetail.Resources
         //public static string SERVER_POWERTAG = "http://45.251.112.69:5004/192.168.99.116";
 
         //public static string SERVER_IP = "45.251.112.69:9003";
-        //public static string SERVER_IP = "192.168.1.115:5000";
+        public static string SERVER_IP = "192.168.1.209:5000";
+
         //public static string SERVER_IP = "112.213.87.154:1001";
         public static string SERVER_IP = "192.168.1.200:5000";
 
@@ -526,6 +526,14 @@ namespace SmartRetail.Resources
         public static string GET_DATA_LOG(string token, int fromTime, int deviceId, int toTime)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datalog?fromTime=" + fromTime.ToString() + "&deviceId=" + deviceId.ToString() + "&toTime=" + toTime.ToString() + "&Token=" + token;
+
+            if (CLIENT_SERVER.Trim() != "")
+                RequestUrl += "&ClientServer=" + CLIENT_SERVER;
+            return RequestUrl;
+        }
+        public static string GET_DATA_DEVICES_LOG(string token, string deviceIds, int fromTime, int toTime)
+        {
+            string RequestUrl = "http://" + SERVER_IP + "/api/datalog?fromTime=" + fromTime.ToString() + "&deviceIds=" + deviceIds + "&toTime=" + toTime.ToString() + "&token=" + token;
 
             if (CLIENT_SERVER.Trim() != "")
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
