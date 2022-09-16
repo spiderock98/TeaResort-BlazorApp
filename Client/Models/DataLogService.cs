@@ -1,12 +1,11 @@
-﻿using SmartRetail.Client.Models;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SmartRetail.Client.Services
+namespace SmartRetail.Client.Models
 {
     public class DataLogService
     {
@@ -52,6 +51,24 @@ namespace SmartRetail.Client.Services
             return await Task.FromResult(dataList);
         }
 
+        public async Task<List<DataLogModel>> GetDataDevicesAsync(string token, List<int> deviceIds, int fromTime, int toTime)
+        {
+            List<DataLogModel> dataList = new List<DataLogModel>();
+            try
+            {
+            var uri = new Uri(Resources.GetLink.GET_DATA_DEVICES_LOG(token, string.Join(";", deviceIds),fromTime, toTime));
+                HttpResponseMessage response = await _client.GetAsync(uri);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    dataList = JsonConvert.DeserializeObject<List<DataLogModel>>(content);
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return await Task.FromResult(dataList);
+        }
 
     }
 }

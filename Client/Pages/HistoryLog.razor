@@ -302,19 +302,19 @@
     private void DownloadExcelFile()
     {
         // convert ms to dattime before export
-        List<DataLogExport> LstExport = new List<DataLogExport>();
+        List<DataLogExportTransferModel> LstExport = new List<DataLogExportTransferModel>();
         foreach(var it in LstDataLog)
         {
             //var _modItem = it.DeepCopy();
-            DataLogExport result = new DataLogExport(it.DeepCopy());
+            DataLogExportTransferModel result = new DataLogExportTransferModel(it.DeepCopy());
 
-            result.TimeUTC = UnixTime.UnixSecondToLocalTime(it.Time);
+            result.TimeUTC = UnixTime.UnixSecondToLocalTime(it.Time).ToString("HH:mm dd/MM/yyyy");
             result.DeviceName = LstDevice.Where(r=>r.Id == it.DeviceId).FirstOrDefault()?.Name;
 
             LstExport.Add(result);
         }
 
-        var excelBytes = ExcelHelper<DataLogExport>.GenerateExcelWorkbook(LstExport);
+        var excelBytes = ExcelHelper<DataLogExportTransferModel>.GenerateExcelWorkbook(LstExport);
         JSHelper.InvokeVoidAsync("saveAsFile", $"ListGateWay_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.xlsx", Convert.ToBase64String(excelBytes));
     }
 }
