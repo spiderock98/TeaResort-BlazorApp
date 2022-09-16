@@ -1,0 +1,47 @@
+﻿@page "/data"
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col text-center">
+                    <h1 style="font-size:50px;">Data</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" KeepPanelsAlive="keepPanelsAlive">
+                <MudTabPanel Text="Day">
+                    <div class="chart-container" style="height: 70vh;">
+                        <canvas id="dayChart"></canvas>
+                    </div>
+                </MudTabPanel>
+                <MudTabPanel Text="Month">
+                    <div class="chart-container" style="height: 70vh;">
+                        <canvas id="monthChart"></canvas>
+                    </div>
+                </MudTabPanel>
+                <MudTabPanel Text="Year">
+                    <div class="chart-container" style="height: 70vh;">
+                        <canvas id="yearChart"></canvas>
+                    </div>
+                </MudTabPanel>
+            </MudTabs>
+        </div>
+    </section>
+</div>
+
+@code {
+    private bool keepPanelsAlive = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        await JSRuntime.InvokeVoidAsync("DayChart");
+        await JSRuntime.InvokeVoidAsync("MonthChart");
+        await JSRuntime.InvokeVoidAsync("YearChart");
+
+    }
+}

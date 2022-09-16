@@ -145,6 +145,14 @@
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a class="nav-link @CheckActiveStatus("data","active")" @onclick=@(() => SelectMenu("data"))>
+                        <i class="nav-icon fas fa-chart-bar"></i>
+                        <p class="font-weight-bolder user-select-none">
+                            DATA
+                        </p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>
@@ -153,7 +161,7 @@
 @code {
     Dictionary<string, string> menuPaths = new Dictionary<string, string>()
 {
-{"dashboard","/dashboard"}, {"ac","/ac"} , {"schedule", "/schedule"}, {"energy", "/energy"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}, { "interlock", "/interlock" }, { "layout_area", "/layout_area" },{ "layout_zone", "/layout_zone" }, { "layout_room", "/layout_room" }, { "gateway", "/gateway" }
+{"dashboard","/dashboard"}, {"ac","/ac"} , {"schedule", "/schedule"}, {"energy", "/energy"}, {"users", "/users"}, {"profile","profile"}, {"logs", "logs"}, { "interlock", "/interlock" }, { "layout_area", "/layout_area" },{ "layout_zone", "/layout_zone" }, { "layout_room", "/layout_room" }, { "gateway", "/gateway" }, { "data", "/data"}
 };
 
     Dictionary<string, bool> arrowDir = new Dictionary<string, bool>()
