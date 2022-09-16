@@ -1,5 +1,4 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SmartRetail.Resources
 {
@@ -15,7 +14,7 @@ namespace SmartRetail.Resources
         //public static string SERVER_POWERTAG = "http://45.251.112.69:5004/192.168.99.116";
 
         //public static string SERVER_IP = "45.251.112.69:9003";
-        public static string SERVER_IP = "192.168.1.209:5000";
+        //public static string SERVER_IP = "192.168.1.209:5000";
 
         //public static string SERVER_IP = "112.213.87.154:1001";
         public static string SERVER_IP = "192.168.1.200:5000";
@@ -53,11 +52,13 @@ namespace SmartRetail.Resources
             var url = "http://" + SERVER_IP + "/api/datalog?token=" + token + "&fromTime=1&toTime=15976097926&deviceId=1";
             return url;
         }
+
         public static string GET_LOG_BY_TIME(string token, int fromUnix, int toUnix)
         {
             var url = "http://" + SERVER_IP + "/api/datalog?token=" + token + "&fromTime=" + fromUnix.ToString() + "&toTime=" + toUnix.ToString() + "&deviceId=1";
             return url;
         }
+
         public static string POST_ADD_LOG(string token, string deviceId, string attribute, string oldValue, string newValue)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datalog/add?token=" + token + "&deviceId=" + deviceId + "&attribute=" + attribute + "&oldValue=" + oldValue + "&newValue=" + newValue;
@@ -69,12 +70,14 @@ namespace SmartRetail.Resources
             string RequestUrl = "http://" + SERVER_IP + "/api/data/filter?token=" + token + "&Classify=" + classify + "&values=" + filter;
             return RequestUrl;
         }
+
         public static string GET_DATA_BY_CLASSIFY_TIME(string token, string classify, int fromUnix, int toUnix)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data?token=" + token + "&Classify=" + classify +
                                 "&fromUnix=" + fromUnix.ToString() + "&toUnix=" + toUnix.ToString();
             return RequestUrl;
         }
+
         public static string GET_DEVICES_MASTER_DATA(string token)
         {
             var url = "http://" + SERVER_IP + "/api/Masterdata/Masterdata?Token=" + token;
@@ -83,6 +86,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string GET_DEVICES_TYPE_DATA(string token)
         {
             var url = "http://" + SERVER_IP + "/api/Masterdata/AllDeviceType?Token=" + token;
@@ -91,6 +95,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string GET_ATTRIBUTE_DATA(string token)
         {
             var url = "http://" + SERVER_IP + "/api/Masterdata/AllAttribute?Token=" + token;
@@ -122,6 +127,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string GET_USER_INFO(string token)
         {
             var url = "http://" + SERVER_IP + "/api/user/infor/" + token;
@@ -184,6 +190,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string GET_ADMIN_RESET_PASSWORD(string user, string newPassword, string token)
         {
             var url = "http://" + SERVER_IP + "/api/user/AdminResetPassword?user=" + user + "&newPassword=" + newPassword + "&token=" + token;
@@ -210,6 +217,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string POST_UPDATE_ROLE(string user, string token)
         {
             var url = "http://" + SERVER_IP + "/api/user/UpdateRole?token=" + token + "&user=" + user;
@@ -245,6 +253,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string PUT_DEVICE_SETTING(int deviceId, string token)
         {
             var url = "http://" + SERVER_IP + "/api/IotDevice/" + deviceId.ToString() + "?token=" + token;
@@ -253,6 +262,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string PUT_MUL_DEVICE_SETTING(string token)
         {
             var url = "http://" + SERVER_IP + "/api/IotDevice?token=" + token;
@@ -271,6 +281,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string DELETE_DEVICE(int deviceId, string token)
         {
             var url = "http://" + SERVER_IP + "/api/IotDevice/" + deviceId.ToString() + "?token=" + token;
@@ -304,6 +315,7 @@ namespace SmartRetail.Resources
         {
             return "http://" + DS4_IP + "/interlock";
         }
+
         public static string POST_DS4_INTERLOCK(string DS4_IP)
         {
             return "http://" + DS4_IP + "/interlock";
@@ -313,10 +325,12 @@ namespace SmartRetail.Resources
         {
             return "http://" + DS4_IP + "/templimit";
         }
+
         public static string GET_DS4_TEMP_LIMIT(string DS4_IP)
         {
             return "http://" + DS4_IP + "/templimit";
         }
+
         public static string GET_DS4_INPUT(string DS4_IP)
         {
             return "http://" + DS4_IP + "/input";
@@ -390,7 +404,6 @@ namespace SmartRetail.Resources
             return url;
         }
 
-
         public static string POST_UPDATE_SCHEDULE(string token)
         {
             var url = "http://" + SERVER_IP + "/api/GlobalSchedule/Update?token=" + token;
@@ -408,6 +421,7 @@ namespace SmartRetail.Resources
                 url += "&ClientServer=" + CLIENT_SERVER;
             return url;
         }
+
         public static string POST_UPDATE_SCENES(string token)
         {
             var url = "http://" + SERVER_IP + "/api/GlobalScenes/Update?token=" + token;
@@ -506,6 +520,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_ENERGY_DATA(string token, int deviceId, int fromDate, int lastDate)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/EnergyData/data?deviceId=" + deviceId.ToString() + "&token=" + token + "&fromDate=" + fromDate + "&LastDate=" + lastDate;
@@ -523,6 +538,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_DATA_LOG(string token, int fromTime, int deviceId, int toTime)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datalog?fromTime=" + fromTime.ToString() + "&deviceId=" + deviceId.ToString() + "&toTime=" + toTime.ToString() + "&Token=" + token;
@@ -531,6 +547,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_DATA_DEVICES_LOG(string token, string deviceIds, int fromTime, int toTime)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datalog?fromTime=" + fromTime.ToString() + "&deviceIds=" + deviceIds + "&toTime=" + toTime.ToString() + "&token=" + token;
@@ -539,6 +556,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_SECTION_LIST(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/section/All?token=" + token;
@@ -547,6 +565,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string PUT_UPDATE_SECTION(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/section/Update?token=" + token;
@@ -555,6 +574,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string POST_INSERT_SECTION(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/section/Add?token=" + token;
@@ -563,6 +583,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string DELETE_SECTION(int Id, string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/section/" + Id.ToString() + "?token=" + token;
@@ -580,6 +601,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string PUT_UPDATE_ZONE(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/zone/Update?token=" + token;
@@ -588,6 +610,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string POST_INSERT_ZONE(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/zone/Add?token=" + token;
@@ -596,6 +619,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string DELETE_ZONE(int Id, string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/zone/" + Id.ToString() + "?token=" + token;
@@ -604,6 +628,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_AREA_LIST(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/area/All?token=" + token;
@@ -612,6 +637,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string DELETE_AREA(int Id, string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/area/" + Id.ToString() + "?token=" + token;
@@ -620,6 +646,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string POST_INSERT_AREA(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/area/Add?token=" + token;
@@ -628,6 +655,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string PUT_UPDATE_AREA(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/area/Update?token=" + token;
@@ -636,6 +664,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_ALL_SOURCE(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datasource?token=" + token;
@@ -644,6 +673,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_SOURCE(string token, string sourceId)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datasource/" + sourceId + "?token=" + token;
@@ -652,6 +682,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string POST_UPDATE_SOURCE(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datasource/Update?token=" + token;
@@ -660,6 +691,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string POST_INSERT_SOURCE(string token, string sourceType, string sourceName)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datasource/Build?sourceType=" + sourceType + "&sourceName=" + sourceName + "&token=" + token;
@@ -668,6 +700,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string DELETE_SOURCE(string Id, string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/datasource/" + Id.ToString() + "?token=" + token;
@@ -676,6 +709,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_ALL_DATA(string token)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data/all?token=" + token;
@@ -684,6 +718,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_DATA_BY_CLASSIFY(string token, string classify)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data?token=" + token + "&Classify=" + classify;
@@ -710,6 +745,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string GET_DATA_BY_ID(string token, string id)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data/" + id + "?token=" + token;
@@ -746,7 +782,6 @@ namespace SmartRetail.Resources
             return RequestUrl;
         }
 
-
         public static string PUT_DATA_BY_ID(string token, string id)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data/" + id + "?token=" + token;
@@ -755,6 +790,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string PUT_DATA_BY_KEY(string token, string classify, string key)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data/key?token=" + token + "&classify=" + classify + "&key=" + key;
@@ -772,6 +808,7 @@ namespace SmartRetail.Resources
                 RequestUrl += "&ClientServer=" + CLIENT_SERVER;
             return RequestUrl;
         }
+
         public static string DELETE_DATA_BY_KEY(string token, string classify, string key)
         {
             string RequestUrl = "http://" + SERVER_IP + "/api/data/key?token=" + token + "&classify=" + classify + "&key=" + key;

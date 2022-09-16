@@ -35,6 +35,36 @@
 
 @code {
     private bool keepPanelsAlive = true;
+    private string AccessToken = string.Empty;
+
+    private DataChartModel dataChart = new();
+    private List<DataChartModel> dataCharts = new();
+
+    private List<DeviceModel> devices = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetDevices();
+        await GetChart();
+    }
+
+    private async Task GetDevices()
+    {
+        AccessToken = await localStorage.GetItemAsync<string>("token");
+        devices = await DeviceService.GetOwnerDevicesListAsync(AccessToken);
+        
+
+    }
+
+    private async Task GetChart()
+    {
+        dataChart.ChartT = Models.ChartType.Year;
+        dataChart.StackDevices = devices;
+        dataChart.Time = new DateTime(2022, 01, 01);
+        
+        dataCharts = await dataChart.GetEnergyByYear(AccessToken);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
