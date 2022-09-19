@@ -12,7 +12,7 @@
     </section>
     <section class="content">
         <div class="container-fluid">
-            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" KeepPanelsAlive="keepPanelsAlive">
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" KeepPanelsAlive="keepPanelsAlive" ActivePanelIndex="activePanelIndex" ActivePanelIndexChanged="async (i) => await ActivePanelIndexChanged(i)">
                 <MudTabPanel Text="Day">
                     <div class="chart-container" style="height: 70vh;">
                         <canvas id="dayChart"></canvas>
@@ -34,26 +34,40 @@
 </div>
 
 @code {
+    private int activePanelIndex = 0;
     private bool keepPanelsAlive = true;
     private string AccessToken = string.Empty;
 
-    private DataChartModel dataChart = new();
-    private List<DataChartModel> dataCharts = new();
+    private Tuple<int, string>[] test = new[] {
+        new(1, "one"),
+        new(2, "two")
+    }
 
-    private List<DeviceModel> devices = new();
+    private DataChartModel dataChart { get; set; } = new();
+    private List<DataChartModel> dataCharts { get; set; } = new();
+
+    private List<DeviceModel> devices { get; set; } = new();
 
 
     protected override async Task OnInitializedAsync()
     {
-        await GetDevices();
-        await GetChart();
+        //await GetDevices();
+        //await GetChart();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        //await JSRuntime.InvokeVoidAsync("DayChart");
+        //await JSRuntime.InvokeVoidAsync("MonthChart");
+
     }
 
     private async Task GetDevices()
     {
         AccessToken = await localStorage.GetItemAsync<string>("token");
         devices = await DeviceService.GetOwnerDevicesListAsync(AccessToken);
-        
+
 
     }
 
@@ -62,16 +76,18 @@
         dataChart.ChartT = Models.ChartType.Year;
         dataChart.StackDevices = devices;
         dataChart.Time = new DateTime(2022, 01, 01);
-        
+
         dataCharts = await dataChart.GetEnergyByYear(AccessToken);
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task ActivePanelIndexChanged(int index)
     {
-
-        await JSRuntime.InvokeVoidAsync("DayChart");
-        await JSRuntime.InvokeVoidAsync("MonthChart");
-        await JSRuntime.InvokeVoidAsync("YearChart");
-
+        if (index == 2)
+        {
+            activePanelIndex = index;
+            //StateHasChanged();
+            await JSRuntime.InvokeVoidAsync("YearChart", test);
+            Console.WriteLine(activePanelIndex);
+        }
     }
 }

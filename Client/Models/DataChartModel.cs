@@ -30,7 +30,7 @@ namespace SmartRetail.Client.Models
 
         private List<DataLogModel> DataLogs { get; set; } = new List<DataLogModel>();
 
-        public bool isDevicesScheider 
+        public bool isDevicesScheider
         {
             get
             {
